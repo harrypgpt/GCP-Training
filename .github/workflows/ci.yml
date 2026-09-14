@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gcp
+          POSTGRES_PASSWORD: gcp_ci
+          POSTGRES_DB: gcp_training_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gcp -d gcp_training_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://gcp:gcp_ci@localhost:5432/gcp_training_ci?schema=public
+      NODE_ENV: test
+      CORS_ORIGINS: http://localhost:3000
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      # CI-only secrets — never reused outside this ephemeral workflow run.
+      JWT_ACCESS_SECRET: ci-only-secret-ci-only-secret-ci-only-secret-32
+      OTP_PEPPER: ci-only-otp-pepper-ci-only-otp-pepper
+      MAIL_TRANSPORT: console
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm --filter @gcp/shared build
+
+      - name: Apply database migrations
+        run: pnpm --filter @gcp/api prisma:deploy
+
+      - name: Seed baseline RBAC
+        run: pnpm --filter @gcp/api db:seed
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: API e2e tests
+        run: pnpm --filter @gcp/api test:e2e

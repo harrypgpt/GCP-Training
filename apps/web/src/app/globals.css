@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Clinical palette — deep navy authority, clean paper, restrained teal accent. */
+    --background: 210 40% 99%;
+    --foreground: 215 30% 15%;
+    --muted: 210 30% 96%;
+    --muted-foreground: 215 16% 42%;
+    --border: 214 24% 88%;
+    --primary: 215 55% 22%;
+    --primary-foreground: 210 40% 99%;
+    --accent: 190 60% 34%;
+    --accent-foreground: 210 40% 99%;
+    --success: 152 45% 34%;
+    --warning: 35 80% 42%;
+    --danger: 355 62% 44%;
+
+    --font-sans: 'Inter', 'Segoe UI', sans-serif;
+    --font-serif: 'Source Serif 4', Georgia, serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 215 32% 10%;
+      --foreground: 210 30% 92%;
+      --muted: 215 25% 16%;
+      --muted-foreground: 214 16% 65%;
+      --border: 215 20% 24%;
+      --primary: 205 60% 62%;
+      --primary-foreground: 215 40% 12%;
+      --accent: 190 55% 55%;
+      --accent-foreground: 215 40% 12%;
+      --success: 152 40% 55%;
+      --warning: 35 75% 60%;
+      --danger: 355 65% 65%;
+    }
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--accent));
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // Keep the incremental cache INSIDE outDir so `deleteOutDir` (nest-cli.json)
+    // always clears it together with dist/ — a stale cache living next to
+    // tsconfig.build.json can otherwise make a rebuild silently emit only a
+    // partial dist/ after a manual `rm -rf dist`.
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts", "**/*.test.ts", "prisma"]
+}

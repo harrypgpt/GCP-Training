@@ -1,0 +1,1371 @@
+// ICH GCP Training & Certification Platform — database schema.
+//
+// Stage 2 (database foundation) adds the full set of foundational domain
+// entities: RBAC (roles/permissions), training structure (programs → levels →
+// modules → lessons → learning objectives), content provenance (sources),
+// the case-study/observation repository, the question engine's storage shape,
+// exam blueprints, exam attempts, and certificates.
+//
+// Explicitly OUT of scope for this stage (per the Stage 2 brief): business
+// logic, services, controllers, question-selection/scoring algorithms, and
+// any seeded regulatory/educational content. Only `users`, baseline RBAC rows
+// (roles + a starter permission set) and lookup-table *structure* are seeded —
+// never fabricated GCP domains, case studies, or questions.
+//
+// Conventions (unchanged from Stage 1):
+//   * snake_case table + column names via @map / @@map
+//   * every FK has an explicit ON DELETE behaviour
+//   * enums mirror packages/shared/src/enums.ts where the shared package
+//     needs the same vocabulary (parity asserted by a unit test)
+//   * DB-level constraints Prisma cannot express (partial unique indexes,
+//     CHECK constraints, triggers) live in migration SQL, not here
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [citext]
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// Account state for a platform user.
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+
+  @@map("user_status")
+}
+
+/// Auditable actions recorded in the immutable-style audit log.
+enum AuditAction {
+  USER_REGISTERED
+  OTP_REQUESTED
+  EMAIL_VERIFIED
+  USER_LOGGED_IN
+  LOGIN_FAILED
+  USER_LOGGED_OUT
+  PASSWORD_CHANGED
+  CONTENT_CREATED
+  CONTENT_MODIFIED
+  CONTENT_APPROVED
+  QUESTION_CREATED
+  QUESTION_UPDATED
+  QUESTION_SUBMITTED_FOR_REVIEW
+  QUESTION_APPROVED
+  QUESTION_REJECTED
+  QUESTION_PUBLISHED
+  QUESTION_ARCHIVED
+  QUESTION_VERSION_CREATED
+  AI_GENERATION_REQUESTED
+  AI_GENERATION_SUCCEEDED
+  AI_GENERATION_FAILED
+  AI_CANDIDATE_ACCEPTED
+  AI_CANDIDATE_REJECTED
+  AI_CANDIDATE_CONVERTED
+  EXAM_STARTED
+  EXAM_SUBMITTED
+  CERTIFICATE_ISSUED
+  CERTIFICATE_REVOKED
+
+  @@map("audit_action")
+}
+
+/// What an OTP challenge is being used to authorise.
+enum OtpPurpose {
+  EMAIL_VERIFICATION
+
+  @@map("otp_purpose")
+}
+
+/// Editorial workflow shared by every reviewable content entity.
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+
+  @@map("content_status")
+}
+
+/// Coarse difficulty tier used by both case studies and questions.
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+
+  @@map("difficulty_level")
+}
+
+/// Severity/risk classification for a case study or observation.
+enum RiskCategory {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("risk_category")
+}
+
+/// Provenance category for a reference source.
+enum SourceType {
+  REGULATION
+  GUIDANCE
+  LITERATURE
+  WHITE_PAPER
+  PROPRIETARY
+  OBSERVATION
+  OTHER
+
+  @@map("source_type")
+}
+
+/// Pedagogical shape of a question. Mirrors the QUESTION ENGINE spec exactly.
+enum QuestionType {
+  KNOWLEDGE
+  APPLICATION
+  SCENARIO
+  CASE_STUDY
+  REASONING
+  REGULATORY_INTERPRETATION
+  INVESTIGATOR_DECISION
+  CRA_DECISION
+  SPONSOR_DECISION
+  RISK_PRIORITIZATION
+  SEQUENCE
+  EVIDENCE_ASSESSMENT
+
+  @@map("question_type")
+}
+
+/// Basic, non-semantic duplicate signals recorded against a question version
+/// (see QUESTION BANK spec §19). Deliberately mechanical — no NLP/embedding
+/// similarity here; that is explicit future-stage scope.
+enum DuplicateMatchType {
+  EXACT_STEM
+  DUPLICATE_OPTION_SET
+
+  @@map("duplicate_match_type")
+}
+
+/// Whether a piece of proprietary content (case study, observation) may ever
+/// be sent to an EXTERNAL AI provider (Stage 6B spec — privacy boundary).
+/// Deliberately conservative: content defaults to INTERNAL_ONLY until a
+/// human content author explicitly marks it SAFE_FOR_EXTERNAL_AI. This is
+/// not automatic de-identification — it is an explicit editorial decision.
+enum ExternalAiEligibility {
+  INTERNAL_ONLY
+  SAFE_FOR_EXTERNAL_AI
+
+  @@map("external_ai_eligibility")
+}
+
+/// Which AI-assisted content-authoring operation a generation run performed.
+enum AiOperation {
+  CONCEPT_EXTRACTION
+  LEARNING_OBJECTIVE_GENERATION
+  QUESTION_GENERATION
+  QUESTION_VARIATION
+  QUALITY_REVIEW
+  DUPLICATE_ANALYSIS
+
+  @@map("ai_operation")
+}
+
+/// Lifecycle of a single call to an AI provider.
+enum AiRunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  TIMED_OUT
+
+  @@map("ai_run_status")
+}
+
+/// Lifecycle of one AI-generated candidate question. ACCEPTED is
+/// deliberately NOT "published" — see AiQuestionCandidate doc comment.
+enum AiCandidateStatus {
+  GENERATED
+  VALIDATION_FAILED
+  READY_FOR_REVIEW
+  IN_REVIEW
+  ACCEPTED
+  REJECTED
+  DISCARDED
+
+  @@map("ai_candidate_status")
+}
+
+/// Lifecycle of a single learner exam session.
+enum ExamAttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+  ABANDONED
+
+  @@map("exam_attempt_status")
+}
+
+/// What an exam-blueprint rule constrains question selection by.
+enum BlueprintRuleType {
+  DOMAIN_DISTRIBUTION
+  DIFFICULTY_DISTRIBUTION
+  QUESTION_TYPE_DISTRIBUTION
+  CASE_STUDY_PROPORTION
+
+  @@map("blueprint_rule_type")
+}
+
+/// Certificate lifecycle. Default validity is one year from issue.
+enum CertificateStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+
+  @@map("certificate_status")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & RBAC
+//
+// Roles and permissions are database rows, not enums — "Role management" is
+// an explicit admin capability, so the set of roles must be extensible
+// without a schema migration (same philosophy as training levels).
+// ---------------------------------------------------------------------------
+
+/// A platform user (learner, reviewer, author or admin).
+model User {
+  id              String     @id @default(uuid()) @db.Uuid
+  email           String     @unique @db.Citext
+  /// Argon2id hash. Null until the learner completes email verification and
+  /// sets a password (Stage 3).
+  passwordHash    String?    @map("password_hash")
+  /// Set once the learner successfully verifies an EMAIL_VERIFICATION OTP.
+  /// Independent of `status` — a learner can be email-verified but not yet
+  /// ACTIVE (password not yet set).
+  emailVerifiedAt DateTime?  @map("email_verified_at") @db.Timestamptz(6)
+  status          UserStatus @default(PENDING_VERIFICATION)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  auditEvents            AuditLog[]           @relation("AuditActor")
+  roleAssignments        UserRoleAssignment[] @relation("UserRoleAssignee")
+  grantedRoleAssignments UserRoleAssignment[] @relation("UserRoleGrantedBy")
+  otpChallenges          OtpChallenge[]
+  refreshTokens          RefreshToken[]
+
+  createdPrograms           TrainingProgram[]
+  createdLevels             TrainingLevel[]
+  createdModules            Module[]
+  createdLessons            Lesson[]
+  createdLearningObjectives LearningObjective[]
+  createdSources            Source[]
+  createdCaseStudies        CaseStudy[]
+  createdObservations       Observation[]
+  createdBlueprints         ExamBlueprint[]
+
+  authoredQuestionVersions QuestionVersion[]       @relation("QuestionVersionAuthor")
+  reviewedQuestionVersions QuestionVersion[]       @relation("QuestionVersionReviewer")
+  resolvedDuplicateFlags   QuestionDuplicateFlag[]
+
+  initiatedAiRuns      AiGenerationRun[]
+  reviewedAiCandidates AiQuestionCandidate[] @relation("AiCandidateReviewer")
+
+  examAttempts        ExamAttempt[]
+  certificates        Certificate[] @relation("CertificateHolder")
+  revokedCertificates Certificate[] @relation("CertificateRevokedBy")
+
+  learnerProfile LearnerProfile?
+  enrollments    Enrollment[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("users")
+}
+
+/// A one-time-passcode challenge issued for a sensitive operation (currently
+/// only email verification). The code itself is never stored — only an HMAC
+/// of it — so a database read alone cannot recover a usable OTP.
+model OtpChallenge {
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @map("user_id") @db.Uuid
+  purpose       OtpPurpose
+  /// HMAC-SHA256(code) using a server-side pepper. Never the plain code.
+  codeHash      String     @map("code_hash")
+  attemptCount  Int        @default(0) @map("attempt_count")
+  maxAttempts   Int        @map("max_attempts")
+  expiresAt     DateTime   @map("expires_at") @db.Timestamptz(6)
+  consumedAt    DateTime?  @map("consumed_at") @db.Timestamptz(6)
+  /// Set when superseded by a newer challenge (e.g. the learner asked to
+  /// resend the code) so only one challenge is ever active per user+purpose.
+  invalidatedAt DateTime?  @map("invalidated_at") @db.Timestamptz(6)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+  @@map("otp_challenges")
+}
+
+/// An opaque, rotating refresh token backing a learner's login session.
+/// Only a hash is stored; the bearer value is set once, in an httpOnly
+/// cookie, and never persisted or logged in plain form.
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+/// A named, admin-manageable role (e.g. LEARNER, REVIEWER, CONTENT_AUTHOR,
+/// ADMIN). Seeded with a baseline set; not hard-coded into the application.
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  /// System roles are seeded and cannot be deleted through the admin UI.
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  permissions     RolePermission[]
+  userAssignments UserRoleAssignment[]
+
+  @@map("roles")
+}
+
+/// A single grantable capability, e.g. "content.publish".
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+/// Join table: which permissions a role carries.
+model RolePermission {
+  roleId       String   @map("role_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+/// Join table: which roles a user holds (many-to-many).
+model UserRoleAssignment {
+  userId       String   @map("user_id") @db.Uuid
+  roleId       String   @map("role_id") @db.Uuid
+  assignedById String?  @map("assigned_by_id") @db.Uuid
+  assignedAt   DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+
+  user       User  @relation("UserRoleAssignee", fields: [userId], references: [id], onDelete: Cascade)
+  role       Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedBy User? @relation("UserRoleGrantedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_role_assignments")
+}
+
+/// Append-only audit trail. The application never updates or deletes rows here;
+/// a migration additionally makes UPDATE/DELETE raise at the database level.
+model AuditLog {
+  id        String      @id @default(uuid()) @db.Uuid
+  /// Null for system-initiated or pre-authentication events.
+  actorId   String?     @map("actor_id") @db.Uuid
+  actor     User?       @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action    AuditAction
+  /// Logical entity name, e.g. "user", "question", "certificate".
+  entity    String
+  /// Identifier of the affected entity (stringified).
+  entityId  String      @map("entity_id")
+  /// Structured, non-sensitive context for the event.
+  metadata  Json        @default("{}")
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// ---------------------------------------------------------------------------
+// Shared lookup vocabularies
+//
+// Kept as admin-manageable tables (not enums) because they are open,
+// content-domain vocabularies — analogous to training levels. Structure only;
+// no rows are seeded, so no taxonomy is invented by this migration.
+// ---------------------------------------------------------------------------
+
+/// A GCP subject-matter domain used to tag content and drive blueprint
+/// domain-distribution rules (e.g. "Informed Consent", "Monitoring").
+model GcpDomain {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  caseStudies       CaseStudy[]
+  observations      Observation[]
+  questionVersions  QuestionVersion[]
+  ExamBlueprintRule ExamBlueprintRule[]
+  aiCandidates      AiQuestionCandidate[]
+
+  @@map("gcp_domains")
+}
+
+/// A clinical-research professional role a case study/question targets
+/// (e.g. Investigator, CRA, Sponsor, CRC, QA). Distinct from platform RBAC
+/// {@link Role} — this describes the learner's real-world job function.
+model ProfessionalRole {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  caseStudies      CaseStudy[]
+  questionVersions QuestionVersion[]
+  learnerProfiles  LearnerProfile[]
+  aiGenerationRuns AiGenerationRun[]
+  aiCandidates     AiQuestionCandidate[]
+
+  @@map("professional_roles")
+}
+
+/// A free-form tag applied to case studies for flexible categorisation.
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  caseStudies CaseStudyTag[]
+
+  @@map("tags")
+}
+
+// ---------------------------------------------------------------------------
+// Training structure: program → level → module → lesson → learning objective
+// ---------------------------------------------------------------------------
+
+/// A top-level training offering (e.g. "ICH GCP E6(R3) Certification").
+model TrainingProgram {
+  id           String        @id @default(uuid()) @db.Uuid
+  slug         String        @unique
+  title        String
+  description  String?
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  version      Int           @default(1)
+  createdById  String?       @map("created_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  createdBy    User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  levels       TrainingLevel[]
+  certificates Certificate[]
+  enrollments  Enrollment[]
+
+  @@index([reviewStatus])
+  @@map("training_programs")
+}
+
+/// A configurable difficulty/track tier within a program (e.g. Foundation,
+/// Advanced). Levels are data, never hard-coded into application logic.
+model TrainingLevel {
+  id           String        @id @default(uuid()) @db.Uuid
+  programId    String        @map("program_id") @db.Uuid
+  code         String
+  name         String
+  description  String?
+  sortOrder    Int           @default(0) @map("sort_order")
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  version      Int           @default(1)
+  createdById  String?       @map("created_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  program   TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  createdBy User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  modules          Module[]
+  questionVersions QuestionVersion[]
+  blueprints       ExamBlueprint[]
+  attempts         ExamAttempt[]
+  certificates     Certificate[]
+  enrollments      Enrollment[]
+  preferredBy      LearnerProfile[]
+  aiGenerationRuns AiGenerationRun[]
+  aiCandidates     AiQuestionCandidate[]
+
+  @@unique([programId, code])
+  @@index([reviewStatus])
+  @@map("training_levels")
+}
+
+/// A course module within a training level.
+model Module {
+  id           String        @id @default(uuid()) @db.Uuid
+  levelId      String        @map("level_id") @db.Uuid
+  slug         String
+  title        String
+  description  String?
+  sortOrder    Int           @default(0) @map("sort_order")
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  version      Int           @default(1)
+  createdById  String?       @map("created_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  level     TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  createdBy User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  lessons   Lesson[]
+
+  progress            ModuleProgress[]
+  currentInEnrollment Enrollment[]      @relation("EnrollmentCurrentModule")
+  aiGenerationRuns    AiGenerationRun[]
+
+  @@unique([levelId, slug])
+  @@index([reviewStatus])
+  @@map("modules")
+}
+
+/// A single lesson (unit of study) within a module.
+model Lesson {
+  id           String        @id @default(uuid()) @db.Uuid
+  moduleId     String        @map("module_id") @db.Uuid
+  slug         String
+  title        String
+  /// Educational body content (rich text / markdown, authored later).
+  content      String?
+  sortOrder    Int           @default(0) @map("sort_order")
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  version      Int           @default(1)
+  createdById  String?       @map("created_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  module     Module              @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdBy  User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  objectives LearningObjective[]
+
+  progress            LessonProgress[]
+  currentInEnrollment Enrollment[]     @relation("EnrollmentCurrentLesson")
+
+  @@unique([moduleId, slug])
+  @@index([reviewStatus])
+  @@map("lessons")
+}
+
+/// A discrete learning objective a lesson is meant to achieve.
+model LearningObjective {
+  id           String        @id @default(uuid()) @db.Uuid
+  lessonId     String        @map("lesson_id") @db.Uuid
+  description  String
+  sortOrder    Int           @default(0) @map("sort_order")
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  version      Int           @default(1)
+  createdById  String?       @map("created_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  lesson           Lesson                @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdBy        User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  caseStudies      CaseStudy[]
+  questionVersions QuestionVersion[]
+  aiGenerationRuns AiGenerationRun[]
+  aiCandidates     AiQuestionCandidate[]
+
+  @@index([lessonId])
+  @@index([reviewStatus])
+  @@map("learning_objectives")
+}
+
+// ---------------------------------------------------------------------------
+// Provenance
+// ---------------------------------------------------------------------------
+
+/// An authoritative or proprietary reference source, for citation/provenance.
+model Source {
+  id           String        @id @default(uuid()) @db.Uuid
+  type         SourceType
+  title        String
+  citation     String?
+  url          String?
+  publishedOn  DateTime?     @map("published_on") @db.Date
+  retrievedAt  DateTime?     @map("retrieved_at") @db.Timestamptz(6)
+  notes        String?
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  version      Int           @default(1)
+  createdById  String?       @map("created_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  createdBy        User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  caseStudies      CaseStudy[]
+  observations     Observation[]
+  questionVersions QuestionVersion[]
+  aiGenerationRuns AiGenerationRun[]
+  aiCandidates     AiQuestionCandidate[]
+
+  @@index([type])
+  @@index([reviewStatus])
+  @@map("sources")
+}
+
+// ---------------------------------------------------------------------------
+// Case-study & observation repository
+// ---------------------------------------------------------------------------
+
+/// A structured, de-identified real-life case study.
+model CaseStudy {
+  id                    String                @id @default(uuid()) @db.Uuid
+  /// Human-readable business key, e.g. "CS-000123".
+  caseCode              String                @unique @map("case_code")
+  title                 String
+  scenario              String
+  observation           String
+  context               String?
+  domainId              String?               @map("domain_id") @db.Uuid
+  professionalRoleId    String?               @map("professional_role_id") @db.Uuid
+  riskCategory          RiskCategory?         @map("risk_category")
+  rootCause             String?               @map("root_cause")
+  expectedAction        String?               @map("expected_action")
+  learningObjectiveId   String?               @map("learning_objective_id") @db.Uuid
+  difficulty            DifficultyLevel       @default(MEDIUM)
+  sourceId              String?               @map("source_id") @db.Uuid
+  version               Int                   @default(1)
+  reviewStatus          ContentStatus         @default(DRAFT) @map("review_status")
+  isActive              Boolean               @default(true) @map("is_active")
+  /// Privacy boundary for AI content grounding (Stage 6B) — conservative
+  /// default; a content author must explicitly opt this case study in
+  /// before its narrative may ever be sent to an external AI provider.
+  externalAiEligibility ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
+  createdById           String?               @map("created_by_id") @db.Uuid
+  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  domain            GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  source            Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  createdBy         User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  tags          CaseStudyTag[]
+  observations  Observation[]
+  questionLinks QuestionCaseStudyLink[]
+
+  aiGenerationRuns AiGenerationRun[]
+  aiCandidateLinks AiQuestionCandidateCaseStudy[]
+
+  @@index([reviewStatus])
+  @@index([isActive])
+  @@index([domainId])
+  @@index([riskCategory])
+  @@map("case_studies")
+}
+
+/// Join table: free-form tags applied to a case study.
+model CaseStudyTag {
+  caseStudyId String @map("case_study_id") @db.Uuid
+  tagId       String @map("tag_id") @db.Uuid
+
+  caseStudy CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([caseStudyId, tagId])
+  @@index([tagId])
+  @@map("case_study_tags")
+}
+
+/// A standalone or case-study-linked field observation.
+model Observation {
+  id                    String                @id @default(uuid()) @db.Uuid
+  observationCode       String                @unique @map("observation_code")
+  caseStudyId           String?               @map("case_study_id") @db.Uuid
+  domainId              String?               @map("domain_id") @db.Uuid
+  riskCategory          RiskCategory?         @map("risk_category")
+  description           String
+  sourceId              String?               @map("source_id") @db.Uuid
+  reviewStatus          ContentStatus         @default(DRAFT) @map("review_status")
+  version               Int                   @default(1)
+  isActive              Boolean               @default(true) @map("is_active")
+  /// Same privacy boundary as CaseStudy.externalAiEligibility (Stage 6B).
+  externalAiEligibility ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
+  createdById           String?               @map("created_by_id") @db.Uuid
+  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  caseStudy CaseStudy? @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
+  domain    GcpDomain? @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  source    Source?    @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  createdBy User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  questionVersions QuestionVersion[]
+  aiGenerationRuns AiGenerationRun[]
+  aiCandidates     AiQuestionCandidate[]
+
+  @@index([isActive])
+  @@index([reviewStatus])
+  @@index([caseStudyId])
+  @@index([domainId])
+  @@map("observations")
+}
+
+// ---------------------------------------------------------------------------
+// Question engine (storage shape only — no selection/scoring logic here)
+// ---------------------------------------------------------------------------
+
+/// The stable identity of a question. All actual editorial content —
+/// stem, options, classification, workflow status — lives on
+/// {@link QuestionVersion}; this row only ever holds the immutable business
+/// code and a pointer to whichever version is currently the live/published
+/// one. A question's code never changes across revisions (Stage 6 spec §7).
+model Question {
+  id   String @id @default(uuid()) @db.Uuid
+  /// Stable business key, e.g. "GCP-Q-000001". Assigned once, on creation,
+  /// from the `question_code_seq` database sequence — never reused, never
+  /// regenerated when a new version is created.
+  code String @unique
+
+  /// The version currently live for learner/exam use. Moves forward each
+  /// time a newer version is published; the version it used to point to is
+  /// never deleted or mutated — it simply stops being "current" while
+  /// remaining historically queryable (Stage 6 spec §8).
+  currentPublishedVersionId String? @unique @map("current_published_version_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  versions                QuestionVersion[]    @relation("QuestionVersions")
+  currentPublishedVersion QuestionVersion?     @relation("CurrentPublishedVersion", fields: [currentPublishedVersionId], references: [id], onDelete: SetNull)
+  /// Set only if this question originated from an accepted AI candidate
+  /// (Stage 6B) — the inverse of AiQuestionCandidate.convertedQuestionId.
+  aiCandidate             AiQuestionCandidate?
+
+  @@map("questions")
+}
+
+/// One editorial version of a question's full content. Every field a
+/// question "has" (per Stage 6 spec §5) that can change on revision lives
+/// here, not on {@link Question}. A new version is a new row — a published
+/// version is never overwritten in place.
+model QuestionVersion {
+  id            String @id @default(uuid()) @db.Uuid
+  questionId    String @map("question_id") @db.Uuid
+  /// 1, 2, 3, ... within this question. Never reused.
+  versionNumber Int    @map("version_number")
+
+  type         QuestionType
+  stem         String
+  instructions String?
+  explanation  String?
+  rationale    String?
+
+  difficulty DifficultyLevel @default(MEDIUM)
+
+  levelId             String? @map("level_id") @db.Uuid
+  domainId            String? @map("domain_id") @db.Uuid
+  professionalRoleId  String? @map("professional_role_id") @db.Uuid
+  learningObjectiveId String? @map("learning_objective_id") @db.Uuid
+  observationId       String? @map("observation_id") @db.Uuid
+  sourceId            String? @map("source_id") @db.Uuid
+  /// Pinpoint citation within the source, e.g. "ICH E6(R3) §4.3.2".
+  sourceSection       String? @map("source_section")
+
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  /// Independent of reviewStatus — lets a PUBLISHED version be temporarily
+  /// pulled from exam eligibility without going through re-review (mirrors
+  /// the CaseStudy/Observation isActive pattern from Stage 4).
+  isActive     Boolean       @default(true) @map("is_active")
+
+  authorId    String?   @map("author_id") @db.Uuid
+  reviewerId  String?   @map("reviewer_id") @db.Uuid
+  approvedAt  DateTime? @map("approved_at") @db.Timestamptz(6)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  archivedAt  DateTime? @map("archived_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  question          Question           @relation("QuestionVersions", fields: [questionId], references: [id], onDelete: Cascade)
+  level             TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  domain            GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  observation       Observation?       @relation(fields: [observationId], references: [id], onDelete: SetNull)
+  source            Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  author            User?              @relation("QuestionVersionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewer          User?              @relation("QuestionVersionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  /// Set (by Question.currentPublishedVersionId) only while this is the live
+  /// version — the inverse side of that pointer.
+  currentForQuestion Question? @relation("CurrentPublishedVersion")
+
+  options           QuestionOption[]
+  caseStudyLinks    QuestionCaseStudyLink[]
+  attemptQuestions  ExamAttemptQuestion[]
+  duplicateFlagsAsA QuestionDuplicateFlag[] @relation("DuplicateFlagVersionA")
+  duplicateFlagsAsB QuestionDuplicateFlag[] @relation("DuplicateFlagVersionB")
+  /// Set only if this version originated from an accepted AI candidate.
+  aiCandidate       AiQuestionCandidate?
+
+  @@unique([questionId, versionNumber])
+  @@index([reviewStatus])
+  @@index([isActive])
+  @@index([type])
+  @@index([domainId])
+  @@index([levelId])
+  @@index([difficulty])
+  @@index([professionalRoleId])
+  @@index([learningObjectiveId])
+  @@index([observationId])
+  @@map("question_versions")
+}
+
+/// Join table: a question version may reference one or more case studies
+/// (Stage 6 spec §10 — "one or more"), never copying the case-study record.
+model QuestionCaseStudyLink {
+  questionVersionId String   @map("question_version_id") @db.Uuid
+  caseStudyId       String   @map("case_study_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  questionVersion QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Cascade)
+  caseStudy       CaseStudy       @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+
+  @@id([questionVersionId, caseStudyId])
+  @@index([caseStudyId])
+  @@map("question_case_study_links")
+}
+
+/// One answer option belonging to a specific question version.
+model QuestionOption {
+  id                String   @id @default(uuid()) @db.Uuid
+  questionVersionId String   @map("question_version_id") @db.Uuid
+  /// Display label, e.g. "A", "B", "C" — stable ordering within a version.
+  label             String
+  content           String
+  isCorrect         Boolean  @default(false) @map("is_correct")
+  explanation       String?
+  sortOrder         Int      @default(0) @map("sort_order")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  questionVersion    QuestionVersion       @relation(fields: [questionVersionId], references: [id], onDelete: Cascade)
+  selectedInAttempts ExamAttemptQuestion[]
+
+  @@unique([questionVersionId, label])
+  @@index([questionVersionId, isCorrect])
+  @@map("question_options")
+}
+
+/// A mechanically-detected potential duplicate between two (different
+/// questions') versions — never auto-resolved or auto-deleted (Stage 6
+/// spec §19). Future semantic duplicate detection extends this table rather
+/// than replacing it.
+model QuestionDuplicateFlag {
+  id             String             @id @default(uuid()) @db.Uuid
+  versionAId     String             @map("version_a_id") @db.Uuid
+  versionBId     String             @map("version_b_id") @db.Uuid
+  matchType      DuplicateMatchType @map("match_type")
+  detectedAt     DateTime           @default(now()) @map("detected_at") @db.Timestamptz(6)
+  resolvedAt     DateTime?          @map("resolved_at") @db.Timestamptz(6)
+  resolvedById   String?            @map("resolved_by_id") @db.Uuid
+  resolutionNote String?            @map("resolution_note")
+
+  versionA   QuestionVersion @relation("DuplicateFlagVersionA", fields: [versionAId], references: [id], onDelete: Cascade)
+  versionB   QuestionVersion @relation("DuplicateFlagVersionB", fields: [versionBId], references: [id], onDelete: Cascade)
+  resolvedBy User?           @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@unique([versionAId, versionBId, matchType])
+  @@index([versionBId])
+  @@map("question_duplicate_flags")
+}
+
+// ---------------------------------------------------------------------------
+// Exam blueprint
+// ---------------------------------------------------------------------------
+
+/// A named, versioned exam configuration for a training level.
+model ExamBlueprint {
+  id                  String        @id @default(uuid()) @db.Uuid
+  levelId             String        @map("level_id") @db.Uuid
+  name                String
+  description         String?
+  totalQuestions      Int           @default(20) @map("total_questions")
+  passingScorePercent Decimal       @default(80) @map("passing_score_percent") @db.Decimal(5, 2)
+  timeLimitMinutes    Int?          @map("time_limit_minutes")
+  maxAttempts         Int?          @map("max_attempts")
+  /// The single active blueprint an eligible learner is examined against for
+  /// a level. Enforced unique-per-level at the database level via a partial
+  /// unique index (see migration SQL) rather than here.
+  isDefault           Boolean       @default(false) @map("is_default")
+  version             Int           @default(1)
+  status              ContentStatus @default(DRAFT)
+  createdById         String?       @map("created_by_id") @db.Uuid
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  level     TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  createdBy User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  rules    ExamBlueprintRule[]
+  attempts ExamAttempt[]
+
+  @@index([levelId])
+  @@index([status])
+  @@map("exam_blueprints")
+}
+
+/// A single distribution rule within a blueprint (domain / difficulty /
+/// question-type / case-study proportion). The selection *engine* that
+/// consumes these rules is built in a later stage.
+model ExamBlueprintRule {
+  id            String            @id @default(uuid()) @db.Uuid
+  blueprintId   String            @map("blueprint_id") @db.Uuid
+  ruleType      BlueprintRuleType @map("rule_type")
+  domainId      String?           @map("domain_id") @db.Uuid
+  difficulty    DifficultyLevel?
+  questionType  QuestionType?     @map("question_type")
+  /// Absolute question count this rule targets (mutually exclusive in
+  /// practice with targetPercent — validated at the service layer).
+  targetCount   Int?              @map("target_count")
+  /// Percentage-of-exam alternative to targetCount.
+  targetPercent Decimal?          @map("target_percent") @db.Decimal(5, 2)
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  blueprint ExamBlueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
+  domain    GcpDomain?    @relation(fields: [domainId], references: [id], onDelete: SetNull)
+
+  @@index([blueprintId])
+  @@map("exam_blueprint_rules")
+}
+
+// ---------------------------------------------------------------------------
+// Exam attempts
+// ---------------------------------------------------------------------------
+
+/// One learner's sitting of an exam against a specific blueprint.
+model ExamAttempt {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  blueprintId    String            @map("blueprint_id") @db.Uuid
+  /// Denormalised for stable historical reporting even if the blueprint's
+  /// level assignment changes later.
+  levelId        String            @map("level_id") @db.Uuid
+  status         ExamAttemptStatus @default(IN_PROGRESS)
+  totalQuestions Int               @map("total_questions")
+  correctCount   Int?              @map("correct_count")
+  scorePercent   Decimal?          @map("score_percent") @db.Decimal(5, 2)
+  passed         Boolean?
+  startedAt      DateTime          @default(now()) @map("started_at") @db.Timestamptz(6)
+  expiresAt      DateTime?         @map("expires_at") @db.Timestamptz(6)
+  submittedAt    DateTime?         @map("submitted_at") @db.Timestamptz(6)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  blueprint ExamBlueprint @relation(fields: [blueprintId], references: [id], onDelete: Restrict)
+  level     TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Restrict)
+
+  questions   ExamAttemptQuestion[]
+  certificate Certificate?
+
+  @@index([userId])
+  @@index([status])
+  @@index([blueprintId])
+  @@map("exam_attempts")
+}
+
+/// One question served within one exam attempt, snapshotting order and the
+/// learner's answer. This is the exam-integrity audit trail for that attempt.
+model ExamAttemptQuestion {
+  id                String    @id @default(uuid()) @db.Uuid
+  attemptId         String    @map("attempt_id") @db.Uuid
+  /// The EXACT version served in this attempt — never the mutable "current"
+  /// question — so historical attempts stay reproducible even after later
+  /// edits (Stage 6 spec §8, "historical records must continue to reference
+  /// the exact question version used").
+  questionVersionId String    @map("question_version_id") @db.Uuid
+  /// Position the question was presented at within this attempt (randomised).
+  sortOrder         Int       @map("sort_order")
+  selectedOptionId  String?   @map("selected_option_id") @db.Uuid
+  isCorrect         Boolean?  @map("is_correct")
+  answeredAt        DateTime? @map("answered_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  attempt         ExamAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionVersion QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+  selectedOption  QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionVersionId])
+  @@index([questionVersionId])
+  @@map("exam_attempt_questions")
+}
+
+// ---------------------------------------------------------------------------
+// Certificates
+// ---------------------------------------------------------------------------
+
+model Certificate {
+  id                String            @id @default(uuid()) @db.Uuid
+  /// Public, human-shareable identifier used for verification lookups.
+  certificateNumber String            @unique @map("certificate_number")
+  userId            String            @map("user_id") @db.Uuid
+  programId         String            @map("program_id") @db.Uuid
+  levelId           String            @map("level_id") @db.Uuid
+  examAttemptId     String            @unique @map("exam_attempt_id") @db.Uuid
+  scorePercent      Decimal           @map("score_percent") @db.Decimal(5, 2)
+  issueDate         DateTime          @map("issue_date") @db.Date
+  expiryDate        DateTime          @map("expiry_date") @db.Date
+  status            CertificateStatus @default(ACTIVE)
+  revokedAt         DateTime?         @map("revoked_at") @db.Timestamptz(6)
+  revokedById       String?           @map("revoked_by_id") @db.Uuid
+  revocationReason  String?           @map("revocation_reason")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user        User            @relation("CertificateHolder", fields: [userId], references: [id], onDelete: Restrict)
+  program     TrainingProgram @relation(fields: [programId], references: [id], onDelete: Restrict)
+  level       TrainingLevel   @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  examAttempt ExamAttempt     @relation(fields: [examAttemptId], references: [id], onDelete: Restrict)
+  revokedBy   User?           @relation("CertificateRevokedBy", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiryDate])
+  @@map("certificates")
+}
+
+// ---------------------------------------------------------------------------
+// Learner profile, enrollment & progress (Stage 5)
+// ---------------------------------------------------------------------------
+
+/// Lifecycle of one learner's enrollment in a training level.
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+
+  @@map("enrollment_status")
+}
+
+/// Generic tri-state progress used for both module- and lesson-level tracking.
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+
+  @@map("progress_status")
+}
+
+/// The learner-editable profile, separate from `User` (identity/auth) so a
+/// learner can never touch identity/role/status fields through this table.
+model LearnerProfile {
+  id                      String   @id @default(uuid()) @db.Uuid
+  userId                  String   @unique @map("user_id") @db.Uuid
+  firstName               String?  @map("first_name")
+  lastName                String?  @map("last_name")
+  professionalDesignation String?  @map("professional_designation")
+  organization            String?
+  country                 String?
+  professionalRoleId      String?  @map("professional_role_id") @db.Uuid
+  yearsOfExperience       Int?     @map("years_of_experience")
+  /// The level the learner intends to enroll in next — a preference, not an
+  /// enrollment. Actual enrollment is tracked by {@link Enrollment}.
+  preferredLevelId        String?  @map("preferred_level_id") @db.Uuid
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professionalRole ProfessionalRole? @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  preferredLevel   TrainingLevel?    @relation(fields: [preferredLevelId], references: [id], onDelete: SetNull)
+
+  @@map("learner_profiles")
+}
+
+/// One learner's sitting of a training level. A new row is created for each
+/// retake cycle (`cycleNumber`) rather than overwriting history.
+model Enrollment {
+  id                     String           @id @default(uuid()) @db.Uuid
+  userId                 String           @map("user_id") @db.Uuid
+  programId              String           @map("program_id") @db.Uuid
+  levelId                String           @map("level_id") @db.Uuid
+  status                 EnrollmentStatus @default(ACTIVE)
+  /// 1 for the first attempt at this program+level, incremented per retake.
+  cycleNumber            Int              @default(1) @map("cycle_number")
+  enrolledAt             DateTime         @default(now()) @map("enrolled_at") @db.Timestamptz(6)
+  startedAt              DateTime?        @map("started_at") @db.Timestamptz(6)
+  completedAt            DateTime?        @map("completed_at") @db.Timestamptz(6)
+  lastActivityAt         DateTime         @default(now()) @map("last_activity_at") @db.Timestamptz(6)
+  /// Server-calculated (completed published lessons ÷ total published
+  /// lessons in the level) — never accepted from the client.
+  overallProgressPercent Decimal          @default(0) @map("overall_progress_percent") @db.Decimal(5, 2)
+  currentModuleId        String?          @map("current_module_id") @db.Uuid
+  currentLessonId        String?          @map("current_lesson_id") @db.Uuid
+  createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  program       TrainingProgram @relation(fields: [programId], references: [id], onDelete: Restrict)
+  level         TrainingLevel   @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  currentModule Module?         @relation("EnrollmentCurrentModule", fields: [currentModuleId], references: [id], onDelete: SetNull)
+  currentLesson Lesson?         @relation("EnrollmentCurrentLesson", fields: [currentLessonId], references: [id], onDelete: SetNull)
+
+  moduleProgress ModuleProgress[]
+  lessonProgress LessonProgress[]
+
+  @@unique([userId, programId, levelId, cycleNumber])
+  @@index([userId])
+  @@index([programId, levelId])
+  @@index([status])
+  @@map("enrollments")
+}
+
+/// Per-module progress within one enrollment.
+model ModuleProgress {
+  id              String         @id @default(uuid()) @db.Uuid
+  enrollmentId    String         @map("enrollment_id") @db.Uuid
+  moduleId        String         @map("module_id") @db.Uuid
+  status          ProgressStatus @default(NOT_STARTED)
+  firstAccessedAt DateTime?      @map("first_accessed_at") @db.Timestamptz(6)
+  lastAccessedAt  DateTime?      @map("last_accessed_at") @db.Timestamptz(6)
+  completedAt     DateTime?      @map("completed_at") @db.Timestamptz(6)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+
+  @@unique([enrollmentId, moduleId])
+  @@index([moduleId])
+  @@map("module_progress")
+}
+
+/// Per-lesson progress within one enrollment — the finest-grained,
+/// server-authoritative record completion is calculated from.
+model LessonProgress {
+  id              String         @id @default(uuid()) @db.Uuid
+  enrollmentId    String         @map("enrollment_id") @db.Uuid
+  lessonId        String         @map("lesson_id") @db.Uuid
+  status          ProgressStatus @default(NOT_STARTED)
+  firstAccessedAt DateTime?      @map("first_accessed_at") @db.Timestamptz(6)
+  lastAccessedAt  DateTime?      @map("last_accessed_at") @db.Timestamptz(6)
+  completedAt     DateTime?      @map("completed_at") @db.Timestamptz(6)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+
+  @@unique([enrollmentId, lessonId])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+// ---------------------------------------------------------------------------
+// AI content intelligence foundation (Stage 6B)
+//
+// Strictly additive to the Stage 6 question bank. The AI layer never writes
+// a Question/QuestionVersion directly - AiQuestionCandidate is a separate,
+// controlled authoring artifact. A candidate only ever reaches the real
+// question bank via AiCandidateConversionService, which calls the exact
+// same QuestionsService.create() path a human author uses, always landing
+// on a DRAFT QuestionVersion. See docs/ai-content-intelligence.md.
+// ---------------------------------------------------------------------------
+
+/// One call to an AI provider for a single content-authoring operation.
+/// This is the audit/provenance record - never the candidate content itself
+/// (see AiQuestionCandidate). The grounding context is a set of single,
+/// nullable FKs (mirroring QuestionVersion's own shape) so every generation
+/// is traceable back to real content-bank rows, never free-form text.
+model AiGenerationRun {
+  id                    String      @id @default(uuid()) @db.Uuid
+  operation             AiOperation
+  provider              String
+  model                 String
+  status                AiRunStatus @default(PENDING)
+  initiatedById         String      @map("initiated_by_id") @db.Uuid
+  startedAt             DateTime    @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt           DateTime?   @map("completed_at") @db.Timestamptz(6)
+  promptTemplateVersion String      @map("prompt_template_version")
+  groundingVersion      String      @map("grounding_version")
+  outputSchemaVersion   String      @map("output_schema_version")
+
+  sourceId            String? @map("source_id") @db.Uuid
+  sourceSection       String? @map("source_section")
+  caseStudyId         String? @map("case_study_id") @db.Uuid
+  observationId       String? @map("observation_id") @db.Uuid
+  learningObjectiveId String? @map("learning_objective_id") @db.Uuid
+  levelId             String? @map("level_id") @db.Uuid
+  moduleId            String? @map("module_id") @db.Uuid
+  professionalRoleId  String? @map("professional_role_id") @db.Uuid
+
+  /// The generation request options (question type, difficulty, count,
+  /// variant label, ...) - deliberately never the raw grounding narrative
+  /// itself, per the Stage 6B "log without unnecessarily storing raw
+  /// sensitive content" requirement.
+  requestParams Json    @default("{}") @map("request_params")
+  /// Structured output for operations that do not create AiQuestionCandidate
+  /// rows (CONCEPT_EXTRACTION, LEARNING_OBJECTIVE_GENERATION, ...). Left
+  /// null for QUESTION_GENERATION/QUESTION_VARIATION, whose output lives in
+  /// the candidate rows themselves rather than being duplicated here.
+  output        Json?   @map("output")
+  /// Normalised {promptTokens, completionTokens, totalTokens} when the
+  /// provider reports it; null for providers that do not.
+  tokenUsage    Json?   @map("token_usage")
+  latencyMs     Int?    @map("latency_ms")
+  errorCode     String? @map("error_code")
+  errorMessage  String? @map("error_message")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  initiatedBy       User               @relation(fields: [initiatedById], references: [id], onDelete: Restrict)
+  source            Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  caseStudy         CaseStudy?         @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
+  observation       Observation?       @relation(fields: [observationId], references: [id], onDelete: SetNull)
+  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  level             TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  module            Module?            @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+
+  candidates AiQuestionCandidate[]
+
+  @@index([operation])
+  @@index([status])
+  @@index([initiatedById])
+  @@index([createdAt])
+  @@map("ai_generation_runs")
+}
+
+/// One AI-generated candidate question - a controlled authoring artifact,
+/// NEVER itself a live QuestionVersion. ACCEPTED does not mean published:
+/// only an explicit conversion creates a real Question/QuestionVersion,
+/// always as DRAFT, recorded here via convertedQuestionId /
+/// convertedQuestionVersionId.
+model AiQuestionCandidate {
+  id     String            @id @default(uuid()) @db.Uuid
+  runId  String            @map("run_id") @db.Uuid
+  status AiCandidateStatus @default(GENERATED)
+
+  type         QuestionType
+  difficulty   DifficultyLevel @default(MEDIUM)
+  stem         String
+  instructions String?
+  explanation  String?
+  rationale    String?
+
+  levelId             String? @map("level_id") @db.Uuid
+  domainId            String? @map("domain_id") @db.Uuid
+  professionalRoleId  String? @map("professional_role_id") @db.Uuid
+  learningObjectiveId String? @map("learning_objective_id") @db.Uuid
+  sourceId            String? @map("source_id") @db.Uuid
+  sourceSection       String? @map("source_section")
+  observationId       String? @map("observation_id") @db.Uuid
+
+  /// Deterministic result from ai-output.validator.ts -
+  /// {valid, errors, warnings, checks}. Never trusted from the provider.
+  qualityReport  Json @default("{}") @map("quality_report")
+  /// Soft signals (evidenceCoverage, regulatoryGrounding, ...) - signals,
+  /// never a final approval decision.
+  qualitySignals Json @default("{}") @map("quality_signals")
+
+  reviewerId      String?   @map("reviewer_id") @db.Uuid
+  reviewedAt      DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  rejectionReason String?   @map("rejection_reason")
+
+  convertedQuestionId        String?   @unique @map("converted_question_id") @db.Uuid
+  convertedQuestionVersionId String?   @unique @map("converted_question_version_id") @db.Uuid
+  convertedAt                DateTime? @map("converted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  run                      AiGenerationRun    @relation(fields: [runId], references: [id], onDelete: Cascade)
+  level                    TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  domain                   GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  professionalRole         ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  learningObjective        LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  source                   Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  observation              Observation?       @relation(fields: [observationId], references: [id], onDelete: SetNull)
+  reviewer                 User?              @relation("AiCandidateReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  convertedQuestion        Question?          @relation(fields: [convertedQuestionId], references: [id], onDelete: SetNull)
+  convertedQuestionVersion QuestionVersion?   @relation(fields: [convertedQuestionVersionId], references: [id], onDelete: SetNull)
+
+  options        AiQuestionCandidateOption[]
+  caseStudyLinks AiQuestionCandidateCaseStudy[]
+
+  @@index([status])
+  @@index([runId])
+  @@index([levelId])
+  @@index([domainId])
+  @@map("ai_question_candidates")
+}
+
+/// One answer option belonging to an AI-generated candidate. Mirrors
+/// QuestionOption's shape but stays fully separate until conversion.
+model AiQuestionCandidateOption {
+  id          String  @id @default(uuid()) @db.Uuid
+  candidateId String  @map("candidate_id") @db.Uuid
+  label       String
+  content     String
+  isCorrect   Boolean @default(false) @map("is_correct")
+  explanation String?
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  candidate AiQuestionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, label])
+  @@map("ai_question_candidate_options")
+}
+
+/// Join table: an AI candidate may cite one or more case studies (mirrors
+/// QuestionCaseStudyLink).
+model AiQuestionCandidateCaseStudy {
+  candidateId String   @map("candidate_id") @db.Uuid
+  caseStudyId String   @map("case_study_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  candidate AiQuestionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  caseStudy CaseStudy           @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+
+  @@id([candidateId, caseStudyId])
+  @@index([caseStudyId])
+  @@map("ai_question_candidate_case_studies")
+}

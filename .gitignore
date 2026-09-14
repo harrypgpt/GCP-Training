@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/
+.nyc_output/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Prisma
+apps/api/prisma/*.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# Claude Code local (machine-specific) settings
+.claude/settings.local.json
+
+# Prisma generated client (regenerated on install / build)
+apps/api/src/generated/
+.prisma/

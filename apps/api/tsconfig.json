@@ -1,0 +1,14 @@
+{
+  "extends": "@gcp/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "rootDir": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "prisma/seed.ts"],
+  "exclude": ["node_modules", "dist"]
+}
