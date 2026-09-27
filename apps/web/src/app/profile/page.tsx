@@ -10,9 +10,11 @@ import {
 
 import { RequireAuth } from '@/components/auth/require-auth';
 import { AppShell } from '@/components/learner/app-shell';
+import { ErrorState } from '@/components/learner/error-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api';
 import { learnerApi } from '@/lib/learner-api';
 
@@ -70,9 +72,11 @@ function ProfileForm(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setError(null);
     Promise.all([
       learnerApi.getProfile(),
       learnerApi.getProfessionalRoles(),
@@ -107,7 +111,7 @@ function ProfileForm(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
 
   async function handleSubmit(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -141,11 +145,17 @@ function ProfileForm(): JSX.Element {
   }
 
   if (error && !profile) {
-    return <p className="text-sm text-danger">{error}</p>;
+    return (
+      <ErrorState
+        title="Profile unavailable"
+        description={error}
+        onRetry={() => setReloadToken((t) => t + 1)}
+      />
+    );
   }
 
   if (!profile || !form) {
-    return <p className="text-sm text-muted-foreground">Loading your profile…</p>;
+    return <SkeletonPage label="Loading your profile" />;
   }
 
   return (

@@ -1,0 +1,12 @@
+-- Gate 7B schema correction: while implementing exam-session creation, a
+-- pre-existing Stage 2 constraint was discovered that was missed during
+-- initial design - "exam_attempts_one_active_per_user" (from
+-- 20260905044505_stage2_partial_indexes) already enforces a STRICTER,
+-- platform-wide policy: only one IN_PROGRESS exam attempt per learner
+-- across the ENTIRE platform, not merely one per exam version. The
+-- narrower per-(user, exam version) partial index added earlier in this
+-- same gate is therefore redundant - the broader index already implies it.
+-- Dropping an index is non-destructive to data; the service layer (Gate 7B)
+-- now enforces the platform-wide policy explicitly and maps a conflicting
+-- concurrent exam to a distinct `ACTIVE_ATTEMPT_EXISTS` error.
+DROP INDEX "exam_attempts_one_in_progress_per_user_version";

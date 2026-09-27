@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-09-27T05:04:38.041Z",
+  "adminEmail": "data-import-admin@gcp-training.local",
+  "method": "real HTTP request via a real, validly-signed JWT (TokenService.signAccessToken), not a direct service call",
+  "dataIntegrity": {
+    "before": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "learningObjectives": 83,
+      "questions": 7,
+      "questionVersions": 7,
+      "aiQuestionCandidates": 28,
+      "exams": 0,
+      "examAttempts": 0,
+      "certificates": 0
+    },
+    "after": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "learningObjectives": 83,
+      "questions": 7,
+      "questionVersions": 7,
+      "aiQuestionCandidates": 28,
+      "exams": 0,
+      "examAttempts": 0,
+      "certificates": 0
+    },
+    "unchanged": true
+  },
+  "ichAuthority": {
+    "status": "SINGLE_AUTHORITATIVE_SOURCE",
+    "registeredSourceVersionCount": 1,
+    "distinctSourceCount": 1,
+    "sourceVersionIds": ["a6cbd729-f09c-42a9-a262-239d79ecc0a4"]
+  },
+  "curriculum": {
+    "totalIchSections": 11,
+    "mappedIchSections": 0,
+    "unmappedIchSections": 11,
+    "totalLearningObjectives": 83,
+    "mappedLearningObjectives": 0,
+    "unmappedLearningObjectives": 83
+  },
+  "questionBank": {
+    "totalQuestions": 7,
+    "byReviewStatus": {
+      "DRAFT": 7
+    },
+    "byQuestionGenerationType": {
+      "UNCLASSIFIED": 2,
+      "DIRECT_GCP": 2,
+      "CASE_APPLICATION": 3
+    },
+    "byDifficulty": {
+      "MEDIUM": 7
+    }
+  },
+  "normativeGrounding": {
+    "directGcpValid": 0,
+    "directGcpMissingGrounding": 0,
+    "caseApplicationValid": 0,
+    "caseApplicationMissingGrounding": 0
+  },
+  "duplicates": {
+    "byMatchType": {},
+    "unresolvedCount": 0,
+    "resolvedCount": 0
+  },
+  "blueprints": {
+    "total": 0,
+    "sufficient": 0,
+    "insufficient": 0,
+    "requiresReview": 0
+  },
+  "generationGaps": [],
+  "overallStatus": "PARTIALLY_READY"
+}

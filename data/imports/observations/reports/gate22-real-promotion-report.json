@@ -1,0 +1,45 @@
+{
+  "generatedAt": "2026-09-26T17:06:10.125Z",
+  "reviewerEmail": "gate16-reviewer@gcp-training.local",
+  "promotionMethod": "real HTTP request via a real, validly-signed JWT (TokenService.signAccessToken), not a direct service call",
+  "totalAttempted": 5,
+  "promoted": 5,
+  "failed": 0,
+  "results": [
+    {
+      "candidateId": "a68c0aa8-3d9a-4120-bb45-34fb1ea4ac9a",
+      "httpStatus": 201,
+      "questionId": "55c9b85c-fe35-4975-a3d1-df05ae098c78",
+      "questionCode": "GCP-Q-001180",
+      "reviewStatus": "DRAFT"
+    },
+    {
+      "candidateId": "df9553d4-9d55-4774-b73a-4565b8c28025",
+      "httpStatus": 201,
+      "questionId": "cc5bbb0c-9f11-481a-a6a7-42ce98b78d78",
+      "questionCode": "GCP-Q-001181",
+      "reviewStatus": "DRAFT"
+    },
+    {
+      "candidateId": "a52c043f-3714-46dd-85e1-302b92b465d6",
+      "httpStatus": 201,
+      "questionId": "10ef6469-abd4-4343-ad38-15da14bbbb02",
+      "questionCode": "GCP-Q-001182",
+      "reviewStatus": "DRAFT"
+    },
+    {
+      "candidateId": "a00a3745-c10b-436e-87f8-858b514f6785",
+      "httpStatus": 201,
+      "questionId": "6c1d83f4-7d2a-4d57-abcd-bd9a88d78465",
+      "questionCode": "GCP-Q-001183",
+      "reviewStatus": "DRAFT"
+    },
+    {
+      "candidateId": "99b1232e-0258-445a-b3b0-4bf4d8d5ad94",
+      "httpStatus": 201,
+      "questionId": "2ac88dcd-5d37-48ba-9110-feacfaabacaf",
+      "questionCode": "GCP-Q-001184",
+      "reviewStatus": "DRAFT"
+    }
+  ]
+}

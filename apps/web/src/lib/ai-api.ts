@@ -35,6 +35,40 @@ const generateQuestionResultSchema = z.object({
 });
 const paginatedRunsSchema = paginatedSchema(aiGenerationRunSchema);
 const paginatedCandidatesSchema = paginatedSchema(aiQuestionCandidateSchema);
+const qualityReviewResultSchema = z.object({
+  candidate: aiQuestionCandidateSchema,
+  duplicateOf: z.array(z.string()),
+  gateFailures: z.array(z.string()),
+});
+
+export type QualityDimensionValue = 'PASS' | 'FAIL' | 'REQUIRES_REVIEW' | 'NOT_APPLICABLE';
+
+export interface QualityReviewDimensionsInput {
+  normativeCorrectness: QualityDimensionValue;
+  normativeTraceability: QualityDimensionValue;
+  caseEvidenceTraceability: QualityDimensionValue;
+  singleBestAnswer: QualityDimensionValue;
+  distractorQuality: QualityDimensionValue;
+  clarity: QualityDimensionValue;
+  caseRealism: QualityDimensionValue;
+  evidenceBoundary: QualityDimensionValue;
+  unsupportedClaims: QualityDimensionValue;
+  trainingUsefulness: QualityDimensionValue;
+  difficulty: 'FOUNDATIONAL' | 'INTERMEDIATE' | 'ADVANCED';
+  cognitiveLevel: 'RECALL' | 'UNDERSTANDING' | 'APPLICATION' | 'ANALYSIS';
+}
+
+export interface SubmitQualityReviewInput {
+  decision: 'ACCEPT' | 'REJECT';
+  reviewComment: string;
+  dimensions: QualityReviewDimensionsInput;
+}
+
+export interface QualityReviewResult {
+  candidate: AiQuestionCandidateView;
+  duplicateOf: string[];
+  gateFailures: string[];
+}
 
 export interface RunListFilters {
   page?: number | undefined;
@@ -115,24 +149,18 @@ export const aiApi = {
     return authenticatedJson(AI_ROUTES.candidate(id), aiQuestionCandidateSchema);
   },
 
-  acceptCandidate(id: string): Promise<AiQuestionCandidateView> {
-    return authenticatedJson(AI_ROUTES.acceptCandidate(id), aiQuestionCandidateSchema, {
-      method: 'POST',
-    });
-  },
-
-  rejectCandidate(id: string, reason: string): Promise<AiQuestionCandidateView> {
-    return authenticatedJson(AI_ROUTES.rejectCandidate(id), aiQuestionCandidateSchema, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
-  },
-
   convertCandidate(id: string): Promise<{ id: string; code: string }> {
     return authenticatedJson(
       AI_ROUTES.convertCandidate(id),
       z.object({ id: z.string().uuid(), code: z.string() }).passthrough(),
       { method: 'POST' },
     );
+  },
+
+  submitQualityReview(id: string, dto: SubmitQualityReviewInput): Promise<QualityReviewResult> {
+    return authenticatedJson(AI_ROUTES.submitQualityReview(id), qualityReviewResultSchema, {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
   },
 };

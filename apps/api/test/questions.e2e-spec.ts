@@ -498,7 +498,13 @@ describe('Question bank (e2e)', () => {
       const objective = await request(app.getHttpServer())
         .post('/api/admin/learning-objectives')
         .set(...auth(adminToken))
-        .send({ lessonId: (lesson.body as { id: string }).id, description: 'Understand consent' })
+        .send({
+          code: `LO-E2E-QUESTIONS-${(lesson.body as { id: string }).id.slice(0, 8).toUpperCase()}`,
+          title: 'Understand consent',
+          lessonId: (lesson.body as { id: string }).id,
+          description: 'Understand consent',
+          sourceBasis: 'CURRICULUM_REQUIREMENT',
+        })
         .expect(201);
 
       const source = await request(app.getHttpServer())

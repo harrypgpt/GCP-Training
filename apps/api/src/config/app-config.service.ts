@@ -30,6 +30,12 @@ export class AppConfigService {
     return this.env.DATABASE_URL;
   }
 
+  /** Base URL of the learner-facing web app - used only to build the public
+   * certificate verification URL (Gate 8). */
+  get publicWebUrl(): string {
+    return this.env.PUBLIC_WEB_URL;
+  }
+
   get rateLimit(): { ttlMs: number; limit: number } {
     return {
       ttlMs: this.env.RATE_LIMIT_TTL_SECONDS * 1000,
@@ -97,6 +103,7 @@ export class AppConfigService {
     externalContentAllowed: boolean;
     maxRetries: number;
     openaiApiKey?: string;
+    geminiApiKey?: string;
   } {
     return {
       enabled: this.env.AI_ENABLED,
@@ -108,6 +115,7 @@ export class AppConfigService {
       externalContentAllowed: this.env.AI_EXTERNAL_CONTENT_ALLOWED,
       maxRetries: this.env.AI_MAX_RETRIES,
       ...(this.env.OPENAI_API_KEY ? { openaiApiKey: this.env.OPENAI_API_KEY } : {}),
+      ...(this.env.GEMINI_API_KEY ? { geminiApiKey: this.env.GEMINI_API_KEY } : {}),
     };
   }
 }

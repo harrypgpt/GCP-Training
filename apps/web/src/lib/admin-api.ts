@@ -4,6 +4,7 @@ import {
   duplicateFlagSchema,
   lookupItemSchema,
   paginatedSchema,
+  questionBankReadinessSummarySchema,
   questionDetailSchema,
   questionListItemSchema,
   questionPreviewSchema,
@@ -12,6 +13,7 @@ import {
   type CreateQuestionRequest,
   type DuplicateFlag,
   type LookupItem,
+  type QuestionBankReadinessSummary,
   type QuestionDetail,
   type QuestionListItem,
   type QuestionPreview,
@@ -74,18 +76,21 @@ const observationOptionSchema = z.object({
   observationCode: z.string(),
   description: z.string(),
 });
+const programOptionSchema = z.object({ id: z.string().uuid(), title: z.string() });
 
 export type LevelOption = z.infer<typeof levelOptionSchema>;
 export type ObjectiveOption = z.infer<typeof objectiveOptionSchema>;
 export type SourceOption = z.infer<typeof sourceOptionSchema>;
 export type CaseStudyOption = z.infer<typeof caseStudyOptionSchema>;
 export type ObservationOption = z.infer<typeof observationOptionSchema>;
+export type ProgramOption = z.infer<typeof programOptionSchema>;
 
 const paginatedLevelsSchema = paginatedSchema(levelOptionSchema);
 const paginatedObjectivesSchema = paginatedSchema(objectiveOptionSchema);
 const paginatedSourcesSchema = paginatedSchema(sourceOptionSchema);
 const paginatedCaseStudiesSchema = paginatedSchema(caseStudyOptionSchema);
 const paginatedObservationsSchema = paginatedSchema(observationOptionSchema);
+const paginatedProgramsSchema = paginatedSchema(programOptionSchema);
 
 /** Typed client for `/api/admin/questions/**` and the small lookup
  * endpoints it depends on. Every call carries the caller's access token;
@@ -102,6 +107,10 @@ export const adminApi = {
       `${ADMIN_QUESTION_ROUTES.list}${toQueryString({ ...filters })}`,
       paginatedQuestionListSchema,
     );
+  },
+
+  getQuestionBankReadiness(): Promise<QuestionBankReadinessSummary> {
+    return authenticatedJson(ADMIN_QUESTION_ROUTES.readiness, questionBankReadinessSummarySchema);
   },
 
   getQuestion(id: string): Promise<QuestionDetail> {
@@ -208,6 +217,13 @@ export const adminApi = {
     return authenticatedJson(
       `/api/admin/observations${toQueryString({ search, pageSize: 100 })}`,
       paginatedObservationsSchema,
+    );
+  },
+
+  listPrograms(search?: string): Promise<{ items: ProgramOption[] }> {
+    return authenticatedJson(
+      `/api/admin/programs${toQueryString({ search, pageSize: 100 })}`,
+      paginatedProgramsSchema,
     );
   },
 };

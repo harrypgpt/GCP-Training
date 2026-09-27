@@ -9,7 +9,7 @@ function makeConfig(enabled: boolean, externalContentAllowed: boolean): AppConfi
 describe('AiPolicyService', () => {
   it('throws AI_DISABLED when AI_ENABLED=false', () => {
     const config = makeConfig(false, false);
-    const providers = new AiProviderFactory(config, {} as never, {} as never);
+    const providers = new AiProviderFactory(config, {} as never, {} as never, {} as never);
     const policy = new AiPolicyService(config, providers);
 
     expect(() => policy.ensureEnabled()).toThrow(/disabled/i);
@@ -17,7 +17,7 @@ describe('AiPolicyService', () => {
 
   it('does not throw when AI is enabled', () => {
     const config = makeConfig(true, false);
-    const providers = new AiProviderFactory(config, {} as never, {} as never);
+    const providers = new AiProviderFactory(config, {} as never, {} as never, {} as never);
     const policy = new AiPolicyService(config, providers);
 
     expect(() => policy.ensureEnabled()).not.toThrow();
@@ -25,7 +25,7 @@ describe('AiPolicyService', () => {
 
   it('blocks an external provider when AI_EXTERNAL_CONTENT_ALLOWED=false', () => {
     const config = makeConfig(true, false);
-    const providers = new AiProviderFactory(config, {} as never, {} as never);
+    const providers = new AiProviderFactory(config, {} as never, {} as never, {} as never);
     const policy = new AiPolicyService(config, providers);
 
     expect(() => policy.ensureProviderAllowed('openai')).toThrow(/external/i);
@@ -33,7 +33,7 @@ describe('AiPolicyService', () => {
 
   it('allows an external provider when AI_EXTERNAL_CONTENT_ALLOWED=true', () => {
     const config = makeConfig(true, true);
-    const providers = new AiProviderFactory(config, {} as never, {} as never);
+    const providers = new AiProviderFactory(config, {} as never, {} as never, {} as never);
     const policy = new AiPolicyService(config, providers);
 
     expect(() => policy.ensureProviderAllowed('openai')).not.toThrow();
@@ -41,7 +41,7 @@ describe('AiPolicyService', () => {
 
   it('always allows the mock provider regardless of AI_EXTERNAL_CONTENT_ALLOWED', () => {
     const config = makeConfig(true, false);
-    const providers = new AiProviderFactory(config, {} as never, {} as never);
+    const providers = new AiProviderFactory(config, {} as never, {} as never, {} as never);
     const policy = new AiPolicyService(config, providers);
 
     expect(() => policy.ensureProviderAllowed('mock')).not.toThrow();

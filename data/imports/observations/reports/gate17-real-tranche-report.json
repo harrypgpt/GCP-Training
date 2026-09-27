@@ -1,0 +1,86 @@
+[
+  {
+    "caseStudyVersionId": "071276cf-8214-43a4-8516-d35e7b14407c",
+    "reason": "FDA Warning Letter - patient safety",
+    "reviewerDecision": null,
+    "publicationState": "NOT_PUBLISHED",
+    "observationCode": "OBS-FDA-WL-729750",
+    "domain": "Subject Safety & Adverse Event Reporting",
+    "runId": "5e39f88a-2f05-4e82-92af-5e69c3b372f6",
+    "candidateId": "bc53e6e7-06df-4e84-8e32-79abbb3dc1e0",
+    "candidateStatus": "VALIDATION_FAILED",
+    "provider": "mock",
+    "model": "mock-v1",
+    "promptTemplateVersion": "case-study-question-generation-v1",
+    "validationWarnings": [],
+    "validationErrors": [
+      "The question references a regulatory citation, but no source was supplied to support it."
+    ]
+  },
+  {
+    "caseStudyVersionId": "538022d1-bb1f-414a-a9ae-0eac454cac2a",
+    "reason": "Computerized system - practical evidence",
+    "reviewerDecision": null,
+    "publicationState": "NOT_PUBLISHED",
+    "observationCode": "OBS-OBK-AUDIT-000039",
+    "domain": "Computerized Systems & Electronic Records",
+    "runId": "efc6685c-5bb0-4af8-9c94-614788c567a0",
+    "candidateId": "1870eae3-1d7c-420c-b91c-e508e4ef7923",
+    "candidateStatus": "READY_FOR_REVIEW",
+    "provider": "mock",
+    "model": "mock-v1",
+    "promptTemplateVersion": "case-study-question-generation-v1",
+    "validationWarnings": [],
+    "validationErrors": []
+  },
+  {
+    "caseStudyVersionId": "94e99071-1ad3-4450-b257-585f529dff71",
+    "reason": "Practical/expert - quality assurance/CAPA",
+    "reviewerDecision": null,
+    "publicationState": "NOT_PUBLISHED",
+    "observationCode": "OBS-OBK-AUDIT-000005",
+    "domain": "Quality Assurance, Auditing & CAPA",
+    "runId": "5aff8fb1-0b5a-44ac-b5f8-39ed32a6de9b",
+    "candidateId": "fb5dcc50-ab68-4a06-b16b-a44b54ac37e1",
+    "candidateStatus": "READY_FOR_REVIEW",
+    "provider": "mock",
+    "model": "mock-v1",
+    "promptTemplateVersion": "case-study-question-generation-v1",
+    "validationWarnings": [],
+    "validationErrors": []
+  },
+  {
+    "caseStudyVersionId": "e252bdfe-76df-481a-b55a-4eb1d91666d4",
+    "reason": "Practical/expert - informed consent",
+    "reviewerDecision": null,
+    "publicationState": "NOT_PUBLISHED",
+    "observationCode": "OBS-OBK-CLINICAL-000334",
+    "domain": "Informed Consent",
+    "runId": "14bf5806-499a-40c1-9280-a6827b108899",
+    "candidateId": "7d5dcc00-e727-4e75-ba81-efce7d420b27",
+    "candidateStatus": "READY_FOR_REVIEW",
+    "provider": "mock",
+    "model": "mock-v1",
+    "promptTemplateVersion": "case-study-question-generation-v1",
+    "validationWarnings": [],
+    "validationErrors": []
+  },
+  {
+    "caseStudyVersionId": "d274bd84-fffd-43bf-8431-123070569503",
+    "reason": "FDA Warning Letter - data integrity (PUBLISHED)",
+    "reviewerDecision": null,
+    "publicationState": "NOT_PUBLISHED",
+    "observationCode": "OBS-FDA-WL-623671",
+    "domain": "Data Integrity",
+    "runId": "ef5d9ad0-e57f-4621-8112-9b16e584ac28",
+    "candidateId": "ed9c8c5e-a808-45cd-a19d-402d8642c9e3",
+    "candidateStatus": "VALIDATION_FAILED",
+    "provider": "mock",
+    "model": "mock-v1",
+    "promptTemplateVersion": "case-study-question-generation-v1",
+    "validationWarnings": [],
+    "validationErrors": [
+      "The question references a regulatory citation, but no source was supplied to support it."
+    ]
+  }
+]

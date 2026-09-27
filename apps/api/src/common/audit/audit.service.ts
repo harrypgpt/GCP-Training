@@ -28,9 +28,31 @@ export class AuditService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async record(input: RecordAuditEventInput): Promise<void> {
+  /**
+   * `tx` is optional and additive: omit it (as every existing caller does)
+   * and the write happens after-the-fact with errors swallowed, exactly as
+   * before - audit logging must never break the primary request flow once
+   * that flow has already committed. Pass a Prisma transaction client only
+   * when the caller needs the audit row to be part of the same atomic unit
+   * as another write; in that case an error here MUST propagate so the
+   * transaction rolls back both together, so it is deliberately not caught.
+   */
+  async record(input: RecordAuditEventInput, tx?: Prisma.TransactionClient): Promise<void> {
+    const client = tx ?? this.prisma;
+    if (tx) {
+      await client.auditLog.create({
+        data: {
+          action: input.action,
+          entity: input.entity,
+          entityId: input.entityId,
+          actorId: input.actorId ?? null,
+          metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+        },
+      });
+      return;
+    }
     try {
-      await this.prisma.auditLog.create({
+      await client.auditLog.create({
         data: {
           action: input.action,
           entity: input.entity,

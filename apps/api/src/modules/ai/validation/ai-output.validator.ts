@@ -28,7 +28,25 @@ const RATIONALE_REQUIRED_TYPES = new Set([
   'EVIDENCE_ASSESSMENT',
 ]);
 
-const CITATION_PATTERN = /\bICH\s?E\d|21\s?CFR|\bFDA\b|\bEMA\b|\bIRB\b|\bIEC\b guideline/i;
+// Exported (Gate 20 §13G) so the Gate 20 per-option distractor scan can
+// reuse the exact same citation/record-identifier logic rather than
+// re-implementing it a second place and risking the two drifting apart.
+export const CITATION_PATTERN = /\bICH\s?E\d|21\s?CFR|\bFDA\b|\bEMA\b|\bIRB\b|\bIEC\b guideline/i;
+
+/** Gate 18 §20: internal record identifiers (e.g. "OBS-FDA-WL-729750",
+ * "SPEC-INFORMED-CONSENT-001") are multi-segment, hyphen-joined, all-caps
+ * tokens - structurally distinct from how a real citation is ever written
+ * ("FDA", "21 CFR 312", "ICH E6(R3)", "FDA Form 483" never appear as part
+ * of a longer hyphenated code). Stripping these tokens BEFORE running
+ * `CITATION_PATTERN` makes the citation check token-aware: a citation
+ * keyword embedded in an identifier is never mistaken for an actual
+ * regulatory citation, while a genuine textual citation - hyphenated or
+ * not - is completely unaffected, since it never matches this shape. */
+const RECORD_IDENTIFIER_PATTERN = /\b[A-Z]{2,}(?:-[A-Z0-9]+){2,}\b/g;
+
+export function stripRecordIdentifiers(text: string): string {
+  return text.replace(RECORD_IDENTIFIER_PATTERN, '');
+}
 
 function normalize(text: string): string {
   return text.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -153,8 +171,12 @@ export function validateAiQuestionOutput(
   check('no_answer_leakage_in_stem', !leaked);
   if (leaked) errors.push('The correct option text appears verbatim in the stem or instructions.');
 
-  // 18. No unsupported citation (a regulation-style citation with no source grounding).
-  const textToScan = [output.stem, output.explanation ?? '', output.rationale ?? ''].join(' ');
+  // 18. No unsupported citation (a regulation-style citation with no source
+  // grounding). Record identifiers (e.g. "OBS-FDA-WL-729750") are stripped
+  // first so an internal code never counts as a citation (Gate 18 §20).
+  const textToScan = stripRecordIdentifiers(
+    [output.stem, output.explanation ?? '', output.rationale ?? ''].join(' '),
+  );
   const citesRegulation = CITATION_PATTERN.test(textToScan);
   check('no_unsupported_citation', !citesRegulation || !!context.source);
   if (citesRegulation && !context.source) {
@@ -189,6 +211,13 @@ export function validateAiQuestionOutput(
     knownLabels.length > 0
   ) {
     warnings.push('None of the claimed evidence references match the supplied grounding content.');
+  } else if (inventedEvidence.length > 0) {
+    // Gate 17 §13/§14: a PARTIALLY fabricated claim must never pass
+    // silently just because at least one real reference is also present -
+    // the backend, not the model, decides which claims are trustworthy.
+    warnings.push(
+      `${inventedEvidence.length} claimed evidence reference(s) could not be matched to the supplied grounding content.`,
+    );
   }
 
   // 20. Missing provenance overall (soft — mirrors Stage 6's own provenance warning).

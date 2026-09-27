@@ -1,0 +1,130 @@
+{
+  "generatedAt": "2026-09-26T08:35:18.647Z",
+  "reviewerEmail": "gate16-reviewer@gcp-training.local",
+  "reviewMethod": "real HTTP request via a real, validly-signed JWT (TokenService.signAccessToken), not a direct service call",
+  "totalReviewed": 17,
+  "accepted": 16,
+  "rejected": 1,
+  "failed": 0,
+  "results": [
+    {
+      "candidateId": "6b38fa71-dddf-4ad4-b1a3-6003f1eed80d",
+      "questionGenerationType": "DIRECT_GCP",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "a68c0aa8-3d9a-4120-bb45-34fb1ea4ac9a",
+      "questionGenerationType": "DIRECT_GCP",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "df9553d4-9d55-4774-b73a-4565b8c28025",
+      "questionGenerationType": "DIRECT_GCP",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "f7c18898-e0fe-488b-8bae-8956aa35e03c",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "a52c043f-3714-46dd-85e1-302b92b465d6",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "a00a3745-c10b-436e-87f8-858b514f6785",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "99b1232e-0258-445a-b3b0-4bf4d8d5ad94",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "65f120ca-d15d-4ce4-a603-39aac82dc758",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "e15ac41c-d37c-45c8-acd5-9123098bdfb4",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "e0511e0d-7197-4e8e-8b7a-8ec4ae254b66",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "71180a1b-5687-4762-937f-7826a92dbe04",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "a3a2b099-306c-4907-b57e-e25e89709a2c",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "dfa94759-358f-4a91-a78d-b7974070dca6",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "1bf10e9e-0f1c-4bff-81e0-a02779b87327",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "5a6f348a-5e3e-4f30-a2a7-0e4f89c44c31",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "8dfd1ac1-9f49-4df2-8509-b074bd3c447b",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "ACCEPT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "ACCEPTED"
+    },
+    {
+      "candidateId": "3353ba63-659f-419c-9173-cbead5f0b3b0",
+      "questionGenerationType": "CASE_APPLICATION",
+      "decisionSubmitted": "REJECT",
+      "httpStatus": 201,
+      "resultingCandidateStatus": "REJECTED"
+    }
+  ]
+}

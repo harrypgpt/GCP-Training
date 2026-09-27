@@ -65,16 +65,78 @@ enum AuditAction {
   QUESTION_PUBLISHED
   QUESTION_ARCHIVED
   QUESTION_VERSION_CREATED
+  EXAM_CREATED
+  EXAM_UPDATED
+  EXAM_VERSION_CREATED
+  EXAM_BLUEPRINT_CREATED
+  EXAM_BLUEPRINT_UPDATED
+  EXAM_BLUEPRINT_VALIDATED
+  EXAM_ACTIVATED
+  EXAM_DEACTIVATED
+  EXAM_ARCHIVED
+  EXAM_ATTEMPT_REOPENED
   AI_GENERATION_REQUESTED
   AI_GENERATION_SUCCEEDED
   AI_GENERATION_FAILED
   AI_CANDIDATE_ACCEPTED
   AI_CANDIDATE_REJECTED
   AI_CANDIDATE_CONVERTED
+  AI_CANDIDATE_QUALITY_REVIEWED
+  AI_CANDIDATE_PROMOTED_TO_QUESTION
   EXAM_STARTED
   EXAM_SUBMITTED
+  EXAM_EVALUATED
   CERTIFICATE_ISSUED
   CERTIFICATE_REVOKED
+  SOURCE_VERSION_CREATED
+  SOURCE_VERSION_METADATA_CHANGED
+  SOURCE_INGESTION_STARTED
+  SOURCE_INGESTION_COMPLETED
+  SOURCE_INGESTION_FAILED
+  SOURCE_VERSION_PUBLISHED
+  SOURCE_VERSION_ARCHIVED
+  OBSERVATION_VERSION_CREATED
+  OBSERVATION_VERSION_METADATA_CHANGED
+  OBSERVATION_VERSION_PUBLISHED
+  OBSERVATION_VERSION_ARCHIVED
+  OBSERVATION_CLASSIFICATION_CHANGED
+  OBSERVATION_DEIDENTIFICATION_CHANGED
+  OBSERVATION_AI_ELIGIBILITY_CHANGED
+  OBSERVATION_SOURCE_LINKAGE_CHANGED
+  OBSERVATION_IMPORT_BATCH_CREATED
+  OBSERVATION_IMPORT_BATCH_COMMITTED
+  OBSERVATION_IMPORT_BATCH_FAILED
+  OBSERVATION_CURATION_FIELD_CHANGED
+  OBSERVATION_CURATION_STATUS_CHANGED
+  OBSERVATION_CURATION_BULK_APPLIED
+  OBSERVATION_SOURCE_LINK_REVIEW_CREATED
+  OBSERVATION_SOURCE_LINK_REVIEW_DECIDED
+  OBSERVATION_TRAINING_INTERPRETATION_CREATED
+  OBSERVATION_TRAINING_INTERPRETATION_UPDATED
+  OBSERVATION_TRAINING_INTERPRETATION_STATUS_CHANGED
+  GCP_DOMAIN_CREATED
+  GCP_DOMAIN_UPDATED
+  GCP_DOMAIN_RETIRED
+  LEARNING_OBJECTIVE_CREATED
+  LEARNING_OBJECTIVE_UPDATED
+  LEARNING_OBJECTIVE_RETIRED
+  GCP_DOMAIN_ROLE_MAP_CHANGED
+  OBSERVATION_CURATION_PRIORITY_ASSIGNED
+  OBSERVATION_CURATION_CLAIMED
+  OBSERVATION_CURATION_CLAIM_RELEASED
+  CASE_STUDY_SPECIFICATION_CREATED
+  CASE_STUDY_SPECIFICATION_UPDATED
+  CASE_STUDY_GENERATION_REQUESTED
+  CASE_STUDY_GENERATION_COMPLETED
+  CASE_STUDY_GENERATION_FAILED
+  CASE_STUDY_VALIDATION_FAILED
+  CASE_STUDY_REVIEW_STARTED
+  CASE_STUDY_APPROVED
+  CASE_STUDY_REJECTED
+  CASE_STUDY_REVISION_REQUESTED
+  CASE_STUDY_PUBLISHED
+  CASE_STUDY_TRANCHE_SELECTED
+  CASE_STUDY_SPECIFICATION_VALIDATED
 
   @@map("audit_action")
 }
@@ -117,7 +179,11 @@ enum RiskCategory {
   @@map("risk_category")
 }
 
-/// Provenance category for a reference source.
+/// Provenance category for a reference source — WHAT KIND of document this
+/// is (its format/origin). Distinct from {@link SourceAuthority}, which is
+/// WHAT TRUST WEIGHT its statements carry — a WHITE_PAPER could in principle
+/// carry any authority level, so the two axes are kept independent rather
+/// than collapsed into one enum (Gate 10 spec §3).
 enum SourceType {
   REGULATION
   GUIDANCE
@@ -128,6 +194,357 @@ enum SourceType {
   OTHER
 
   @@map("source_type")
+}
+
+/// Gate 10: the trust/authority weight a piece of source evidence carries -
+/// the axis the future AI/question-authoring layer must never flatten away
+/// (spec §3). Deliberately a SEPARATE enum from {@link SourceType}: type is
+/// "what kind of document", authority is "how much regulatory weight do its
+/// statements carry" - e.g. an official regulator's own guidance document
+/// (OFFICIAL_GUIDANCE) is a different SourceType (GUIDANCE) but the same
+/// *kind* of authority question as a WHITE_PAPER that happens to restate
+/// binding regulation text.
+enum SourceAuthority {
+  AUTHORITATIVE_REGULATORY
+  OFFICIAL_GUIDANCE
+  SCIENTIFIC_LITERATURE
+  EDUCATIONAL_REFERENCE
+  INTERNAL_EDUCATIONAL
+  PROPRIETARY_EXPERIENCE
+
+  @@map("source_authority")
+}
+
+/// Gate 10 §13: how a SourceVersion's (or one of its sections') text was
+/// obtained. OCR output must never be silently trusted as exact regulatory
+/// text - callers can tell the two apart from this field alone.
+enum ExtractionMethod {
+  TEXT_LAYER
+  OCR
+  MANUAL
+  OTHER
+
+  @@map("extraction_method")
+}
+
+/// Gate 10 §13: extraction/ingestion quality state, independent of the
+/// editorial {@link ContentStatus} lifecycle - a section can be APPROVED
+/// editorially only once its extraction is trustworthy.
+enum ExtractionStatus {
+  PENDING
+  EXTRACTED
+  OCR_EXTRACTED
+  NEEDS_REVIEW
+  FAILED
+  APPROVED
+
+  @@map("extraction_status")
+}
+
+/// Gate 10 §46: structural role of one normalized content unit. Preserves
+/// enough shape to reconstruct meaning (e.g. a TABLE is never silently
+/// flattened into prose) without attempting real table-cell modelling.
+enum SourceSectionType {
+  HEADING
+  PARAGRAPH
+  LIST
+  TABLE
+  NOTE
+  FOOTNOTE
+  DEFINITION
+  ANNEX
+  CROSS_REFERENCE
+  OTHER
+
+  @@map("source_section_type")
+}
+
+/// Gate 10 §17/§25: explicit, evidence-based relationships between two
+/// source versions. Never inferred automatically - a relationship row must
+/// be deliberately recorded by an admin.
+enum SourceRelationType {
+  SUPERSEDES
+  REFERENCES
+  RELATED_TO
+  IMPLEMENTS
+  INTERPRETS
+
+  @@map("source_relation_type")
+}
+
+/// Gate 10 §25: distribution boundary, independent of {@link
+/// ExternalAiEligibility} (which governs sending content to an AI provider,
+/// not to other humans/systems). Conservative default - a source stored in
+/// this system is NOT automatically publicly redistributable.
+enum SourceAccessRestriction {
+  INTERNAL_KNOWLEDGE_ONLY
+  PUBLIC_REDISTRIBUTION_PERMITTED
+
+  @@map("source_access_restriction")
+}
+
+// ---------------------------------------------------------------------------
+// Gate 11 — real-world GCP observation knowledge foundation
+// ---------------------------------------------------------------------------
+
+/// Gate 11 §3: what KIND of real-world observation this is. Distinct from
+/// {@link ObservationEvidenceClass} (§4 - how much evidentiary weight it
+/// carries) exactly as {@link SourceType}/{@link SourceAuthority} are kept
+/// separate in Gate 10.
+enum ObservationType {
+  FDA_483_OBSERVATION
+  INSPECTION_OBSERVATION
+  AUDIT_OBSERVATION
+  PROPRIETARY_OBSERVATION
+  CLINICAL_OPERATIONS_OBSERVATION
+  /// Gate 12 §5/§6/§9: an FDA Warning Letter is a distinct, more severe
+  /// legal enforcement document than a Form 483 - conflating the two would
+  /// misrepresent what kind of evidence this is, so it gets its own value
+  /// rather than reusing FDA_483_OBSERVATION.
+  FDA_WARNING_LETTER_OBSERVATION
+  OTHER
+
+  @@map("observation_type")
+}
+
+/// Gate 11 §4: the evidentiary weight an observation carries - never
+/// confused with regulatory {@link SourceAuthority}. An observation is
+/// always evidence of what was SEEN in practice, never itself an
+/// authoritative regulatory statement.
+enum ObservationEvidenceClass {
+  INSPECTION_EVIDENCE
+  AUDIT_EVIDENCE
+  PRACTICAL_EXPERIENCE
+  INTERNAL_EDUCATIONAL_EVIDENCE
+
+  @@map("observation_evidence_class")
+}
+
+/// Gate 11 §10/§11: a controlled de-identification review state - distinct
+/// from {@link ExternalAiEligibility} (§9/§31): "safe to keep internally"
+/// and "safe to send to an external AI provider" are different decisions,
+/// both required before any external use. Never claims automatic PII
+/// detection - human review remains authoritative (§11).
+enum DeIdentificationStatus {
+  NOT_REVIEWED
+  REVIEW_REQUIRED
+  DE_IDENTIFIED
+  APPROVED_FOR_INTERNAL_USE
+  APPROVED_FOR_EXTERNAL_AI
+
+  @@map("de_identification_status")
+}
+
+/// Gate 11 §18: NOT_ASSESSED is the honest default - severity is never
+/// fabricated from observation text without documented or reviewed basis.
+enum ObservationSeverity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+  NOT_ASSESSED
+
+  @@map("observation_severity")
+}
+
+/// Gate 11 §17: structured risk dimensions, stored as a native array on
+/// {@link ObservationVersion} - deliberately not a single arbitrary "risk
+/// score" (no objective methodology exists for one).
+enum ObservationRiskDimension {
+  PATIENT_SAFETY
+  DATA_INTEGRITY
+  REGULATORY_COMPLIANCE
+  PROTOCOL_COMPLIANCE
+  PRODUCT_QUALITY
+  OPERATIONAL
+  DOCUMENTATION
+  PRIVACY
+  COMPUTERIZED_SYSTEM
+  OTHER
+
+  @@map("observation_risk_dimension")
+}
+
+/// Gate 11 §19: category of root cause, where documented or responsibly
+/// inferred for training purposes - see {@link RootCauseBasis} for which.
+enum RootCauseCategory {
+  TRAINING
+  PROCESS
+  SYSTEM
+  PEOPLE
+  GOVERNANCE
+  DOCUMENTATION
+  COMMUNICATION
+  VENDOR
+  RESOURCE
+  UNKNOWN
+
+  @@map("root_cause_category")
+}
+
+/// Gate 11 §19: whether a root-cause category was stated in the original
+/// evidence or is a training-only inference - never presented as the same
+/// thing.
+enum RootCauseBasis {
+  DOCUMENTED
+  TRAINING_INFERENCE
+
+  @@map("root_cause_basis")
+}
+
+/// Gate 11 §20: three genuinely different kinds of "what should happen
+/// next" - a documented CAPA is not the same claim as training guidance or
+/// a best-practice recommendation, and the model must never blur them.
+enum ExpectedActionBasis {
+  DOCUMENTED_CORRECTIVE_ACTION
+  TRAINING_EXPECTED_ACTION
+  RECOMMENDED_BEST_PRACTICE
+
+  @@map("expected_action_basis")
+}
+
+/// Gate 11 §21: CAPA implementation status, only ever recorded when the
+/// source evidence actually documents it.
+enum CapaStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+  NOT_APPLICABLE
+
+  @@map("capa_status")
+}
+
+/// Gate 11 §42: lifecycle of one observation import batch.
+enum ImportBatchStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  PARTIAL
+  FAILED
+  CANCELLED
+
+  @@map("import_batch_status")
+}
+
+/// Gate 11 §41/§43: per-row outcome within one import batch.
+enum ImportRowStatus {
+  VALID
+  INVALID
+  DUPLICATE
+  CREATED
+  FAILED
+
+  @@map("import_row_status")
+}
+
+/// Gate 12 §11: how confident/traceable a normalized classification
+/// decision is, recorded per classified dimension (observationType,
+/// evidenceClass, severity, professionalRole, domain, ...) in
+/// {@link ObservationVersion.classificationBasis}. Deliberately explicit
+/// rather than hidden inference - SOURCE_EXPLICIT (the source data stated
+/// it), DETERMINISTIC_MAPPING (a fixed, reviewable lookup rule produced
+/// it), HUMAN_REVIEW_REQUIRED (a human must decide), or UNMAPPED (no
+/// reliable signal existed - left unset rather than guessed).
+enum ClassificationBasis {
+  SOURCE_EXPLICIT
+  DETERMINISTIC_MAPPING
+  HUMAN_REVIEW_REQUIRED
+  /// Gate 13 §8/§11: an authorized reviewer has now explicitly made this
+  /// classification decision - distinct from HUMAN_REVIEW_REQUIRED, which
+  /// only flags that a decision is still pending.
+  HUMAN_CURATED
+  UNMAPPED
+
+  @@map("classification_basis")
+}
+
+// ---------------------------------------------------------------------------
+// Gate 13 — observation knowledge curation, domain/role mapping &
+// learning-objective readiness
+//
+// This gate never edits original evidence (ObservationVersion.originalText/
+// rawSourceFields/provenance are untouched) and never bypasses Gate 11's
+// publish-immutability rule (curation writes are rejected once a version is
+// PUBLISHED/ARCHIVED, exactly like any other ObservationVersion edit - see
+// ObservationCurationService.assertEditable). It is a HUMAN-IN-THE-LOOP
+// layer: nothing here auto-generates a domain, role, learning objective,
+// case study, or question - see docs/observation-knowledge-curation.md.
+// ---------------------------------------------------------------------------
+
+/// Gate 13 §17/§18: whether a candidate regulatory/source citation found in
+/// an observation's raw text (e.g. "21 CFR 312.60") has been verified
+/// against an actual Source/SourceVersion/SourceSection. Never inferred
+/// from pattern matching alone - NOT_LINKED is the default, honest state.
+enum SourceLinkReviewStatus {
+  VERIFIED
+  HUMAN_REVIEW_REQUIRED
+  NOT_LINKED
+
+  @@map("source_link_review_status")
+}
+
+/// Gate 13 §21: how (or whether) an observation was matched to an EXISTING
+/// LearningObjective - this gate never generates a new one.
+enum LearningObjectiveMatchType {
+  EXACT_EXISTING_MATCH
+  CURATED_MATCH
+  HUMAN_REVIEW_REQUIRED
+  NO_MATCH
+
+  @@map("learning_objective_match_type")
+}
+
+/// Gate 13 §23/§24/§25: one shared readiness vocabulary for case-study,
+/// question-generation, and training-use readiness - the field name itself
+/// (not the enum value) says which dimension is being assessed, so
+/// APPROVED never needs a redundant per-dimension label.
+enum ReadinessStatus {
+  NOT_ASSESSED
+  NOT_SUITABLE
+  CANDIDATE
+  APPROVED
+
+  @@map("readiness_status")
+}
+
+/// Gate 13 §27: the curation lifecycle - orthogonal to (and independent of)
+/// ObservationVersion.reviewStatus (the existing Gate 11 DRAFT/REVIEW/
+/// APPROVED/PUBLISHED/ARCHIVED publish-authority lifecycle). A version can
+/// be fully CURATED while still DRAFT for publishing purposes.
+enum CurationWorkflowStatus {
+  IMPORTED
+  CURATION_REQUIRED
+  IN_REVIEW
+  CURATED
+  APPROVED
+
+  @@map("curation_workflow_status")
+}
+
+/// Gate 14 §23/§24: deterministic curation-workflow prioritization tiers -
+/// a scheduling aid for human reviewers, never a quality or AI confidence
+/// score. See ObservationCurationPriorityService for the exact, documented
+/// deterministic rules that assign each tier.
+enum CurationPriorityTier {
+  PRIORITY_1
+  PRIORITY_2
+  PRIORITY_3
+
+  @@map("curation_priority_tier")
+}
+
+/// Gate 13 §19/§20: which practical question a training interpretation
+/// answers - never itself presented as original evidence or a regulatory
+/// requirement.
+enum TrainingInterpretationType {
+  PRACTICAL_LESSON
+  RISK_EXPLANATION
+  VERIFICATION_GUIDANCE
+  PROFESSIONAL_ACTION
+  GENERAL
+
+  @@map("training_interpretation_type")
 }
 
 /// Pedagogical shape of a question. Mirrors the QUESTION ENGINE spec exactly.
@@ -178,6 +595,8 @@ enum AiOperation {
   QUESTION_VARIATION
   QUALITY_REVIEW
   DUPLICATE_ANALYSIS
+  /// Gate 15: knowledge-to-scenario case-study candidate generation.
+  CASE_STUDY_GENERATION
 
   @@map("ai_operation")
 }
@@ -207,24 +626,67 @@ enum AiCandidateStatus {
   @@map("ai_candidate_status")
 }
 
-/// Lifecycle of a single learner exam session.
+/// Gate 18 §4: the two, deliberately non-mixable question-generation
+/// categories - DIRECT_GCP is grounded solely in ICH E6(R3); CASE_APPLICATION
+/// presents a real-world scenario but its answer/rationale must still be
+/// grounded in ICH E6(R3).
+enum QuestionGenerationType {
+  DIRECT_GCP
+  CASE_APPLICATION
+
+  @@map("question_generation_type")
+}
+
+/// Gate 18 §1/§5: the ONLY normative GCP training authority this platform
+/// recognises. A single-value enum today so that adding a future normative
+/// source is an explicit, reviewable schema change, never a silent string.
+enum NormativeSource {
+  ICH_E6_R3
+
+  @@map("normative_source")
+}
+
+/// Gate 18 §5: controlled vocabulary for a CASE_APPLICATION question's
+/// scenario provenance category - deterministically derived from the real
+/// observation's own ObservationType/evidenceClass, never an independent AI
+/// classification. NONE is used for a DIRECT_GCP question (no scenario).
+enum QuestionScenarioSourceType {
+  NONE
+  FDA_WARNING_LETTER
+  FDA_483
+  PRACTICAL_OBSERVATION
+  EXPERT_OBSERVATION
+  OTHER_APPROVED_CASE_EVIDENCE
+
+  @@map("question_scenario_source_type")
+}
+
+/// Lifecycle of a single learner exam session. PASSED/FAILED are established
+/// now as the future-scoring foundation (Gate 7B spec) but are never set by
+/// any Gate 7B code path - no scoring exists yet. ABANDONED already serves
+/// the "learner cancelled" role, so no separate CANCELLED value was added.
 enum ExamAttemptStatus {
   IN_PROGRESS
   SUBMITTED
+  PASSED
+  FAILED
   EXPIRED
   ABANDONED
 
   @@map("exam_attempt_status")
 }
 
-/// What an exam-blueprint rule constrains question selection by.
-enum BlueprintRuleType {
-  DOMAIN_DISTRIBUTION
-  DIFFICULTY_DISTRIBUTION
-  QUESTION_TYPE_DISTRIBUTION
-  CASE_STUDY_PROPORTION
+/// Lifecycle of one versioned examination configuration (Stage 7A). Distinct
+/// from ContentStatus - examination configuration is never "reviewed" the
+/// same way editorial content is; "active" instead means "eligible to
+/// eventually be started by a learner" once the attempt engine exists.
+enum ExamVersionStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
 
-  @@map("blueprint_rule_type")
+  @@map("exam_version_status")
 }
 
 /// Certificate lifecycle. Default validity is one year from issue.
@@ -265,22 +727,39 @@ model User {
   otpChallenges          OtpChallenge[]
   refreshTokens          RefreshToken[]
 
-  createdPrograms           TrainingProgram[]
-  createdLevels             TrainingLevel[]
-  createdModules            Module[]
-  createdLessons            Lesson[]
-  createdLearningObjectives LearningObjective[]
-  createdSources            Source[]
-  createdCaseStudies        CaseStudy[]
-  createdObservations       Observation[]
-  createdBlueprints         ExamBlueprint[]
+  createdPrograms                   TrainingProgram[]
+  createdLevels                     TrainingLevel[]
+  createdModules                    Module[]
+  createdLessons                    Lesson[]
+  createdLearningObjectives         LearningObjective[]
+  createdDomainRoleMapEntries       GcpDomainRoleMap[]
+  createdSources                    Source[]
+  createdSourceVersions             SourceVersion[]
+  createdSourceVersionRelationships SourceVersionRelationship[]
+  createdCaseStudies                CaseStudy[]
+  createdObservations               Observation[]
+  createdObservationVersions        ObservationVersion[]
+  claimedObservationVersions        ObservationVersion[]                 @relation("ObservationVersionCurationClaim")
+  initiatedObservationImportBatches ObservationImportBatch[]
+  curatedObservationRoles           ObservationVersionProfessionalRole[]
+  observationCurationHistory        ObservationCurationHistory[]
+  observationSourceLinkReviews      ObservationSourceLinkReview[]
+  createdTrainingInterpretations    ObservationTrainingInterpretation[]
+  createdExams                      Exam[]
+  createdExamVersions               ExamVersion[]
+  createdExamBlueprints             ExamBlueprint[]
+  createdCaseStudySpecifications    CaseStudySpecification[]
+  createdCaseStudyTranches          CaseStudyTranche[]
+  createdCaseStudyVersions          CaseStudyVersion[]                   @relation("CaseStudyVersionCreatedBy")
+  reviewedCaseStudyVersions         CaseStudyVersion[]                   @relation("CaseStudyVersionReviewer")
 
   authoredQuestionVersions QuestionVersion[]       @relation("QuestionVersionAuthor")
   reviewedQuestionVersions QuestionVersion[]       @relation("QuestionVersionReviewer")
   resolvedDuplicateFlags   QuestionDuplicateFlag[]
 
-  initiatedAiRuns      AiGenerationRun[]
-  reviewedAiCandidates AiQuestionCandidate[] @relation("AiCandidateReviewer")
+  initiatedAiRuns           AiGenerationRun[]
+  reviewedAiCandidates      AiQuestionCandidate[]      @relation("AiCandidateReviewer")
+  aiCandidateQualityReviews AiCandidateQualityReview[]
 
   examAttempts        ExamAttempt[]
   certificates        Certificate[] @relation("CertificateHolder")
@@ -434,17 +913,46 @@ model GcpDomain {
   code        String   @unique
   name        String
   description String?
+  /// Gate 14 §8: display ordering for the taxonomy admin UI - purely
+  /// cosmetic, never used for any classification/matching logic.
+  sortOrder   Int      @default(0) @map("sort_order")
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  caseStudies       CaseStudy[]
-  observations      Observation[]
-  questionVersions  QuestionVersion[]
-  ExamBlueprintRule ExamBlueprintRule[]
-  aiCandidates      AiQuestionCandidate[]
+  caseStudies             CaseStudy[]
+  observations            Observation[]
+  questionVersions        QuestionVersion[]
+  examBlueprintRules      ExamBlueprintRule[]
+  aiCandidates            AiQuestionCandidate[]
+  observationVersions     ObservationVersion[]
+  learningObjectives      LearningObjective[]
+  roleMapEntries          GcpDomainRoleMap[]
+  caseStudySpecifications CaseStudySpecification[]
+  caseStudyVersions       CaseStudyVersion[]
 
   @@map("gcp_domains")
+}
+
+/// Gate 14 §11: a deterministic reference view of which professional roles
+/// commonly interact with which GCP domain. Explicitly NOT a permission
+/// system and never implies a role exclusively owns a domain's regulatory
+/// responsibility - purely a curated navigational/training aid.
+model GcpDomainRoleMap {
+  id                 String   @id @default(uuid()) @db.Uuid
+  domainId           String   @map("domain_id") @db.Uuid
+  professionalRoleId String   @map("professional_role_id") @db.Uuid
+  rationale          String?
+  createdById        String?  @map("created_by_id") @db.Uuid
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  domain           GcpDomain        @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  professionalRole ProfessionalRole @relation(fields: [professionalRoleId], references: [id], onDelete: Cascade)
+  createdBy        User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([domainId, professionalRoleId])
+  @@index([professionalRoleId])
+  @@map("gcp_domain_role_map")
 }
 
 /// A clinical-research professional role a case study/question targets
@@ -459,11 +967,17 @@ model ProfessionalRole {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  caseStudies      CaseStudy[]
-  questionVersions QuestionVersion[]
-  learnerProfiles  LearnerProfile[]
-  aiGenerationRuns AiGenerationRun[]
-  aiCandidates     AiQuestionCandidate[]
+  caseStudies                 CaseStudy[]
+  questionVersions            QuestionVersion[]
+  learnerProfiles             LearnerProfile[]
+  aiGenerationRuns            AiGenerationRun[]
+  aiCandidates                AiQuestionCandidate[]
+  examBlueprintRules          ExamBlueprintRule[]
+  observationVersionLinks     ObservationVersionProfessionalRole[]
+  domainMapEntries            GcpDomainRoleMap[]
+  learningObjectiveLinks      LearningObjectiveProfessionalRole[]
+  caseStudySpecificationLinks CaseStudySpecificationProfessionalRole[]
+  caseStudyVersionLinks       CaseStudyVersionProfessionalRole[]
 
   @@map("professional_roles")
 }
@@ -499,6 +1013,7 @@ model TrainingProgram {
   levels       TrainingLevel[]
   certificates Certificate[]
   enrollments  Enrollment[]
+  exams        Exam[]
 
   @@index([reviewStatus])
   @@map("training_programs")
@@ -507,30 +1022,36 @@ model TrainingProgram {
 /// A configurable difficulty/track tier within a program (e.g. Foundation,
 /// Advanced). Levels are data, never hard-coded into application logic.
 model TrainingLevel {
-  id           String        @id @default(uuid()) @db.Uuid
-  programId    String        @map("program_id") @db.Uuid
-  code         String
-  name         String
-  description  String?
-  sortOrder    Int           @default(0) @map("sort_order")
-  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
-  version      Int           @default(1)
-  createdById  String?       @map("created_by_id") @db.Uuid
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                        String        @id @default(uuid()) @db.Uuid
+  programId                 String        @map("program_id") @db.Uuid
+  code                      String
+  name                      String
+  description               String?
+  sortOrder                 Int           @default(0) @map("sort_order")
+  reviewStatus              ContentStatus @default(DRAFT) @map("review_status")
+  version                   Int           @default(1)
+  /// Gate 8: how long a certificate earned at this level remains valid,
+  /// in whole months from issuance. Configurable per level (a future admin
+  /// UI may expose this; no such UI exists yet, so every level uses the
+  /// default). Read by CertificatesService - never hard-coded per issuance.
+  certificateValidityMonths Int           @default(12) @map("certificate_validity_months")
+  createdById               String?       @map("created_by_id") @db.Uuid
+  createdAt                 DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   program   TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
   createdBy User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
-  modules          Module[]
-  questionVersions QuestionVersion[]
-  blueprints       ExamBlueprint[]
-  attempts         ExamAttempt[]
-  certificates     Certificate[]
-  enrollments      Enrollment[]
-  preferredBy      LearnerProfile[]
-  aiGenerationRuns AiGenerationRun[]
-  aiCandidates     AiQuestionCandidate[]
+  modules            Module[]
+  questionVersions   QuestionVersion[]
+  examVersions       ExamVersion[]
+  examBlueprintRules ExamBlueprintRule[]
+  attempts           ExamAttempt[]
+  certificates       Certificate[]
+  enrollments        Enrollment[]
+  preferredBy        LearnerProfile[]
+  aiGenerationRuns   AiGenerationRun[]
+  aiCandidates       AiQuestionCandidate[]
 
   @@unique([programId, code])
   @@index([reviewStatus])
@@ -592,27 +1113,84 @@ model Lesson {
 }
 
 /// A discrete learning objective a lesson is meant to achieve.
-model LearningObjective {
-  id           String        @id @default(uuid()) @db.Uuid
-  lessonId     String        @map("lesson_id") @db.Uuid
-  description  String
-  sortOrder    Int           @default(0) @map("sort_order")
-  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
-  version      Int           @default(1)
-  createdById  String?       @map("created_by_id") @db.Uuid
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+/// Gate 14 §16: how a LearningObjective's need was established - so an
+/// expert-curated training requirement is never displayed as if it were an
+/// authoritative regulatory mandate.
+enum LearningObjectiveSourceBasis {
+  AUTHORITATIVE_SOURCE
+  OBSERVATION_EVIDENCE
+  CURRICULUM_REQUIREMENT
+  EXPERT_CURATED_TRAINING_REQUIREMENT
 
-  lesson           Lesson                @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  createdBy        User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  caseStudies      CaseStudy[]
-  questionVersions QuestionVersion[]
-  aiGenerationRuns AiGenerationRun[]
-  aiCandidates     AiQuestionCandidate[]
+  @@map("learning_objective_source_basis")
+}
+
+model LearningObjective {
+  id           String                       @id @default(uuid()) @db.Uuid
+  /// Gate 14 §14: stable machine-readable code, e.g. "LO-PROTOCOL-001".
+  /// Independent of `lessonId` below, which remains optional since the
+  /// curriculum lesson tree (Gate 4) is not yet authored in this
+  /// environment - an objective is tied to a GCP domain first and a lesson
+  /// only once curriculum content actually exists for it.
+  code         String                       @unique
+  title        String
+  /// The observable/assessable learner action (Gate 14 §13/§15) - never a
+  /// vague "understand X" statement unless required by pre-existing
+  /// curriculum content.
+  description  String
+  /// Gate 14 §7: optional free-text subdomain label within `domainId` -
+  /// deliberately not a separate GcpTopic table, since the existing
+  /// GcpDomain granularity was found sufficient (see docs).
+  topic        String?
+  domainId     String?                      @map("domain_id") @db.Uuid
+  /// Nullable: Gate 4's Lesson/Module/TrainingLevel/TrainingProgram tree has
+  /// zero authored rows in this environment (verified by inspection) - an
+  /// objective is never fabricated a fake lesson home just to satisfy this
+  /// FK. Once real curriculum content exists, an author can attach it here.
+  lessonId     String?                      @map("lesson_id") @db.Uuid
+  sourceBasis  LearningObjectiveSourceBasis @map("source_basis")
+  rationale    String?
+  difficulty   DifficultyLevel?
+  sortOrder    Int                          @default(0) @map("sort_order")
+  reviewStatus ContentStatus                @default(DRAFT) @map("review_status")
+  version      Int                          @default(1)
+  createdById  String?                      @map("created_by_id") @db.Uuid
+  createdAt    DateTime                     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  lesson                  Lesson?                             @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  domain                  GcpDomain?                          @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  createdBy               User?                               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  caseStudies             CaseStudy[]
+  questionVersions        QuestionVersion[]
+  aiGenerationRuns        AiGenerationRun[]
+  aiCandidates            AiQuestionCandidate[]
+  examBlueprintRules      ExamBlueprintRule[]
+  observationVersions     ObservationVersion[]
+  professionalRoles       LearningObjectiveProfessionalRole[]
+  caseStudySpecifications CaseStudySpecification[]
+  caseStudyVersions       CaseStudyVersion[]
+  caseStudyEvidenceRefs   CaseStudyEvidenceReference[]
 
   @@index([lessonId])
+  @@index([domainId])
   @@index([reviewStatus])
   @@map("learning_objectives")
+}
+
+/// Join table: a LearningObjective may apply to one or more professional
+/// roles (Gate 14 §14) - curriculum applicability, never a permission grant.
+model LearningObjectiveProfessionalRole {
+  learningObjectiveId String   @map("learning_objective_id") @db.Uuid
+  professionalRoleId  String   @map("professional_role_id") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  learningObjective LearningObjective @relation(fields: [learningObjectiveId], references: [id], onDelete: Cascade)
+  professionalRole  ProfessionalRole  @relation(fields: [professionalRoleId], references: [id], onDelete: Cascade)
+
+  @@id([learningObjectiveId, professionalRoleId])
+  @@index([professionalRoleId])
+  @@map("learning_objective_professional_roles")
 }
 
 // ---------------------------------------------------------------------------
@@ -620,31 +1198,266 @@ model LearningObjective {
 // ---------------------------------------------------------------------------
 
 /// An authoritative or proprietary reference source, for citation/provenance.
+///
+/// Gate 10: this row is the SOURCE IDENTITY only (stable id, coarse type,
+/// display title) - unchanged in shape from Stage 2/4 so every existing
+/// consumer (CaseStudy.sourceId, Observation.sourceId, QuestionVersion
+/// .sourceId, AiGenerationRun, AiQuestionCandidate) keeps working exactly as
+/// before. `title`/`citation`/`url`/`publishedOn`/`notes`/`reviewStatus`/
+/// `version` remain a lightweight, mutable summary for that legacy shape;
+/// they are NOT the versioned, immutable-once-published record of a
+/// specific revision's exact content - that is {@link SourceVersion}, added
+/// in Gate 10 as an additive child structure. New code that needs
+/// provenance-grade, version-aware detail should use `versions`/
+/// `currentPublishedVersion`, not the legacy fields above.
 model Source {
-  id           String        @id @default(uuid()) @db.Uuid
-  type         SourceType
-  title        String
-  citation     String?
-  url          String?
-  publishedOn  DateTime?     @map("published_on") @db.Date
-  retrievedAt  DateTime?     @map("retrieved_at") @db.Timestamptz(6)
-  notes        String?
-  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
-  version      Int           @default(1)
-  createdById  String?       @map("created_by_id") @db.Uuid
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                        String        @id @default(uuid()) @db.Uuid
+  type                      SourceType
+  title                     String
+  citation                  String?
+  url                       String?
+  publishedOn               DateTime?     @map("published_on") @db.Date
+  retrievedAt               DateTime?     @map("retrieved_at") @db.Timestamptz(6)
+  notes                     String?
+  reviewStatus              ContentStatus @default(DRAFT) @map("review_status")
+  version                   Int           @default(1)
+  /// Gate 10: the SourceVersion currently considered authoritative for this
+  /// source, or null until the first version is published. Mirrors
+  /// `Question.currentPublishedVersionId` exactly - moves forward on each
+  /// new publish; the version it used to point to is never deleted or
+  /// mutated, it simply stops being "current" while remaining historically
+  /// queryable (Gate 10 §28/§38).
+  currentPublishedVersionId String?       @unique @map("current_published_version_id") @db.Uuid
+  createdById               String?       @map("created_by_id") @db.Uuid
+  createdAt                 DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  createdBy        User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  caseStudies      CaseStudy[]
-  observations     Observation[]
-  questionVersions QuestionVersion[]
-  aiGenerationRuns AiGenerationRun[]
-  aiCandidates     AiQuestionCandidate[]
+  createdBy                    User?                         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  currentPublishedVersion      SourceVersion?                @relation("SourceCurrentPublishedVersion", fields: [currentPublishedVersionId], references: [id], onDelete: SetNull)
+  versions                     SourceVersion[]               @relation("SourceVersions")
+  caseStudies                  CaseStudy[]
+  observations                 Observation[]
+  observationVersions          ObservationVersion[]
+  questionVersions             QuestionVersion[]
+  aiGenerationRuns             AiGenerationRun[]
+  aiCandidates                 AiQuestionCandidate[]
+  observationSourceLinkReviews ObservationSourceLinkReview[]
+  caseStudyEvidenceReferences  CaseStudyEvidenceReference[]
 
   @@index([type])
   @@index([reviewStatus])
   @@map("sources")
+}
+
+// ---------------------------------------------------------------------------
+// Gate 10 — Source-document ingestion & knowledge foundation
+//
+// Source (above) is the stable IDENTITY. Everything below is the versioned,
+// provenance-rich, structurally-decomposed content that identity can carry
+// over time:
+//
+//   Source (identity)
+//     -> SourceVersion (one immutable-once-published revision, full
+//        provenance/lifecycle/licensing/AI-eligibility/extraction metadata)
+//       -> SourceSection (structured, exactly-traceable content units,
+//          self-referencing for PART/CHAPTER/SECTION/SUBSECTION nesting)
+//   SourceVersionRelationship: explicit, evidence-based cross-version links
+//   (supersedes/references/related_to/implements/interprets) - never
+//   inferred automatically.
+//
+// Deliberately NOT built here (see docs/source-knowledge-foundation.md):
+// binary file storage, OCR/parsing execution, AI summarization, embeddings,
+// semantic/vector search, automatic question generation from source text.
+// ---------------------------------------------------------------------------
+
+/// One specific, provenance-complete revision of a Source. This is the unit
+/// that is reviewed, approved, published, and - once published - treated as
+/// immutable (Gate 10 §6/§38): a correction requires a NEW SourceVersion,
+/// never an in-place edit of a PUBLISHED row. `versionNumber` is sequential
+/// per Source and never reused, mirroring `QuestionVersion.versionNumber`/
+/// `ExamVersion.versionNumber` exactly.
+model SourceVersion {
+  id            String @id @default(uuid()) @db.Uuid
+  sourceId      String @map("source_id") @db.Uuid
+  versionNumber Int    @map("version_number")
+
+  // --- Provenance (Gate 10 §4) ---------------------------------------------
+  issuingOrganization String?         @map("issuing_organization")
+  authority           SourceAuthority
+  jurisdiction        String?
+  /// The source's OWN self-described version label, e.g. "R3" - distinct
+  /// from `versionNumber`, which is this platform's internal sequence.
+  documentVersion     String?         @map("document_version")
+  revision            String?
+  language            String?
+  publicationDate     DateTime?       @map("publication_date") @db.Date
+  effectiveDate       DateTime?       @map("effective_date") @db.Date
+  canonicalUrl        String?         @map("canonical_url")
+  /// e.g. a DOI, an official document/report number - an external
+  /// identifier this platform did not assign.
+  documentIdentifier  String?         @map("document_identifier")
+  retrievedAt         DateTime?       @map("retrieved_at") @db.Timestamptz(6)
+  provenanceNotes     String?         @map("provenance_notes")
+
+  // --- Content integrity / duplicate detection (Gate 10 §15/§16) ----------
+  /// SHA-256 of the original ingested file/content, when one was supplied.
+  /// The primary deterministic exact-duplicate signal for re-ingestion.
+  checksum             String?
+  /// SHA-256 of the ordered, concatenated normalized section content -
+  /// distinct from `checksum` (that hashes the ORIGINAL input; this hashes
+  /// what this platform actually extracted and stored).
+  extractedContentHash String? @map("extracted_content_hash")
+
+  // --- Lifecycle (Gate 10 §6) -----------------------------------------------
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  approvedAt   DateTime?     @map("approved_at") @db.Timestamptz(6)
+  publishedAt  DateTime?     @map("published_at") @db.Timestamptz(6)
+  archivedAt   DateTime?     @map("archived_at") @db.Timestamptz(6)
+
+  // --- Licensing / distribution (Gate 10 §25) -------------------------------
+  license             String?
+  accessRestriction   SourceAccessRestriction @default(INTERNAL_KNOWLEDGE_ONLY) @map("access_restriction")
+  attributionRequired Boolean                 @default(true) @map("attribution_required")
+
+  // --- AI eligibility (Gate 10 §26, mirrors CaseStudy/Observation exactly) -
+  /// Conservative default: a version is never eligible for an external AI
+  /// provider until a human explicitly opts it in. Unknown means blocked.
+  externalAiEligibility ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
+
+  // --- Ingestion / extraction metadata (Gate 10 §10/§11/§13/§39/§40) -------
+  originalFilename     String?           @map("original_filename")
+  mimeType             String?           @map("mime_type")
+  fileSizeBytes        Int?              @map("file_size_bytes")
+  extractionMethod     ExtractionMethod? @map("extraction_method")
+  extractionStatus     ExtractionStatus  @default(PENDING) @map("extraction_status")
+  /// Free-text identifier of whatever deterministic tool/process produced
+  /// the extracted sections, e.g. "manual-transcription-v1". Never an AI
+  /// model name - extraction is explicitly non-AI (Gate 10 §11/§59).
+  extractorVersion     String?           @map("extractor_version")
+  ingestionStartedAt   DateTime?         @map("ingestion_started_at") @db.Timestamptz(6)
+  ingestionCompletedAt DateTime?         @map("ingestion_completed_at") @db.Timestamptz(6)
+  /// Controlled, non-stack-trace failure detail for admin diagnosis only
+  /// (Gate 10 §40) - never rendered to a non-admin caller.
+  ingestionError       String?           @map("ingestion_error")
+
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  source           Source          @relation("SourceVersions", fields: [sourceId], references: [id], onDelete: Cascade)
+  currentForSource Source?         @relation("SourceCurrentPublishedVersion")
+  createdBy        User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  sections         SourceSection[]
+
+  relationshipsFrom              SourceVersionRelationship[]   @relation("SourceVersionRelFrom")
+  relationshipsTo                SourceVersionRelationship[]   @relation("SourceVersionRelTo")
+  observationVersions            ObservationVersion[]
+  observationSourceLinkReviews   ObservationSourceLinkReview[]
+  caseStudyEvidenceReferences    CaseStudyEvidenceReference[]
+  /// Gate 18: AiQuestionCandidates whose normative GCP grounding is this
+  /// SourceVersion (always ICH E6(R3) in practice).
+  normativeForQuestionCandidates AiQuestionCandidate[]
+
+  @@unique([sourceId, versionNumber])
+  @@index([sourceId])
+  @@index([reviewStatus])
+  @@index([authority])
+  @@index([extractionStatus])
+  @@index([externalAiEligibility])
+  @@index([checksum])
+  @@map("source_versions")
+}
+
+/// One structured, exactly-traceable content unit within a SourceVersion
+/// (Gate 10 §7/§8/§9/§45). Self-referencing via `parentSectionId` to express
+/// PART/CHAPTER/SECTION/SUBSECTION nesting; `sequence` orders siblings.
+/// `content` is the exact extracted/normalized text - extraction MUST NOT
+/// paraphrase, summarize, or otherwise alter meaning (Gate 10 §12/§30).
+model SourceSection {
+  id              String  @id @default(uuid()) @db.Uuid
+  sourceVersionId String  @map("source_version_id") @db.Uuid
+  parentSectionId String? @map("parent_section_id") @db.Uuid
+
+  /// The document's OWN section numbering/label, e.g. "4.3.2" - unique only
+  /// within its SourceVersion, never reused across versions.
+  sectionIdentifier String            @map("section_identifier")
+  heading           String?
+  sectionType       SourceSectionType @default(PARAGRAPH) @map("section_type")
+  /// Ordering among siblings sharing the same parent (and version).
+  sequence          Int
+  depth             Int               @default(0)
+
+  /// Exact extracted/normalized text. Never AI-rewritten, never summarized.
+  content     String
+  /// SHA-256 of `content` - change detection and exact-duplicate detection
+  /// at the content-unit level (Gate 10 §15). Not semantic similarity.
+  contentHash String @map("content_hash")
+
+  // --- Location metadata (Gate 10 §9) --------------------------------------
+  pdfPageStart Int?    @map("pdf_page_start")
+  pdfPageEnd   Int?    @map("pdf_page_end")
+  /// The document's OWN printed page label, which may differ from the PDF
+  /// page index - deliberately kept as a separate field, never assumed equal.
+  documentPage String? @map("document_page")
+  paragraphRef String? @map("paragraph_ref")
+  anchor       String?
+
+  extractionStatus   ExtractionStatus  @default(PENDING) @map("extraction_status")
+  extractionMethod   ExtractionMethod? @map("extraction_method")
+  /// Raw, UNRESOLVED cross-reference text as it appears in the source, e.g.
+  /// "see Section 5.3" (Gate 10 §47). A stored unresolved reference is
+  /// preferable to an invented relationship - this is never auto-resolved
+  /// into a hard FK to another section.
+  crossReferenceText String?           @map("cross_reference_text")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sourceVersion SourceVersion   @relation(fields: [sourceVersionId], references: [id], onDelete: Cascade)
+  parentSection SourceSection?  @relation("SourceSectionParent", fields: [parentSectionId], references: [id], onDelete: SetNull)
+  childSections SourceSection[] @relation("SourceSectionParent")
+
+  /// Gate 10 §29/§61: future evidence-precise citations FROM existing
+  /// content, added as purely optional/additive back-relations - no
+  /// existing QuestionVersion/CaseStudy/Observation row is touched by
+  /// adding this capability.
+  questionVersions               QuestionVersion[]
+  caseStudies                    CaseStudy[]
+  observations                   Observation[]
+  observationVersions            ObservationVersion[]
+  observationSourceLinkReviews   ObservationSourceLinkReview[]
+  caseStudyEvidenceReferences    CaseStudyEvidenceReference[]
+  /// Gate 18: AiQuestionCandidates whose normative GCP grounding cites this
+  /// exact SourceSection.
+  normativeForQuestionCandidates AiQuestionCandidate[]
+
+  @@unique([sourceVersionId, sectionIdentifier])
+  @@index([sourceVersionId, sequence])
+  @@index([parentSectionId])
+  @@index([contentHash])
+  @@map("source_sections")
+}
+
+/// Explicit, evidence-based relationship between two SourceVersions (Gate 10
+/// §17). Never inferred automatically - only ever created by a deliberate
+/// admin action recording a fact already established in the source material
+/// itself (e.g. a document's own text stating it supersedes an earlier one).
+model SourceVersionRelationship {
+  id            String             @id @default(uuid()) @db.Uuid
+  fromVersionId String             @map("from_version_id") @db.Uuid
+  toVersionId   String             @map("to_version_id") @db.Uuid
+  relationType  SourceRelationType @map("relation_type")
+  notes         String?
+  createdById   String?            @map("created_by_id") @db.Uuid
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  fromVersion SourceVersion @relation("SourceVersionRelFrom", fields: [fromVersionId], references: [id], onDelete: Cascade)
+  toVersion   SourceVersion @relation("SourceVersionRelTo", fields: [toVersionId], references: [id], onDelete: Cascade)
+  createdBy   User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([fromVersionId, toVersionId, relationType])
+  @@index([toVersionId])
+  @@map("source_version_relationships")
 }
 
 // ---------------------------------------------------------------------------
@@ -653,44 +1466,60 @@ model Source {
 
 /// A structured, de-identified real-life case study.
 model CaseStudy {
-  id                    String                @id @default(uuid()) @db.Uuid
+  id                        String                @id @default(uuid()) @db.Uuid
   /// Human-readable business key, e.g. "CS-000123".
-  caseCode              String                @unique @map("case_code")
-  title                 String
-  scenario              String
-  observation           String
-  context               String?
-  domainId              String?               @map("domain_id") @db.Uuid
-  professionalRoleId    String?               @map("professional_role_id") @db.Uuid
-  riskCategory          RiskCategory?         @map("risk_category")
-  rootCause             String?               @map("root_cause")
-  expectedAction        String?               @map("expected_action")
-  learningObjectiveId   String?               @map("learning_objective_id") @db.Uuid
-  difficulty            DifficultyLevel       @default(MEDIUM)
-  sourceId              String?               @map("source_id") @db.Uuid
-  version               Int                   @default(1)
-  reviewStatus          ContentStatus         @default(DRAFT) @map("review_status")
-  isActive              Boolean               @default(true) @map("is_active")
+  caseCode                  String                @unique @map("case_code")
+  title                     String
+  scenario                  String
+  observation               String
+  context                   String?
+  domainId                  String?               @map("domain_id") @db.Uuid
+  professionalRoleId        String?               @map("professional_role_id") @db.Uuid
+  riskCategory              RiskCategory?         @map("risk_category")
+  rootCause                 String?               @map("root_cause")
+  expectedAction            String?               @map("expected_action")
+  learningObjectiveId       String?               @map("learning_objective_id") @db.Uuid
+  difficulty                DifficultyLevel       @default(MEDIUM)
+  sourceId                  String?               @map("source_id") @db.Uuid
+  /// Gate 10 §62: optional, purely additive precise citation into the new
+  /// structured source model - does not replace `sourceId`, which remains
+  /// this case study's existing, unmodified provenance pointer.
+  sourceSectionRefId        String?               @map("source_section_ref_id") @db.Uuid
+  version                   Int                   @default(1)
+  reviewStatus              ContentStatus         @default(DRAFT) @map("review_status")
+  isActive                  Boolean               @default(true) @map("is_active")
   /// Privacy boundary for AI content grounding (Stage 6B) — conservative
   /// default; a content author must explicitly opt this case study in
   /// before its narrative may ever be sent to an external AI provider.
-  externalAiEligibility ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
-  createdById           String?               @map("created_by_id") @db.Uuid
-  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  externalAiEligibility     ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
+  /// Gate 15 §5/§6: the CaseStudyVersion currently PUBLISHED under this
+  /// identity, or null until the first version is published. Mirrors
+  /// `Observation.currentPublishedVersionId`/`Source.currentPublishedVersionId`
+  /// exactly - purely additive, never touches the legacy flat fields above,
+  /// which remain exactly as Gate 4 defined them.
+  currentPublishedVersionId String?               @unique @map("current_published_version_id") @db.Uuid
+  createdById               String?               @map("created_by_id") @db.Uuid
+  createdAt                 DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  domain            GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
-  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
-  source            Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  createdBy         User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  domain                  GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  professionalRole        ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  learningObjective       LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  source                  Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceSectionRef        SourceSection?     @relation(fields: [sourceSectionRefId], references: [id], onDelete: SetNull)
+  createdBy               User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  currentPublishedVersion CaseStudyVersion?  @relation("CaseStudyCurrentPublishedVersion", fields: [currentPublishedVersionId], references: [id], onDelete: SetNull)
 
   tags          CaseStudyTag[]
   observations  Observation[]
   questionLinks QuestionCaseStudyLink[]
 
-  aiGenerationRuns AiGenerationRun[]
-  aiCandidateLinks AiQuestionCandidateCaseStudy[]
+  aiGenerationRuns        AiGenerationRun[]
+  aiCandidateLinks        AiQuestionCandidateCaseStudy[]
+  observationVersionLinks ObservationVersionCaseStudy[]
+  /// Gate 15: the full, versioned, auditable case-study narrative history -
+  /// additive to (never a replacement for) the legacy flat fields above.
+  versions                CaseStudyVersion[]             @relation("CaseStudyVersions")
 
   @@index([reviewStatus])
   @@index([isActive])
@@ -712,38 +1541,878 @@ model CaseStudyTag {
   @@map("case_study_tags")
 }
 
+// ---------------------------------------------------------------------------
+// Gate 15 — knowledge-to-scenario / case-study generation foundation.
+// Separates SOURCE EVIDENCE / CURATED KNOWLEDGE / TRAINING INTERPRETATION
+// (Gates 11-14, untouched) from a CaseStudySpecification (the deterministic
+// "recipe" for a scenario), an AI-GENERATED CANDIDATE, and an APPROVED
+// CaseStudyVersion - the same versioned row, distinguished only by status,
+// exactly mirroring how Question/QuestionVersion and Source/SourceVersion
+// keep a candidate mutable until an explicit human APPROVE/PUBLISH action.
+// ---------------------------------------------------------------------------
+
+/// Gate 15 §8: which kind of decision/scenario a specification is meant to
+/// produce. Deliberately the exact, closed list the spec calls for - no
+/// unsupported type is added merely for completeness.
+enum CaseStudyScenarioType {
+  INVESTIGATOR_DECISION
+  CRA_DECISION
+  SPONSOR_DECISION
+  SITE_QUALITY_DECISION
+  DATA_INTEGRITY_SCENARIO
+  DOCUMENTATION_SCENARIO
+  MONITORING_SCENARIO
+  INFORMED_CONSENT_SCENARIO
+  SAFETY_SCENARIO
+  VENDOR_OVERSIGHT_SCENARIO
+  COMPUTERIZED_SYSTEM_SCENARIO
+  AUDIT_TRAIL_SCENARIO
+  TRAINING_SCENARIO
+  CAPA_SCENARIO
+  INSPECTION_READINESS_SCENARIO
+
+  @@map("case_study_scenario_type")
+}
+
+/// Gate 15 §8: a CaseStudySpecification's own small lifecycle - distinct
+/// from a generated CaseStudyVersion's much richer review lifecycle below.
+enum CaseStudySpecificationStatus {
+  DRAFT
+  READY_FOR_GENERATION
+  GENERATION_IN_PROGRESS
+  GENERATED
+  ARCHIVED
+
+  @@map("case_study_specification_status")
+}
+
+/// Gate 15 §7: the full CaseStudyVersion lifecycle. AI generation may only
+/// ever reach GENERATED/VALIDATION_FAILED - APPROVED/PUBLISHED require an
+/// explicit authorized human workflow action (enforced in service code,
+/// never by the AI provider).
+enum CaseStudyVersionStatus {
+  DRAFT
+  READY_FOR_GENERATION
+  GENERATION_IN_PROGRESS
+  GENERATED
+  VALIDATION_FAILED
+  READY_FOR_REVIEW
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+
+  @@map("case_study_version_status")
+}
+
+/// Gate 15 §4: never conflate a human-authored version with an AI candidate.
+enum CaseStudyGenerationMethod {
+  HUMAN_AUTHORED
+  AI_GENERATED
+
+  @@map("case_study_generation_method")
+}
+
+/// Gate 15 §13: the deterministic validator's verdict - never the AI's own
+/// self-report, and never a claim of complete factual correctness.
+enum CaseStudyValidationStatus {
+  NOT_VALIDATED
+  VALIDATED
+  VALIDATION_FAILED
+  HUMAN_REVIEW_REQUIRED
+
+  @@map("case_study_validation_status")
+}
+
+/// Gate 15 §15: what kind of evidence one CaseStudyEvidenceReference row
+/// points to.
+enum CaseStudyEvidenceType {
+  OBSERVATION
+  SOURCE_SECTION
+  TRAINING_INTERPRETATION
+  LEARNING_OBJECTIVE
+
+  @@map("case_study_evidence_type")
+}
+
+/// Gate 15 §15: the role that evidence plays in the generated narrative -
+/// never left ambiguous between "this is the primary finding" and "this is
+/// merely scenario-construction colour".
+enum CaseStudyEvidenceRole {
+  PRIMARY_OBSERVATION
+  SOURCE_SUPPORT
+  TRAINING_INTERPRETATION
+  CONTEXT
+  SCENARIO_CONSTRUCTION
+
+  @@map("case_study_evidence_role")
+}
+
+/// Gate 15 §8: whether a specification's linked observation is the primary
+/// grounding evidence or merely supporting context.
+enum CaseStudySpecificationObservationRole {
+  PRIMARY
+  SUPPORTING
+
+  @@map("case_study_specification_observation_role")
+}
+
+/// Gate 15 §8/§19: the deterministic, server-assembled "recipe" for one
+/// scenario - created and validated BEFORE any AI call, so the browser can
+/// never pass arbitrary evidence IDs straight through to a provider.
+model CaseStudySpecification {
+  id                          String                       @id @default(uuid()) @db.Uuid
+  /// Stable business key, e.g. "SPEC-000123".
+  code                        String                       @unique
+  title                       String
+  scenarioType                CaseStudyScenarioType        @map("scenario_type")
+  status                      CaseStudySpecificationStatus @default(DRAFT)
+  domainId                    String?                      @map("domain_id") @db.Uuid
+  learningObjectiveId         String?                      @map("learning_objective_id") @db.Uuid
+  /// Gate 15 §9: the one ObservationVersion this specification is primarily
+  /// built from - required, so a specification can never exist ungrounded.
+  /// Additional supporting evidence lives in
+  /// `CaseStudySpecificationObservation` below.
+  primaryObservationVersionId String                       @map("primary_observation_version_id") @db.Uuid
+  trainingInterpretationId    String?                      @map("training_interpretation_id") @db.Uuid
+  riskDimensions              ObservationRiskDimension[]   @map("risk_dimensions")
+  severity                    ObservationSeverity?
+  rootCauseCategory           RootCauseCategory?           @map("root_cause_category")
+  desiredDecisionPoint        String?                      @map("desired_decision_point")
+  expectedLearnerCompetency   String?                      @map("expected_learner_competency")
+  /// Gate 15 §8/§14: free-text guardrails a curator sets BEFORE generation -
+  /// what the AI is allowed to treat as fact, and what it must never assume.
+  allowedFactualBoundaries    String?                      @map("allowed_factual_boundaries")
+  prohibitedAssumptions       String?                      @map("prohibited_assumptions")
+  generationConstraints       Json?                        @map("generation_constraints")
+  /// Gate 15 §21: idempotency guard - set while a generation run is
+  /// in-flight for this specification, cleared on completion/failure, so a
+  /// second concurrent generate request is rejected deterministically.
+  activeGenerationRunId       String?                      @unique @map("active_generation_run_id") @db.Uuid
+  createdById                 String?                      @map("created_by_id") @db.Uuid
+  createdAt                   DateTime                     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  domain                    GcpDomain?                         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  learningObjective         LearningObjective?                 @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  primaryObservationVersion ObservationVersion                 @relation("CaseStudySpecificationPrimaryObservation", fields: [primaryObservationVersionId], references: [id], onDelete: Restrict)
+  trainingInterpretation    ObservationTrainingInterpretation? @relation(fields: [trainingInterpretationId], references: [id], onDelete: SetNull)
+  activeGenerationRun       AiGenerationRun?                   @relation("CaseStudySpecificationActiveRun", fields: [activeGenerationRunId], references: [id], onDelete: SetNull)
+  createdBy                 User?                              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  professionalRoles      CaseStudySpecificationProfessionalRole[]
+  supportingObservations CaseStudySpecificationObservation[]
+  generationRuns         AiGenerationRun[]                        @relation("CaseStudySpecificationRuns")
+  versions               CaseStudyVersion[]
+
+  @@index([domainId])
+  @@index([status])
+  @@index([primaryObservationVersionId])
+  @@index([scenarioType])
+  @@map("case_study_specifications")
+}
+
+/// Join table: a specification may indicate several applicable professional
+/// roles (mirrors ObservationVersionProfessionalRole's pattern).
+model CaseStudySpecificationProfessionalRole {
+  specificationId    String @map("specification_id") @db.Uuid
+  professionalRoleId String @map("professional_role_id") @db.Uuid
+
+  specification    CaseStudySpecification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+  professionalRole ProfessionalRole       @relation(fields: [professionalRoleId], references: [id], onDelete: Cascade)
+
+  @@id([specificationId, professionalRoleId])
+  @@index([professionalRoleId])
+  @@map("case_study_specification_professional_roles")
+}
+
+/// Join table: additional SUPPORTING evidence beyond the specification's
+/// required primary observation (Gate 15 §8 "sourceObservationIds").
+model CaseStudySpecificationObservation {
+  specificationId      String                                @map("specification_id") @db.Uuid
+  observationVersionId String                                @map("observation_version_id") @db.Uuid
+  role                 CaseStudySpecificationObservationRole @default(SUPPORTING)
+  createdAt            DateTime                              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  specification      CaseStudySpecification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+  observationVersion ObservationVersion     @relation("CaseStudySpecificationSupportingObservation", fields: [observationVersionId], references: [id], onDelete: Cascade)
+
+  @@id([specificationId, observationVersionId])
+  @@index([observationVersionId])
+  @@map("case_study_specification_observations")
+}
+
+/// Gate 15 §5/§6: the versioned, immutable-once-approved case-study
+/// narrative. A freshly AI-generated row (status GENERATED/
+/// VALIDATION_FAILED/READY_FOR_REVIEW/IN_REVIEW) IS the "candidate" the
+/// spec describes - the SAME row becomes the "approved case study" once its
+/// status reaches APPROVED/PUBLISHED, exactly mirroring how QuestionVersion/
+/// SourceVersion never duplicate a candidate into a second table.
+model CaseStudyVersion {
+  id                  String                    @id @default(uuid()) @db.Uuid
+  caseStudyId         String                    @map("case_study_id") @db.Uuid
+  versionNumber       Int                       @map("version_number")
+  status              CaseStudyVersionStatus    @default(DRAFT)
+  generationMethod    CaseStudyGenerationMethod @default(HUMAN_AUTHORED) @map("generation_method")
+  specificationId     String?                   @map("specification_id") @db.Uuid
+  generationRunId     String?                   @unique @map("generation_run_id") @db.Uuid
+  validationStatus    CaseStudyValidationStatus @default(NOT_VALIDATED) @map("validation_status")
+  /// Deterministic validator output (ai-output-style {valid, errors,
+  /// warnings, checks}) - never the AI's own self-report.
+  validationReport    Json?                     @map("validation_report")
+  title               String
+  scenario            String
+  domainId            String?                   @map("domain_id") @db.Uuid
+  learningObjectiveId String?                   @map("learning_objective_id") @db.Uuid
+  /// Gate 15 §5/§12: the full structured narrative (context, setting,
+  /// participantRoles, situation, observedIssue, decisionPoint,
+  /// evidencePresentedToLearner, learnerTask, expectedCompetency,
+  /// educationalRationale, assumptions, generatedLimitations,
+  /// qualityWarnings, factualBoundaryStatements[]) - one Json column rather
+  /// than ~15 scalar columns, mirroring Gate 12's `rawSourceFields`/Gate
+  /// 13's `classificationBasis` precedent for flexible structured content;
+  /// `title`/`scenario` are promoted to real columns above for indexed
+  /// list/display, matching CaseStudy's own existing pattern exactly.
+  content             Json
+  reviewerId          String?                   @map("reviewer_id") @db.Uuid
+  reviewedAt          DateTime?                 @map("reviewed_at") @db.Timestamptz(6)
+  reviewNotes         String?                   @map("review_notes")
+  publishedAt         DateTime?                 @map("published_at") @db.Timestamptz(6)
+  archivedAt          DateTime?                 @map("archived_at") @db.Timestamptz(6)
+  createdById         String?                   @map("created_by_id") @db.Uuid
+  createdAt           DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  caseStudy           CaseStudy               @relation("CaseStudyVersions", fields: [caseStudyId], references: [id], onDelete: Cascade)
+  currentForCaseStudy CaseStudy?              @relation("CaseStudyCurrentPublishedVersion")
+  specification       CaseStudySpecification? @relation(fields: [specificationId], references: [id], onDelete: SetNull)
+  generationRun       AiGenerationRun?        @relation(fields: [generationRunId], references: [id], onDelete: SetNull)
+  domain              GcpDomain?              @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  learningObjective   LearningObjective?      @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  reviewer            User?                   @relation("CaseStudyVersionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  createdBy           User?                   @relation("CaseStudyVersionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  professionalRoles              CaseStudyVersionProfessionalRole[]
+  evidenceReferences             CaseStudyEvidenceReference[]
+  /// Gate 17: AiGenerationRun/AiQuestionCandidate rows that used this
+  /// (already-approved) case-study version as read-only grounding for
+  /// question generation - the inverse of `groundingCaseStudyVersionId` on
+  /// each. Purely informational back-relations; this version's own
+  /// lifecycle is never affected by how many questions were grounded on it.
+  groundingForAiRuns             AiGenerationRun[]                  @relation("AiGenerationRunGroundingCaseStudyVersion")
+  groundingForQuestionCandidates AiQuestionCandidate[]              @relation("QuestionCandidateGroundingCaseStudyVersion")
+
+  @@unique([caseStudyId, versionNumber])
+  @@index([caseStudyId])
+  @@index([status])
+  @@index([specificationId])
+  @@index([validationStatus])
+  @@map("case_study_versions")
+}
+
+/// Join table: a CaseStudyVersion may apply to one or more professional
+/// roles (mirrors ObservationVersionProfessionalRole's pattern exactly).
+model CaseStudyVersionProfessionalRole {
+  versionId          String @map("version_id") @db.Uuid
+  professionalRoleId String @map("professional_role_id") @db.Uuid
+
+  version          CaseStudyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  professionalRole ProfessionalRole @relation(fields: [professionalRoleId], references: [id], onDelete: Cascade)
+
+  @@id([versionId, professionalRoleId])
+  @@index([professionalRoleId])
+  @@map("case_study_version_professional_roles")
+}
+
+/// Gate 15 §15/§23: one machine-readable, citable piece of evidence a
+/// CaseStudyVersion actually used - the answer to "exactly which evidence
+/// was used to generate this case study?" never depends on model memory.
+model CaseStudyEvidenceReference {
+  id                       String                @id @default(uuid()) @db.Uuid
+  caseStudyVersionId       String                @map("case_study_version_id") @db.Uuid
+  evidenceType             CaseStudyEvidenceType @map("evidence_type")
+  evidenceRole             CaseStudyEvidenceRole @map("evidence_role")
+  sourceId                 String?               @map("source_id") @db.Uuid
+  sourceVersionId          String?               @map("source_version_id") @db.Uuid
+  sourceSectionId          String?               @map("source_section_id") @db.Uuid
+  observationId            String?               @map("observation_id") @db.Uuid
+  observationVersionId     String?               @map("observation_version_id") @db.Uuid
+  trainingInterpretationId String?               @map("training_interpretation_id") @db.Uuid
+  learningObjectiveId      String?               @map("learning_objective_id") @db.Uuid
+  /// The specific claim/text this reference supports - never a bare ID with
+  /// no explanation of what it is being cited for.
+  claimText                String
+  createdAt                DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  version                CaseStudyVersion                   @relation(fields: [caseStudyVersionId], references: [id], onDelete: Cascade)
+  source                 Source?                            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceVersion          SourceVersion?                     @relation(fields: [sourceVersionId], references: [id], onDelete: SetNull)
+  sourceSection          SourceSection?                     @relation(fields: [sourceSectionId], references: [id], onDelete: SetNull)
+  observation            Observation?                       @relation(fields: [observationId], references: [id], onDelete: SetNull)
+  observationVersion     ObservationVersion?                @relation("CaseStudyEvidenceObservationVersion", fields: [observationVersionId], references: [id], onDelete: SetNull)
+  trainingInterpretation ObservationTrainingInterpretation? @relation(fields: [trainingInterpretationId], references: [id], onDelete: SetNull)
+  learningObjective      LearningObjective?                 @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+
+  @@index([caseStudyVersionId])
+  @@index([observationVersionId])
+  @@index([sourceSectionId])
+  @@map("case_study_evidence_references")
+}
+
+/// Gate 16 §6: the persisted identity of one deterministic real-data
+/// selection run - "which observations were considered, and why" is never
+/// left implicit in application logs. Never itself a readiness/eligibility
+/// system - `CaseStudyEligibilityService` (Gate 15) remains the sole
+/// authority on whether an observation is usable; this only records what a
+/// given selection pass decided to include or exclude and why.
+model CaseStudyTranche {
+  id                String   @id @default(uuid()) @db.Uuid
+  code              String   @unique
+  name              String
+  /// The deterministic selection rules actually applied (priority tiers,
+  /// target size, tie-breaking) - so a re-run can be compared against this
+  /// record rather than trusting memory of what the rules were.
+  selectionCriteria Json     @map("selection_criteria")
+  createdById       String?  @map("created_by_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  createdBy User?                  @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  items     CaseStudyTrancheItem[]
+
+  @@map("case_study_tranches")
+}
+
+/// Gate 16 §6/§7: which priority tier a tranche candidate was classified
+/// into - a workflow-ordering aid only, never a quality score.
+enum CaseStudyTranchePriorityTier {
+  PRIORITY_1
+  PRIORITY_2
+  PRIORITY_3
+
+  @@map("case_study_tranche_priority_tier")
+}
+
+/// One observation considered by a tranche selection pass - included or
+/// excluded, always with a recorded reason (Gate 16 §7: "If an observation
+/// is not eligible, exclude it and record the deterministic reason").
+model CaseStudyTrancheItem {
+  id                   String                        @id @default(uuid()) @db.Uuid
+  trancheId            String                        @map("tranche_id") @db.Uuid
+  observationVersionId String                        @map("observation_version_id") @db.Uuid
+  priorityTier         CaseStudyTranchePriorityTier? @map("priority_tier")
+  included             Boolean                       @default(false)
+  /// Snapshot of CaseStudyEligibilityService's verdict at selection time -
+  /// a string mirroring the shared `CaseStudyEligibilityState` union, never
+  /// a second enum/readiness system.
+  eligibilityState     String                        @map("eligibility_state")
+  rationale            String
+  exclusionReason      String?                       @map("exclusion_reason")
+  createdAt            DateTime                      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tranche            CaseStudyTranche   @relation(fields: [trancheId], references: [id], onDelete: Cascade)
+  observationVersion ObservationVersion @relation("CaseStudyTrancheItemObservation", fields: [observationVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([trancheId, observationVersionId])
+  @@index([observationVersionId])
+  @@index([included])
+  @@map("case_study_tranche_items")
+}
+
 /// A standalone or case-study-linked field observation.
+/// Gate 11: this row remains the observation's stable IDENTITY (unchanged
+/// shape/FKs from Stage 4/Gate 10) - `observationCode` is the existing
+/// stable identifier (e.g. "OBS-000123"), never a mutable text field.
+/// `description`/`riskCategory`/`externalAiEligibility`/`reviewStatus`/
+/// `version` remain the legacy, lightweight summary fields every existing
+/// consumer (QuestionVersion.observationId, AiGenerationRun,
+/// AiQuestionCandidate, GroundingService) already reads - untouched. The
+/// versioned, provenance-rich, evidence/interpretation-separated content
+/// this gate adds lives on {@link ObservationVersion}, exactly mirroring
+/// how Gate 10 added SourceVersion beside the unmodified Source identity.
 model Observation {
-  id                    String                @id @default(uuid()) @db.Uuid
-  observationCode       String                @unique @map("observation_code")
-  caseStudyId           String?               @map("case_study_id") @db.Uuid
-  domainId              String?               @map("domain_id") @db.Uuid
-  riskCategory          RiskCategory?         @map("risk_category")
-  description           String
-  sourceId              String?               @map("source_id") @db.Uuid
-  reviewStatus          ContentStatus         @default(DRAFT) @map("review_status")
-  version               Int                   @default(1)
-  isActive              Boolean               @default(true) @map("is_active")
+  id                        String                @id @default(uuid()) @db.Uuid
+  observationCode           String                @unique @map("observation_code")
+  caseStudyId               String?               @map("case_study_id") @db.Uuid
+  domainId                  String?               @map("domain_id") @db.Uuid
+  riskCategory              RiskCategory?         @map("risk_category")
+  description               String
+  sourceId                  String?               @map("source_id") @db.Uuid
+  /// Gate 10 §62: optional, purely additive precise citation - does not
+  /// replace `sourceId`, which remains this observation's existing,
+  /// unmodified provenance pointer.
+  sourceSectionRefId        String?               @map("source_section_ref_id") @db.Uuid
+  reviewStatus              ContentStatus         @default(DRAFT) @map("review_status")
+  version                   Int                   @default(1)
+  isActive                  Boolean               @default(true) @map("is_active")
   /// Same privacy boundary as CaseStudy.externalAiEligibility (Stage 6B).
-  externalAiEligibility ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
-  createdById           String?               @map("created_by_id") @db.Uuid
-  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  externalAiEligibility     ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
+  /// Gate 11: the ObservationVersion currently authoritative for this
+  /// observation, or null until the first version is published. Mirrors
+  /// `Source.currentPublishedVersionId`/`Question.currentPublishedVersionId`
+  /// exactly - moves forward on each publish; the version it used to point
+  /// to is never deleted or mutated.
+  currentPublishedVersionId String?               @unique @map("current_published_version_id") @db.Uuid
+  createdById               String?               @map("created_by_id") @db.Uuid
+  createdAt                 DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  caseStudy CaseStudy? @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
-  domain    GcpDomain? @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  source    Source?    @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  createdBy User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  caseStudy               CaseStudy?               @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
+  domain                  GcpDomain?               @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  source                  Source?                  @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceSectionRef        SourceSection?           @relation(fields: [sourceSectionRefId], references: [id], onDelete: SetNull)
+  createdBy               User?                    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  currentPublishedVersion ObservationVersion?      @relation("ObservationCurrentPublishedVersion", fields: [currentPublishedVersionId], references: [id], onDelete: SetNull)
+  versions                ObservationVersion[]     @relation("ObservationVersions")
+  importBatches           ObservationImportBatch[]
 
-  questionVersions QuestionVersion[]
-  aiGenerationRuns AiGenerationRun[]
-  aiCandidates     AiQuestionCandidate[]
+  questionVersions            QuestionVersion[]
+  aiGenerationRuns            AiGenerationRun[]
+  aiCandidates                AiQuestionCandidate[]
+  caseStudyEvidenceReferences CaseStudyEvidenceReference[]
 
   @@index([isActive])
   @@index([reviewStatus])
   @@index([caseStudyId])
   @@index([domainId])
   @@map("observations")
+}
+
+// ---------------------------------------------------------------------------
+// Gate 11 — real-world GCP observation knowledge foundation
+//
+// Observation (above) is the stable IDENTITY. Everything below is the
+// versioned, evidence/interpretation-separated content that identity can
+// carry over time:
+//
+//   Observation (identity)
+//     -> ObservationVersion (one immutable-once-published revision: FDA
+//        483/inspection/audit provenance, original evidence text kept
+//        separate from derived interpretation, classification, risk,
+//        root-cause/expected-action/CAPA with documented-vs-inferred
+//        basis, de-identification, licensing, AI eligibility)
+//       -> professional roles (many, via join table)
+//       -> case studies (many, via join table - additive to the existing
+//          single Observation.caseStudyId)
+//   ObservationImportBatch / ObservationImportRow: controlled, validated,
+//   dry-run-capable ingestion, never mass-committing without an explicit
+//   preview + commit step.
+//
+// Deliberately NOT built here: AI-generated observations, embeddings,
+// semantic/vector search, semantic duplicate detection, automatic question
+// generation, mass production-data import (see
+// docs/observation-knowledge-foundation.md).
+// ---------------------------------------------------------------------------
+
+/// One specific, provenance-complete, evidence/interpretation-separated
+/// revision of an Observation. Reviewed, approved, published, and - once
+/// published - immutable (Gate 11 §8/§40): a correction requires a NEW
+/// ObservationVersion, never an in-place edit of a PUBLISHED row.
+model ObservationVersion {
+  id            String @id @default(uuid()) @db.Uuid
+  observationId String @map("observation_id") @db.Uuid
+  versionNumber Int    @map("version_number")
+
+  // --- Classification (Gate 11 §3/§4) --------------------------------------
+  observationType ObservationType          @map("observation_type")
+  evidenceClass   ObservationEvidenceClass @map("evidence_class")
+
+  // --- Evidence vs. interpretation (Gate 11 §7/§13/§48) - NEVER the same
+  // field. `originalText` is exactly what the source evidence said;
+  // `normalizedText` is an optional display/search-normalized form that
+  // never replaces it; `interpretationText` is derived training meaning.
+  originalText       String  @map("original_text")
+  normalizedText     String? @map("normalized_text")
+  interpretationText String? @map("interpretation_text")
+  /// SHA-256 of `originalText` - exact change/duplicate detection only,
+  /// never a semantic fingerprint (Gate 11 §26/§27).
+  contentHash        String  @map("content_hash")
+
+  // --- Provenance (Gate 11 §5) ----------------------------------------------
+  /// Any external identifier this platform did not assign (inspection
+  /// reference, audit finding ID, ...) - generic across observation types.
+  externalObservationId String?   @map("external_observation_id")
+  issuingAuthority      String?   @map("issuing_authority")
+  sourceOrganization    String?   @map("source_organization")
+  observationDate       DateTime? @map("observation_date") @db.Date
+  publicationDate       DateTime? @map("publication_date") @db.Date
+  jurisdiction          String?   @map("jurisdiction")
+  country               String?   @map("country")
+  /// Establishment/site information, where legally appropriate to record.
+  establishmentInfo     String?   @map("establishment_info")
+  sourceUrl             String?   @map("source_url")
+  retrievedAt           DateTime? @map("retrieved_at") @db.Timestamptz(6)
+  provenanceNotes       String?   @map("provenance_notes")
+
+  // --- FDA 483-specific metadata (Gate 11 §6) - all nullable; never assumed
+  // present for a non-FDA observation type. --------------------------------
+  fda483InspectionId      String?   @map("fda483_inspection_id")
+  fda483EstablishmentId   String?   @map("fda483_establishment_id")
+  fda483InspectionDate    DateTime? @map("fda483_inspection_date") @db.Date
+  fda483InspectionType    String?   @map("fda483_inspection_type")
+  fda483ObservationNumber String?   @map("fda483_observation_number")
+  fda483Product           String?   @map("fda483_product")
+  fda483InvestigatorInfo  String?   @map("fda483_investigator_info")
+
+  // --- Source linkage (Gate 11 §12) - optional, version-precise; distinct
+  // from (and additive to) Observation's own existing flat `sourceId`. ----
+  sourceId        String? @map("source_id") @db.Uuid
+  sourceVersionId String? @map("source_version_id") @db.Uuid
+  sourceSectionId String? @map("source_section_id") @db.Uuid
+
+  // --- Training-content linkage (Gate 11 §22) ------------------------------
+  learningObjectiveId String? @map("learning_objective_id") @db.Uuid
+
+  // --- Risk / severity (Gate 11 §17/§18) -----------------------------------
+  riskDimensions ObservationRiskDimension[] @map("risk_dimensions")
+  severity       ObservationSeverity        @default(NOT_ASSESSED)
+
+  // --- Root cause (Gate 11 §19) - basis required whenever a category is
+  // recorded, so "documented" is never silently assumed. -------------------
+  rootCauseCategory RootCauseCategory? @map("root_cause_category")
+  rootCauseBasis    RootCauseBasis?    @map("root_cause_basis")
+  rootCauseNotes    String?            @map("root_cause_notes")
+
+  // --- Expected action (Gate 11 §20) ---------------------------------------
+  expectedActionText  String?              @map("expected_action_text")
+  expectedActionBasis ExpectedActionBasis? @map("expected_action_basis")
+
+  // --- CAPA (Gate 11 §21) - only ever populated when the evidence actually
+  // documents it; never fabricated. -----------------------------------------
+  capaCorrectiveAction String?     @map("capa_corrective_action")
+  capaPreventiveAction String?     @map("capa_preventive_action")
+  capaStatus           CapaStatus? @map("capa_status")
+  capaSource           String?     @map("capa_source")
+  capaDate             DateTime?   @map("capa_date") @db.Date
+
+  /// Gate 11 §49: future question-generation metadata ONLY - decision
+  /// point / likely misconception / role conflict / risk tradeoff etc.
+  /// Explicitly derived/educational, never original evidence, and never
+  /// consumed by any question-generation code in this gate.
+  questionGenerationHints Json? @map("question_generation_hints")
+
+  // --- De-identification (Gate 11 §9/§10/§11) ------------------------------
+  deIdentificationStatus DeIdentificationStatus @default(NOT_REVIEWED) @map("de_identification_status")
+  deIdentificationNotes  String?                @map("de_identification_notes")
+
+  // --- Licensing / access (Gate 11 §30) - reuses Gate 10's exact enum. -----
+  accessRestriction   SourceAccessRestriction @default(INTERNAL_KNOWLEDGE_ONLY) @map("access_restriction")
+  license             String?
+  attributionRequired Boolean                 @default(true) @map("attribution_required")
+
+  // --- External AI eligibility (Gate 11 §9/§31, mirrors Gate 10 exactly) --
+  externalAiEligibility ExternalAiEligibility @default(INTERNAL_ONLY) @map("external_ai_eligibility")
+
+  // --- Lifecycle (Gate 11 §28) ----------------------------------------------
+  reviewStatus ContentStatus @default(DRAFT) @map("review_status")
+  approvedAt   DateTime?     @map("approved_at") @db.Timestamptz(6)
+  publishedAt  DateTime?     @map("published_at") @db.Timestamptz(6)
+  archivedAt   DateTime?     @map("archived_at") @db.Timestamptz(6)
+
+  /// Set only when this version was created by a committed import row
+  /// (Gate 11 §41/§42) - null for a directly-authored version.
+  importBatchId String? @map("import_batch_id") @db.Uuid
+
+  // --- Raw-source traceability (Gate 12 §8/§14) - so a reviewer can answer
+  // "where exactly did this originate" without reading application logs.
+  // Null for a directly-authored (non-imported) version. --------------------
+  sourceFileName  String? @map("source_file_name")
+  sourceSheetName String? @map("source_sheet_name")
+  sourceRowNumber Int?    @map("source_row_number")
+
+  /// Gate 12 §11: per-dimension classification confidence, e.g.
+  /// `{"observationType":"SOURCE_EXPLICIT","domain":"UNMAPPED"}` - one JSON
+  /// map rather than a column per classified dimension, but never hidden:
+  /// every entry is queryable and shown in the admin UI.
+  classificationBasis Json? @map("classification_basis")
+  /// Gate 12 §3/§7: any source column that could not be reliably mapped to
+  /// a canonical field above - preserved here rather than discarded, so no
+  /// source information is ever silently lost.
+  rawSourceFields     Json? @map("raw_source_fields")
+
+  // --- Future-use readiness metadata (Gate 12 §22) - flags only, never
+  // generated content. No case study, question, or narrative is created by
+  // setting these. -----------------------------------------------------------
+  caseStudyCandidate          Boolean @default(false) @map("case_study_candidate")
+  questionGenerationCandidate Boolean @default(false) @map("question_generation_candidate")
+  trainingUseCandidate        Boolean @default(false) @map("training_use_candidate")
+
+  // --- Gate 13: version-scoped curated domain (additive - distinct from,
+  // and never overwriting, Observation.domainId, the existing Gate 4
+  // identity-level pointer). Mirrors the sourceId/Observation.sourceId
+  // precedent from Gate 10/11 exactly. -------------------------------------
+  domainId String? @map("domain_id") @db.Uuid
+
+  // --- Gate 13 §23/§24/§25: curated readiness decisions, distinct from the
+  // Gate 12 import-time heuristic booleans above. Basis/curator/rationale/
+  // timestamp for each change live in ObservationCurationHistory. ----------
+  caseStudyReadiness          ReadinessStatus @default(NOT_ASSESSED) @map("case_study_readiness")
+  questionGenerationReadiness ReadinessStatus @default(NOT_ASSESSED) @map("question_generation_readiness")
+  trainingUseReadiness        ReadinessStatus @default(NOT_ASSESSED) @map("training_use_readiness")
+
+  /// Gate 13 §27: curation-completeness lifecycle - independent of
+  /// `reviewStatus` (which governs publish authority, not curation depth).
+  curationStatus CurationWorkflowStatus @default(IMPORTED) @map("curation_status")
+
+  /// Gate 13 §21: how `learningObjectiveId` below was established, or null
+  /// if no learning-objective assessment has been made yet.
+  learningObjectiveMatchType LearningObjectiveMatchType? @map("learning_objective_match_type")
+
+  /// Gate 14 §23/§24: deterministic curation-priority workflow tier - a
+  /// prioritization aid for the human review queue, NEVER a quality/AI
+  /// confidence score. Null until the deterministic priority rules have
+  /// been run for this version.
+  curationPriority CurationPriorityTier? @map("curation_priority")
+
+  /// Gate 14 §26: a bounded, expiring reviewer lease (max 50 records/claim)
+  /// so two reviewers don't work the same record simultaneously - never an
+  /// indefinite lock. A claim past `curationClaimExpiresAt` is treated as
+  /// released by every read path.
+  curationClaimedById    String?   @map("curation_claimed_by_id") @db.Uuid
+  curationClaimedAt      DateTime? @map("curation_claimed_at") @db.Timestamptz(6)
+  curationClaimExpiresAt DateTime? @map("curation_claim_expires_at") @db.Timestamptz(6)
+
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  observation           Observation             @relation("ObservationVersions", fields: [observationId], references: [id], onDelete: Cascade)
+  currentForObservation Observation?            @relation("ObservationCurrentPublishedVersion")
+  source                Source?                 @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceVersion         SourceVersion?          @relation(fields: [sourceVersionId], references: [id], onDelete: SetNull)
+  sourceSection         SourceSection?          @relation(fields: [sourceSectionId], references: [id], onDelete: SetNull)
+  learningObjective     LearningObjective?      @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  domain                GcpDomain?              @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  importBatch           ObservationImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  createdBy             User?                   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  curationClaimedBy     User?                   @relation("ObservationVersionCurationClaim", fields: [curationClaimedById], references: [id], onDelete: SetNull)
+
+  professionalRoles                    ObservationVersionProfessionalRole[]
+  caseStudyLinks                       ObservationVersionCaseStudy[]
+  importRows                           ObservationImportRow[]
+  curationHistory                      ObservationCurationHistory[]
+  sourceLinkReviews                    ObservationSourceLinkReview[]
+  trainingInterpretations              ObservationTrainingInterpretation[]
+  /// Gate 15: specifications primarily grounded on this observation version.
+  primaryForCaseStudySpecifications    CaseStudySpecification[]             @relation("CaseStudySpecificationPrimaryObservation")
+  supportingForCaseStudySpecifications CaseStudySpecificationObservation[]  @relation("CaseStudySpecificationSupportingObservation")
+  caseStudyEvidenceReferences          CaseStudyEvidenceReference[]         @relation("CaseStudyEvidenceObservationVersion")
+  caseStudyTrancheItems                CaseStudyTrancheItem[]               @relation("CaseStudyTrancheItemObservation")
+
+  @@unique([observationId, versionNumber])
+  @@index([observationId])
+  @@index([reviewStatus])
+  @@index([observationType])
+  @@index([evidenceClass])
+  @@index([deIdentificationStatus])
+  @@index([externalAiEligibility])
+  @@index([contentHash])
+  @@index([externalObservationId])
+  @@index([sourceFileName, sourceSheetName])
+  @@index([domainId])
+  @@index([curationStatus])
+  @@index([caseStudyReadiness])
+  @@index([questionGenerationReadiness])
+  @@index([curationPriority])
+  @@index([curationClaimedById])
+  @@map("observation_versions")
+}
+
+/// Join table: an ObservationVersion may apply to one or more professional
+/// roles (Gate 11 §15) - never forced to a single role when evidence
+/// supports several. Mirrors CaseStudyTag's composite-key pattern.
+model ObservationVersionProfessionalRole {
+  observationVersionId String @map("observation_version_id") @db.Uuid
+  professionalRoleId   String @map("professional_role_id") @db.Uuid
+
+  /// Gate 13 §11: never defaulted to a stronger claim than the assignment
+  /// actually deserves - existing (Gate 11/12) assignments are backfilled
+  /// as HUMAN_CURATED since every prior assignment was an explicit,
+  /// caller-supplied choice, never an automated guess.
+  basis       ClassificationBasis @default(HUMAN_CURATED)
+  rationale   String?
+  curatedById String?             @map("curated_by_id") @db.Uuid
+  curatedAt   DateTime            @default(now()) @map("curated_at") @db.Timestamptz(6)
+
+  observationVersion ObservationVersion @relation(fields: [observationVersionId], references: [id], onDelete: Cascade)
+  professionalRole   ProfessionalRole   @relation(fields: [professionalRoleId], references: [id], onDelete: Cascade)
+  curatedBy          User?              @relation(fields: [curatedById], references: [id], onDelete: SetNull)
+
+  @@id([observationVersionId, professionalRoleId])
+  @@index([professionalRoleId])
+  @@map("observation_version_professional_roles")
+}
+
+/// Join table: an ObservationVersion may support multiple case studies, and
+/// a case study may combine multiple observations (Gate 11 §23) - additive
+/// to (never a replacement for) the existing single `Observation
+/// .caseStudyId`. Never duplicates observation text into the case study;
+/// this is a reference only.
+model ObservationVersionCaseStudy {
+  observationVersionId String   @map("observation_version_id") @db.Uuid
+  caseStudyId          String   @map("case_study_id") @db.Uuid
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  observationVersion ObservationVersion @relation(fields: [observationVersionId], references: [id], onDelete: Cascade)
+  caseStudy          CaseStudy          @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+
+  @@id([observationVersionId, caseStudyId])
+  @@index([caseStudyId])
+  @@map("observation_version_case_studies")
+}
+
+/// Gate 11 §41/§42: one controlled import attempt. Always dry-run
+/// (`PENDING`/`PROCESSING`, no ObservationVersion rows created) until an
+/// explicit commit step; never a silent mass-write.
+model ObservationImportBatch {
+  id                   String            @id @default(uuid()) @db.Uuid
+  /// The single Observation identity every committed row in this batch
+  /// creates a version under - constant for the whole batch, supplied
+  /// explicitly at creation time (Gate 11 §42). Gate 12 §16: NULL means
+  /// "bulk mode" - each row represents a DISTINCT real-world observation
+  /// and gets its own new Observation identity (found-or-created
+  /// deterministically by observationCode) at commit time, rather than
+  /// every row becoming another version of one shared Observation.
+  observationId        String?           @map("observation_id") @db.Uuid
+  sourceLabel          String            @map("source_label")
+  originalFilename     String?           @map("original_filename")
+  /// Gate 12 §16: which version of the deterministic normalization
+  /// pipeline (apps/api/scripts/normalize-observations.ts) produced this
+  /// batch's records - for reproducibility, never for AI provenance.
+  normalizationVersion String?           @map("normalization_version")
+  status               ImportBatchStatus @default(PENDING)
+  totalRecords         Int               @default(0) @map("total_records")
+  acceptedRecords      Int               @default(0) @map("accepted_records")
+  rejectedRecords      Int               @default(0) @map("rejected_records")
+  duplicateRecords     Int               @default(0) @map("duplicate_records")
+  /// Gate 12 §16/§18: rows that are VALID (committable) but carry at least
+  /// one HUMAN_REVIEW_REQUIRED/UNMAPPED classification or a de-
+  /// identification flag - distinct from a blocking validation error.
+  warningCount         Int               @default(0) @map("warning_count")
+  failedRecords        Int               @default(0) @map("failed_records")
+  initiatedById        String?           @map("initiated_by_id") @db.Uuid
+  startedAt            DateTime          @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt          DateTime?         @map("completed_at") @db.Timestamptz(6)
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  observation       Observation?           @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  initiatedBy       User?                  @relation(fields: [initiatedById], references: [id], onDelete: SetNull)
+  rows              ObservationImportRow[]
+  committedVersions ObservationVersion[]
+
+  @@index([status])
+  @@index([observationId])
+  @@map("observation_import_batches")
+}
+
+/// One row within an import batch, from raw input through validation
+/// outcome to (if committed) the resulting ObservationVersion. Preserves
+/// the exact raw input for audit, per Gate 11 §44/§7.
+model ObservationImportRow {
+  id                          String          @id @default(uuid()) @db.Uuid
+  batchId                     String          @map("batch_id") @db.Uuid
+  rowIndex                    Int             @map("row_index")
+  rawData                     Json            @map("raw_data")
+  status                      ImportRowStatus
+  /// Controlled validation errors - never a raw stack trace.
+  errors                      Json?
+  /// Gate 12 §17: non-blocking notices (e.g. "professional role not
+  /// mapped - human review required") - distinct from `errors`, which
+  /// always means the row could not be committed.
+  warnings                    Json?
+  observationCode             String?         @map("observation_code")
+  createdObservationVersionId String?         @map("created_observation_version_id") @db.Uuid
+  createdAt                   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  batch                     ObservationImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  createdObservationVersion ObservationVersion?    @relation(fields: [createdObservationVersionId], references: [id], onDelete: SetNull)
+
+  @@index([batchId])
+  @@index([status])
+  @@map("observation_import_rows")
+}
+
+/// Gate 13 §9/§31: the dedicated, structured curation-provenance record -
+/// preferred over overwriting source data or relying solely on the generic
+/// AuditLog's free-form JSON metadata for a per-field change history a
+/// curation UI can query efficiently. A matching AuditLog entry is ALSO
+/// recorded via the existing AuditService for every curation action, so
+/// this is additive to (never a replacement for) the platform's one audit
+/// framework.
+model ObservationCurationHistory {
+  id                   String              @id @default(uuid()) @db.Uuid
+  observationVersionId String              @map("observation_version_id") @db.Uuid
+  /// Which curated dimension changed, e.g. "domain", "professionalRole",
+  /// "severity", "rootCauseCategory", "riskDimensions", "curationStatus",
+  /// "caseStudyReadiness", "questionGenerationReadiness",
+  /// "trainingUseReadiness", "learningObjective".
+  field                String
+  previousValue        Json?               @map("previous_value")
+  newValue             Json?               @map("new_value")
+  basis                ClassificationBasis
+  rationale            String?
+  curatedById          String?             @map("curated_by_id") @db.Uuid
+  curatedAt            DateTime            @default(now()) @map("curated_at") @db.Timestamptz(6)
+
+  observationVersion ObservationVersion @relation(fields: [observationVersionId], references: [id], onDelete: Cascade)
+  curatedBy          User?              @relation(fields: [curatedById], references: [id], onDelete: SetNull)
+
+  @@index([observationVersionId])
+  @@index([field])
+  @@map("observation_curation_history")
+}
+
+/// Gate 13 §17/§18: one raw citation candidate (e.g. "21 CFR 312.60") found
+/// in an observation's evidence, and its human-reviewed linkage decision.
+/// A single observation may cite several authorities, each reviewed
+/// independently - never auto-linked from pattern matching alone.
+model ObservationSourceLinkReview {
+  id                       String                 @id @default(uuid()) @db.Uuid
+  observationVersionId     String                 @map("observation_version_id") @db.Uuid
+  citationText             String                 @map("citation_text")
+  candidateSourceId        String?                @map("candidate_source_id") @db.Uuid
+  candidateSourceVersionId String?                @map("candidate_source_version_id") @db.Uuid
+  candidateSourceSectionId String?                @map("candidate_source_section_id") @db.Uuid
+  status                   SourceLinkReviewStatus @default(NOT_LINKED)
+  rationale                String?
+  reviewerId               String?                @map("reviewer_id") @db.Uuid
+  reviewedAt               DateTime?              @map("reviewed_at") @db.Timestamptz(6)
+  createdAt                DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  observationVersion     ObservationVersion @relation(fields: [observationVersionId], references: [id], onDelete: Cascade)
+  candidateSource        Source?            @relation(fields: [candidateSourceId], references: [id], onDelete: SetNull)
+  candidateSourceVersion SourceVersion?     @relation(fields: [candidateSourceVersionId], references: [id], onDelete: SetNull)
+  candidateSourceSection SourceSection?     @relation(fields: [candidateSourceSectionId], references: [id], onDelete: SetNull)
+  reviewer               User?              @relation(fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([observationVersionId])
+  @@index([status])
+  @@map("observation_source_link_reviews")
+}
+
+/// Gate 13 §19/§20: a controlled, curated interpretation of an
+/// observation's practical training meaning - structurally and visually
+/// distinct from the observation's own evidence text, FDA wording, and any
+/// authoritative source wording. Never auto-published.
+model ObservationTrainingInterpretation {
+  id                   String                     @id @default(uuid()) @db.Uuid
+  observationVersionId String                     @map("observation_version_id") @db.Uuid
+  interpretationType   TrainingInterpretationType @map("interpretation_type")
+  text                 String
+  rationale            String?
+  reviewStatus         ContentStatus              @default(DRAFT) @map("review_status")
+  approvedAt           DateTime?                  @map("approved_at") @db.Timestamptz(6)
+  createdById          String?                    @map("created_by_id") @db.Uuid
+  createdAt            DateTime                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  observationVersion          ObservationVersion           @relation(fields: [observationVersionId], references: [id], onDelete: Cascade)
+  createdBy                   User?                        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  caseStudySpecifications     CaseStudySpecification[]
+  caseStudyEvidenceReferences CaseStudyEvidenceReference[]
+
+  @@index([observationVersionId])
+  @@index([reviewStatus])
+  @@map("observation_training_interpretations")
 }
 
 // ---------------------------------------------------------------------------
@@ -798,14 +2467,26 @@ model QuestionVersion {
 
   difficulty DifficultyLevel @default(MEDIUM)
 
-  levelId             String? @map("level_id") @db.Uuid
-  domainId            String? @map("domain_id") @db.Uuid
-  professionalRoleId  String? @map("professional_role_id") @db.Uuid
-  learningObjectiveId String? @map("learning_objective_id") @db.Uuid
-  observationId       String? @map("observation_id") @db.Uuid
-  sourceId            String? @map("source_id") @db.Uuid
+  levelId                String?                 @map("level_id") @db.Uuid
+  domainId               String?                 @map("domain_id") @db.Uuid
+  professionalRoleId     String?                 @map("professional_role_id") @db.Uuid
+  learningObjectiveId    String?                 @map("learning_objective_id") @db.Uuid
+  observationId          String?                 @map("observation_id") @db.Uuid
+  sourceId               String?                 @map("source_id") @db.Uuid
   /// Pinpoint citation within the source, e.g. "ICH E6(R3) §4.3.2".
-  sourceSection       String? @map("source_section")
+  sourceSection          String?                 @map("source_section")
+  /// Gate 10 §29/§61: optional, purely additive EXACT evidence pointer into
+  /// the new structured source model - does not replace the free-text
+  /// `sourceSection` above, and no existing QuestionVersion row is altered
+  /// by adding this capability. A future question can eventually cite exact
+  /// source evidence here instead of (or alongside) the free-text citation.
+  sourceSectionRefId     String?                 @map("source_section_ref_id") @db.Uuid
+  /// Gate 22 §13: DIRECT_GCP or CASE_APPLICATION when this question
+  /// originated from an AI candidate carrying that classification (Gate
+  /// 18) - null for a human-authored question or one converted before
+  /// Gate 22. Reuses the existing enum unchanged; never collapses the two
+  /// question-generation categories into one generic type.
+  questionGenerationType QuestionGenerationType? @map("question_generation_type")
 
   reviewStatus ContentStatus @default(DRAFT) @map("review_status")
   /// Independent of reviewStatus — lets a PUBLISHED version be temporarily
@@ -828,6 +2509,7 @@ model QuestionVersion {
   learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
   observation       Observation?       @relation(fields: [observationId], references: [id], onDelete: SetNull)
   source            Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceSectionRef  SourceSection?     @relation(fields: [sourceSectionRefId], references: [id], onDelete: SetNull)
   author            User?              @relation("QuestionVersionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   reviewer          User?              @relation("QuestionVersionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
 
@@ -885,8 +2567,9 @@ model QuestionOption {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  questionVersion    QuestionVersion       @relation(fields: [questionVersionId], references: [id], onDelete: Cascade)
+  questionVersion    QuestionVersion             @relation(fields: [questionVersionId], references: [id], onDelete: Cascade)
   selectedInAttempts ExamAttemptQuestion[]
+  presentationOrders ExamAttemptQuestionOption[]
 
   @@unique([questionVersionId, label])
   @@index([questionVersionId, isCorrect])
@@ -917,98 +2600,209 @@ model QuestionDuplicateFlag {
 }
 
 // ---------------------------------------------------------------------------
-// Exam blueprint
+// Examination engine foundation (Stage 7A)
+//
+// SCHEMA CORRECTION (documented per the Stage 7A brief's explicit allowance):
+// Stage 2 seeded placeholder ExamBlueprint/ExamBlueprintRule/ExamAttempt
+// tables with no consuming service and zero rows (confirmed empty before
+// this change). Stage 7A replaces that placeholder shape with the real
+// Exam -> ExamVersion -> ExamBlueprint -> ExamBlueprintRule hierarchy the
+// spec requires. Because nothing ever wrote to the old tables, this is a
+// safe redesign, not a destructive change to real data.
+//
+// Exam mirrors the Question/QuestionVersion split: Exam is the stable
+// identity (code, program) and points at whichever ExamVersion is currently
+// ACTIVE (activeVersionId, mirroring Question.currentPublishedVersionId);
+// all substantive configuration - and its lifecycle - lives on ExamVersion
+// and is never overwritten in place once non-DRAFT. This stage implements
+// configuration, blueprint and deterministic eligibility only - no live exam
+// session, no runtime question selection, no scoring. See
+// docs/examination-engine.md.
 // ---------------------------------------------------------------------------
 
-/// A named, versioned exam configuration for a training level.
-model ExamBlueprint {
-  id                  String        @id @default(uuid()) @db.Uuid
-  levelId             String        @map("level_id") @db.Uuid
-  name                String
-  description         String?
-  totalQuestions      Int           @default(20) @map("total_questions")
-  passingScorePercent Decimal       @default(80) @map("passing_score_percent") @db.Decimal(5, 2)
-  timeLimitMinutes    Int?          @map("time_limit_minutes")
-  maxAttempts         Int?          @map("max_attempts")
-  /// The single active blueprint an eligible learner is examined against for
-  /// a level. Enforced unique-per-level at the database level via a partial
-  /// unique index (see migration SQL) rather than here.
-  isDefault           Boolean       @default(false) @map("is_default")
-  version             Int           @default(1)
-  status              ContentStatus @default(DRAFT)
-  createdById         String?       @map("created_by_id") @db.Uuid
-  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+/// The stable identity of one certification examination. All substantive
+/// configuration lives on {@link ExamVersion}; this row only holds the
+/// immutable code and a pointer to whichever version is currently ACTIVE.
+model Exam {
+  id                String   @id @default(uuid()) @db.Uuid
+  /// Stable business key, e.g. "GCP-CERT-EXAM". Never reused.
+  code              String   @unique
+  name              String
+  description       String?
+  trainingProgramId String   @map("training_program_id") @db.Uuid
+  /// The version learners could eventually be examined against. Null until
+  /// an admin activates a version. Moves forward on each (re)activation; the
+  /// version it used to point to is never deleted - it becomes INACTIVE.
+  activeVersionId   String?  @unique @map("active_version_id") @db.Uuid
+  createdById       String?  @map("created_by_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  level     TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  createdBy User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  program       TrainingProgram @relation(fields: [trainingProgramId], references: [id], onDelete: Restrict)
+  createdBy     User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  activeVersion ExamVersion?    @relation("ExamActiveVersion", fields: [activeVersionId], references: [id], onDelete: SetNull)
 
-  rules    ExamBlueprintRule[]
-  attempts ExamAttempt[]
+  versions ExamVersion[] @relation("ExamVersions")
 
-  @@index([levelId])
+  @@index([trainingProgramId])
+  @@map("exams")
+}
+
+/// One versioned, immutable-once-active examination configuration. Only a
+/// DRAFT version may be edited in place; editing a non-DRAFT version instead
+/// creates a new version ("never silently mutate historical exam
+/// configuration"). questionCount/totalMarks/passPercentage are
+/// database-driven configuration, never hard-coded into scoring logic (which
+/// does not exist yet).
+model ExamVersion {
+  id            String            @id @default(uuid()) @db.Uuid
+  examId        String            @map("exam_id") @db.Uuid
+  /// 1, 2, 3, ... within this exam. Never reused.
+  versionNumber Int               @map("version_number")
+  status        ExamVersionStatus @default(DRAFT)
+
+  /// The training level this version examines.
+  levelId          String  @map("level_id") @db.Uuid
+  questionCount    Int     @default(20) @map("question_count")
+  marksPerQuestion Decimal @default(5) @map("marks_per_question") @db.Decimal(6, 2)
+  totalMarks       Int     @default(100) @map("total_marks")
+  passPercentage   Decimal @default(80) @map("pass_percentage") @db.Decimal(5, 2)
+  /// Supports a future live timer; Stage 7A stores it only, never enforces it.
+  durationMinutes  Int?    @map("duration_minutes")
+  /// "One active attempt at a time" per the Stage 7A initial configuration;
+  /// the future attempt engine is what will actually enforce this.
+  maxAttempts      Int     @default(1) @map("max_attempts")
+
+  createdById String?   @map("created_by_id") @db.Uuid
+  activatedAt DateTime? @map("activated_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  exam          Exam          @relation("ExamVersions", fields: [examId], references: [id], onDelete: Cascade)
+  level         TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  createdBy     User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  /// Set (by Exam.activeVersionId) only while this is the live version.
+  activeForExam Exam?         @relation("ExamActiveVersion")
+
+  blueprint    ExamBlueprint?
+  attempts     ExamAttempt[]
+  certificates Certificate[]
+
+  @@unique([examId, versionNumber])
   @@index([status])
+  @@index([levelId])
+  @@map("exam_versions")
+}
+
+/// A database-driven blueprint describing WHAT KIND of questions an exam
+/// version should contain. It never itself selects questions - that is
+/// explicit future-stage scope. See docs/examination-engine.md.
+model ExamBlueprint {
+  id            String   @id @default(uuid()) @db.Uuid
+  examVersionId String   @unique @map("exam_version_id") @db.Uuid
+  notes         String?
+  createdById   String?  @map("created_by_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  examVersion ExamVersion @relation(fields: [examVersionId], references: [id], onDelete: Cascade)
+  createdBy   User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  rules ExamBlueprintRule[]
+
   @@map("exam_blueprints")
 }
 
-/// A single distribution rule within a blueprint (domain / difficulty /
-/// question-type / case-study proportion). The selection *engine* that
-/// consumes these rules is built in a later stage.
+/// A single constraint within a blueprint. A rule may constrain one or
+/// several dimensions at once - it is never required to specify every
+/// possible dimension.
 model ExamBlueprintRule {
-  id            String            @id @default(uuid()) @db.Uuid
-  blueprintId   String            @map("blueprint_id") @db.Uuid
-  ruleType      BlueprintRuleType @map("rule_type")
-  domainId      String?           @map("domain_id") @db.Uuid
-  difficulty    DifficultyLevel?
-  questionType  QuestionType?     @map("question_type")
-  /// Absolute question count this rule targets (mutually exclusive in
-  /// practice with targetPercent — validated at the service layer).
-  targetCount   Int?              @map("target_count")
-  /// Percentage-of-exam alternative to targetCount.
-  targetPercent Decimal?          @map("target_percent") @db.Decimal(5, 2)
-  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          String @id @default(uuid()) @db.Uuid
+  blueprintId String @map("blueprint_id") @db.Uuid
 
-  blueprint ExamBlueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
-  domain    GcpDomain?    @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  questionType        QuestionType?    @map("question_type")
+  difficulty          DifficultyLevel?
+  domainId            String?          @map("domain_id") @db.Uuid
+  professionalRoleId  String?          @map("professional_role_id") @db.Uuid
+  levelId             String?          @map("level_id") @db.Uuid
+  learningObjectiveId String?          @map("learning_objective_id") @db.Uuid
+  caseStudyRequired   Boolean?         @map("case_study_required")
+  sourceRequired      Boolean?         @map("source_required")
+
+  minimumCount Int?    @map("minimum_count")
+  maximumCount Int?    @map("maximum_count")
+  exactCount   Int?    @map("exact_count")
+  /// Diagnostic ordering only - the selection engine that will consume
+  /// priority does not exist yet.
+  priority     Int     @default(0)
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  blueprint         ExamBlueprint      @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
+  domain            GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  level             TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
 
   @@index([blueprintId])
+  @@index([isActive])
   @@map("exam_blueprint_rules")
 }
 
 // ---------------------------------------------------------------------------
-// Exam attempts
+// Exam attempts (foundational relations only - Stage 7A does not implement
+// the attempt engine: no answers, no timers, no submissions, no scoring)
 // ---------------------------------------------------------------------------
 
-/// One learner's sitting of an exam against a specific blueprint.
+/// One learner's sitting of an exam against a specific, immutable exam
+/// version. No service creates rows here yet - the shape exists so the
+/// future attempt engine has a stable, already-reviewed target to build
+/// against.
 model ExamAttempt {
   id             String            @id @default(uuid()) @db.Uuid
   userId         String            @map("user_id") @db.Uuid
-  blueprintId    String            @map("blueprint_id") @db.Uuid
-  /// Denormalised for stable historical reporting even if the blueprint's
+  examVersionId  String            @map("exam_version_id") @db.Uuid
+  /// Denormalised for stable historical reporting even if the exam version's
   /// level assignment changes later.
   levelId        String            @map("level_id") @db.Uuid
+  /// 1, 2, 3, ... per (user, examVersion) - never reused. Enforced together
+  /// with maxAttempts at the service layer; uniqueness enforced here so a
+  /// race can never assign the same attempt number twice (Gate 7B).
+  attemptNumber  Int               @map("attempt_number")
   status         ExamAttemptStatus @default(IN_PROGRESS)
   totalQuestions Int               @map("total_questions")
   correctCount   Int?              @map("correct_count")
   scorePercent   Decimal?          @map("score_percent") @db.Decimal(5, 2)
   passed         Boolean?
   startedAt      DateTime          @default(now()) @map("started_at") @db.Timestamptz(6)
+  /// Populated from ExamVersion.durationMinutes when set, for future timer
+  /// use (Gate 7C+). Gate 7B never reads this to expire or reject an attempt.
   expiresAt      DateTime?         @map("expires_at") @db.Timestamptz(6)
   submittedAt    DateTime?         @map("submitted_at") @db.Timestamptz(6)
+  /// Set exactly once, by Gate 7E, at the moment SUBMITTED -> PASSED/FAILED
+  /// finalizes. Non-null is equivalent to "result is FINALIZED" - there is
+  /// no separate resultStatus column (status + evaluatedAt already encode
+  /// PENDING vs FINALIZED unambiguously).
+  evaluatedAt    DateTime?         @map("evaluated_at") @db.Timestamptz(6)
   createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user      User          @relation(fields: [userId], references: [id], onDelete: Restrict)
-  blueprint ExamBlueprint @relation(fields: [blueprintId], references: [id], onDelete: Restrict)
-  level     TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  examVersion ExamVersion   @relation(fields: [examVersionId], references: [id], onDelete: Restrict)
+  level       TrainingLevel @relation(fields: [levelId], references: [id], onDelete: Restrict)
 
   questions   ExamAttemptQuestion[]
   certificate Certificate?
 
+  /// One attempt number per (user, examVersion) - a defence-in-depth
+  /// uniqueness guarantee alongside the partial "one IN_PROGRESS attempt"
+  /// index added in migration SQL (Prisma cannot express a partial index).
+  @@unique([userId, examVersionId, attemptNumber])
   @@index([userId])
   @@index([status])
-  @@index([blueprintId])
+  @@index([examVersionId])
   @@map("exam_attempts")
 }
 
@@ -1033,42 +2827,108 @@ model ExamAttemptQuestion {
   questionVersion QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
   selectedOption  QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
 
+  /// Persisted per-attempt option presentation order (Gate 7B) - the
+  /// underlying QuestionOption.sortOrder never determines what the learner
+  /// sees; this is generated once at attempt creation and never re-rolled.
+  optionOrder ExamAttemptQuestionOption[]
+
   @@unique([attemptId, questionVersionId])
+  @@unique([attemptId, sortOrder])
   @@index([questionVersionId])
   @@map("exam_attempt_questions")
+}
+
+/// Persisted, per-attempt-question presentation order for one answer option
+/// (Gate 7B). This is a pure ordering record - the option's actual content
+/// always comes from the historical QuestionOption row, never duplicated
+/// here, so a later edit to the (immutable, PUBLISHED) source can never
+/// desync from what the learner already saw.
+model ExamAttemptQuestionOption {
+  id                    String   @id @default(uuid()) @db.Uuid
+  examAttemptQuestionId String   @map("exam_attempt_question_id") @db.Uuid
+  questionOptionId      String   @map("question_option_id") @db.Uuid
+  presentationOrder     Int      @map("presentation_order")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  examAttemptQuestion ExamAttemptQuestion @relation(fields: [examAttemptQuestionId], references: [id], onDelete: Cascade)
+  questionOption      QuestionOption      @relation(fields: [questionOptionId], references: [id], onDelete: Restrict)
+
+  @@unique([examAttemptQuestionId, questionOptionId])
+  @@unique([examAttemptQuestionId, presentationOrder])
+  @@map("exam_attempt_question_options")
 }
 
 // ---------------------------------------------------------------------------
 // Certificates
 // ---------------------------------------------------------------------------
 
+/// Gate 8: a historical proof-of-completion artifact, issued exactly once
+/// per qualifying (PASSED, Gate-7E-finalized) ExamAttempt. Deliberately
+/// denormalised (`*Snapshot` fields, `examVersionId`) - Program/TrainingLevel
+/// names are edited in place (no versioning, unlike Question/ExamVersion),
+/// so a certificate must never silently reflect a later rename. Once issued,
+/// only `status`/`revokedAt`/`revokedById`/`revocationReason` may ever
+/// change (REVOKE), and only once, forward - see CertificatesService.
 model Certificate {
-  id                String            @id @default(uuid()) @db.Uuid
-  /// Public, human-shareable identifier used for verification lookups.
-  certificateNumber String            @unique @map("certificate_number")
-  userId            String            @map("user_id") @db.Uuid
-  programId         String            @map("program_id") @db.Uuid
-  levelId           String            @map("level_id") @db.Uuid
-  examAttemptId     String            @unique @map("exam_attempt_id") @db.Uuid
-  scorePercent      Decimal           @map("score_percent") @db.Decimal(5, 2)
-  issueDate         DateTime          @map("issue_date") @db.Date
-  expiryDate        DateTime          @map("expiry_date") @db.Date
-  status            CertificateStatus @default(ACTIVE)
-  revokedAt         DateTime?         @map("revoked_at") @db.Timestamptz(6)
-  revokedById       String?           @map("revoked_by_id") @db.Uuid
-  revocationReason  String?           @map("revocation_reason")
-  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                String @id @default(uuid()) @db.Uuid
+  /// Public, human-shareable certificate identifier, e.g. "GCP-2026-7F4K92QX".
+  /// Server-generated from cryptographically secure randomness - never the
+  /// database id, never sequential. Safe to print/display.
+  certificateNumber String @unique @map("certificate_number")
+  /// A SEPARATE, higher-entropy, URL-safe token used only for public
+  /// verification lookups (`/verify/certificate/:verificationCode`) and the
+  /// QR code payload - kept distinct from `certificateNumber` so the public
+  /// URL's security never depends on the shorter, human-typed display format.
+  verificationCode  String @unique @map("verification_code")
+
+  userId        String @map("user_id") @db.Uuid
+  programId     String @map("program_id") @db.Uuid
+  levelId       String @map("level_id") @db.Uuid
+  /// One certificate per qualifying attempt - the unique constraint IS the
+  /// idempotency/no-duplicate-issuance guarantee, enforced by the database,
+  /// not merely application logic.
+  examAttemptId String @unique @map("exam_attempt_id") @db.Uuid
+  /// The specific historical ExamVersion the qualifying attempt was scored
+  /// against - denormalised from examAttempt for direct queryability without
+  /// requiring a join, even though ExamAttempt.examVersionId is itself
+  /// immutable and Restrict-protected.
+  examVersionId String @map("exam_version_id") @db.Uuid
+
+  /// The learner's Gate 7E result at the moment of issuance - a historical
+  /// snapshot, never recalculated by this gate.
+  scorePercent           Decimal @map("score_percent") @db.Decimal(5, 2)
+  passPercentageSnapshot Decimal @map("pass_percentage_snapshot") @db.Decimal(5, 2)
+  /// The learner's display name at issuance (`LearnerProfile.firstName` +
+  /// `lastName`) - a later profile edit must never rewrite an issued
+  /// certificate.
+  learnerNameSnapshot    String  @map("learner_name_snapshot")
+  /// TrainingProgram.title / TrainingLevel.name at issuance - both are
+  /// edited in place by the existing admin content workflow (no
+  /// versioning), so these snapshots are the only way a historical
+  /// certificate stays accurate after a later rename.
+  programNameSnapshot    String  @map("program_name_snapshot")
+  levelNameSnapshot      String  @map("level_name_snapshot")
+
+  issueDate        DateTime          @map("issue_date") @db.Date
+  expiryDate       DateTime          @map("expiry_date") @db.Date
+  status           CertificateStatus @default(ACTIVE)
+  revokedAt        DateTime?         @map("revoked_at") @db.Timestamptz(6)
+  revokedById      String?           @map("revoked_by_id") @db.Uuid
+  revocationReason String?           @map("revocation_reason")
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   user        User            @relation("CertificateHolder", fields: [userId], references: [id], onDelete: Restrict)
   program     TrainingProgram @relation(fields: [programId], references: [id], onDelete: Restrict)
   level       TrainingLevel   @relation(fields: [levelId], references: [id], onDelete: Restrict)
   examAttempt ExamAttempt     @relation(fields: [examAttemptId], references: [id], onDelete: Restrict)
+  examVersion ExamVersion     @relation(fields: [examVersionId], references: [id], onDelete: Restrict)
   revokedBy   User?           @relation("CertificateRevokedBy", fields: [revokedById], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([status])
   @@index([expiryDate])
+  @@index([examVersionId])
   @@map("certificates")
 }
 
@@ -1228,14 +3088,26 @@ model AiGenerationRun {
   groundingVersion      String      @map("grounding_version")
   outputSchemaVersion   String      @map("output_schema_version")
 
-  sourceId            String? @map("source_id") @db.Uuid
-  sourceSection       String? @map("source_section")
-  caseStudyId         String? @map("case_study_id") @db.Uuid
-  observationId       String? @map("observation_id") @db.Uuid
-  learningObjectiveId String? @map("learning_objective_id") @db.Uuid
-  levelId             String? @map("level_id") @db.Uuid
-  moduleId            String? @map("module_id") @db.Uuid
-  professionalRoleId  String? @map("professional_role_id") @db.Uuid
+  sourceId                    String? @map("source_id") @db.Uuid
+  sourceSection               String? @map("source_section")
+  caseStudyId                 String? @map("case_study_id") @db.Uuid
+  observationId               String? @map("observation_id") @db.Uuid
+  learningObjectiveId         String? @map("learning_objective_id") @db.Uuid
+  levelId                     String? @map("level_id") @db.Uuid
+  moduleId                    String? @map("module_id") @db.Uuid
+  professionalRoleId          String? @map("professional_role_id") @db.Uuid
+  /// Gate 15: which CaseStudySpecification this run was generated for, when
+  /// `operation = CASE_STUDY_GENERATION` - additive, null for every other
+  /// operation.
+  caseStudySpecificationId    String? @map("case_study_specification_id") @db.Uuid
+  /// Gate 17: which pre-existing, already-APPROVED/PUBLISHED CaseStudyVersion
+  /// this run used as READ-ONLY grounding evidence, when
+  /// `operation = QUESTION_GENERATION` via the case-study-grounded path.
+  /// Deliberately a distinct field from `caseStudySpecificationId` above -
+  /// that one records what a CASE_STUDY_GENERATION run PRODUCED; this one
+  /// records what a QUESTION_GENERATION run READ. Additive, null for every
+  /// other operation.
+  groundingCaseStudyVersionId String? @map("grounding_case_study_version_id") @db.Uuid
 
   /// The generation request options (question type, difficulty, count,
   /// variant label, ...) - deliberately never the raw grounding narrative
@@ -1256,21 +3128,27 @@ model AiGenerationRun {
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  initiatedBy       User               @relation(fields: [initiatedById], references: [id], onDelete: Restrict)
-  source            Source?            @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  caseStudy         CaseStudy?         @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
-  observation       Observation?       @relation(fields: [observationId], references: [id], onDelete: SetNull)
-  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
-  level             TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
-  module            Module?            @relation(fields: [moduleId], references: [id], onDelete: SetNull)
-  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  initiatedBy               User                    @relation(fields: [initiatedById], references: [id], onDelete: Restrict)
+  source                    Source?                 @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  caseStudy                 CaseStudy?              @relation(fields: [caseStudyId], references: [id], onDelete: SetNull)
+  observation               Observation?            @relation(fields: [observationId], references: [id], onDelete: SetNull)
+  learningObjective         LearningObjective?      @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  level                     TrainingLevel?          @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  module                    Module?                 @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  professionalRole          ProfessionalRole?       @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  caseStudySpecification    CaseStudySpecification? @relation("CaseStudySpecificationRuns", fields: [caseStudySpecificationId], references: [id], onDelete: SetNull)
+  groundingCaseStudyVersion CaseStudyVersion?       @relation("AiGenerationRunGroundingCaseStudyVersion", fields: [groundingCaseStudyVersionId], references: [id], onDelete: SetNull)
 
-  candidates AiQuestionCandidate[]
+  candidates                      AiQuestionCandidate[]
+  activeForCaseStudySpecification CaseStudySpecification? @relation("CaseStudySpecificationActiveRun")
+  caseStudyVersion                CaseStudyVersion?
 
   @@index([operation])
   @@index([status])
   @@index([initiatedById])
   @@index([createdAt])
+  @@index([caseStudySpecificationId])
+  @@index([groundingCaseStudyVersionId])
   @@map("ai_generation_runs")
 }
 
@@ -1298,6 +3176,35 @@ model AiQuestionCandidate {
   sourceId            String? @map("source_id") @db.Uuid
   sourceSection       String? @map("source_section")
   observationId       String? @map("observation_id") @db.Uuid
+  /// Gate 17: the pre-existing, already-APPROVED/PUBLISHED CaseStudyVersion
+  /// this candidate was grounded on, when generated via the case-study-
+  /// grounded question path. Additive; null for every candidate generated
+  /// the pre-Gate-17 way (source/flat-case-study/observation grounding).
+  caseStudyVersionId  String? @map("case_study_version_id") @db.Uuid
+
+  // --- Gate 18: ICH E6(R3) normative/scenario source-role separation ------
+  /// DIRECT_GCP or CASE_APPLICATION - null only for pre-Gate-18 candidates.
+  questionGenerationType     QuestionGenerationType?     @map("question_generation_type")
+  /// Always ICH_E6_R3 when set - the candidate's claimed normative
+  /// authority. Never an FDA/observation source (Gate 18 §14 validation).
+  normativeSource            NormativeSource?            @map("normative_source")
+  /// WHICH immutable SourceVersion of ICH E6(R3) grounded this candidate's
+  /// answer - distinct from the existing `sourceId` (identity only), so a
+  /// future new ICH SourceVersion never silently reattributes history.
+  normativeSourceVersionId   String?                     @map("normative_source_version_id") @db.Uuid
+  /// The specific real SourceSection (e.g. "II.7", "4.3.3") the normative
+  /// answer/rationale is grounded on - never a free-text/invented label.
+  normativeSourceSectionId   String?                     @map("normative_source_section_id") @db.Uuid
+  /// Controlled category of the CASE_APPLICATION scenario's real-world
+  /// evidence (FDA Warning Letter / FDA 483 / practical / expert / other) -
+  /// NONE for a DIRECT_GCP candidate. Deterministically derived, never
+  /// AI-chosen.
+  scenarioSourceType         QuestionScenarioSourceType? @map("scenario_source_type")
+  /// Gate 18 §23: reuses Gate 13's existing LearningObjectiveMatchType -
+  /// records how/whether an existing LearningObjective was matched, so a
+  /// missing objective is an explicit NO_MATCH/HUMAN_REVIEW_REQUIRED
+  /// decision, never a silently-invented one.
+  learningObjectiveMatchType LearningObjectiveMatchType? @map("learning_objective_match_type")
 
   /// Deterministic result from ai-output.validator.ts -
   /// {valid, errors, warnings, checks}. Never trusted from the provider.
@@ -1327,15 +3234,60 @@ model AiQuestionCandidate {
   reviewer                 User?              @relation("AiCandidateReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   convertedQuestion        Question?          @relation(fields: [convertedQuestionId], references: [id], onDelete: SetNull)
   convertedQuestionVersion QuestionVersion?   @relation(fields: [convertedQuestionVersionId], references: [id], onDelete: SetNull)
+  caseStudyVersion         CaseStudyVersion?  @relation("QuestionCandidateGroundingCaseStudyVersion", fields: [caseStudyVersionId], references: [id], onDelete: SetNull)
+  normativeSourceVersion   SourceVersion?     @relation(fields: [normativeSourceVersionId], references: [id], onDelete: SetNull)
+  normativeSourceSection   SourceSection?     @relation(fields: [normativeSourceSectionId], references: [id], onDelete: SetNull)
 
   options        AiQuestionCandidateOption[]
   caseStudyLinks AiQuestionCandidateCaseStudy[]
+  qualityReview  AiCandidateQualityReview?
 
   @@index([status])
   @@index([runId])
+  @@index([caseStudyVersionId])
   @@index([levelId])
   @@index([domainId])
+  @@index([normativeSourceVersionId])
+  @@index([normativeSourceSectionId])
   @@map("ai_question_candidates")
+}
+
+/// Gate 21 §12/§13/§33: the structured, HUMAN-authored quality assessment
+/// that must exist (and pass the mandatory dimensions - enforced in
+/// `AiCandidateQualityReviewService`, not by any DB constraint) before a
+/// candidate may be ACCEPTed. Deliberately separate from the AI's own
+/// `AiQuestionCandidate.qualityReport`/`qualitySignals` (deterministic
+/// validator output) - this table records a REVIEWER's independent
+/// judgment, never the model's self-report. At most one row per candidate
+/// (`@unique`) and never updated once created (no update method exists) -
+/// review history is preserved by construction, not by a separate
+/// versioning mechanism, since Gate 21 does not implement REQUEST_REVISION
+/// (see docs: known limitation).
+model AiCandidateQualityReview {
+  id                String   @id @default(uuid()) @db.Uuid
+  candidateId       String   @unique @map("candidate_id") @db.Uuid
+  reviewerId        String   @map("reviewer_id") @db.Uuid
+  /// Mirrors the ACCEPT/REJECT decision this review record was submitted
+  /// with - kept alongside the candidate's own (mutable, forward-only)
+  /// `status` so this row remains a self-contained historical record even
+  /// if the candidate's status is ever revisited by a future gate.
+  decision          String   @map("decision")
+  /// Mandatory substantive rationale (Gate 21 §12) - enforced by the DTO
+  /// (`@MinLength`), never optional, regardless of decision.
+  reviewComment     String   @map("review_comment")
+  /// The 12 structured quality dimensions (Q1-Q12), Gate 21 §13 - stored as
+  /// one validated JSON object (the same established pattern as
+  /// `AiQuestionCandidate.qualityReport`/`qualitySignals`), not as ad-hoc
+  /// free text. Each field's allowed values are enforced by
+  /// `QualityReviewDimensionsDto`, not by the database.
+  qualityDimensions Json     @map("quality_dimensions")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  candidate AiQuestionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  reviewer  User                @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([reviewerId])
+  @@map("ai_candidate_quality_reviews")
 }
 
 /// One answer option belonging to an AI-generated candidate. Mirrors

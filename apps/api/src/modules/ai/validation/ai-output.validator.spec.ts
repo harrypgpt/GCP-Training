@@ -208,12 +208,83 @@ describe('validateAiQuestionOutput', () => {
     expect(result.valid).toBe(true);
   });
 
+  describe('citation detection is token-aware (Gate 18 §20 - fixes the Gate 17 false positive)', () => {
+    it('does NOT treat "OBS-FDA-WL-729750" (an internal record identifier) as an unsupported citation', () => {
+      const result = validateAiQuestionOutput(
+        baseOutput({
+          stem: 'Based on the case OBS-FDA-WL-729750, what should the reviewer do next?',
+          evidenceUsed: [],
+        }),
+        baseContext({ source: null }),
+      );
+      expect(result.errors.some((e) => /regulatory citation/i.test(e))).toBe(false);
+    });
+
+    it('still detects an ACTUAL textual "FDA" citation with no source grounded', () => {
+      const result = validateAiQuestionOutput(
+        baseOutput({ stem: 'The FDA has stated that this practice is unacceptable.' }),
+        baseContext({ source: null }),
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => /regulatory citation/i.test(e))).toBe(true);
+    });
+
+    it('still detects an ACTUAL "FDA Form 483" textual citation with no source grounded', () => {
+      const result = validateAiQuestionOutput(
+        baseOutput({ stem: 'Per FDA Form 483, what deficiency was cited?' }),
+        baseContext({ source: null }),
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => /regulatory citation/i.test(e))).toBe(true);
+    });
+
+    it('still detects an ACTUAL "21 CFR" citation with no source grounded', () => {
+      const result = validateAiQuestionOutput(
+        baseOutput({ stem: 'Per 21 CFR 312, what must the sponsor do first?' }),
+        baseContext({ source: null }),
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => /regulatory citation/i.test(e))).toBe(true);
+    });
+
+    it('still recognises an ACTUAL "ICH E6(R3)" citation, and allows it once a source is grounded', () => {
+      const result = validateAiQuestionOutput(
+        baseOutput({
+          stem: 'Per ICH E6(R3), who holds overall responsibility for trial-related medical care?',
+        }),
+        baseContext(),
+      );
+      expect(result.valid).toBe(true);
+    });
+
+    it('leaves plain non-citation text completely unaffected', () => {
+      const result = validateAiQuestionOutput(
+        baseOutput({
+          stem: 'What should the investigator do first upon noting a protocol deviation?',
+        }),
+        baseContext({ source: null }),
+      );
+      expect(result.errors.some((e) => /regulatory citation/i.test(e))).toBe(false);
+    });
+  });
+
   it('warns when claimed evidence does not match any supplied grounding', () => {
     const result = validateAiQuestionOutput(
       baseOutput({ evidenceUsed: ['A completely fabricated source nobody supplied'] }),
       baseContext(),
     );
     expect(result.warnings.some((w) => /none of the claimed evidence/i.test(w))).toBe(true);
+  });
+
+  it('warns (never silently passes) when only ONE of several claimed evidence references is fabricated (Gate 17 §14)', () => {
+    const result = validateAiQuestionOutput(
+      baseOutput({
+        evidenceUsed: ['ICH E6(R3)', 'A completely fabricated source nobody supplied'],
+      }),
+      baseContext(),
+    );
+    expect(result.valid).toBe(true); // partial fabrication is a warning, never a hard block
+    expect(result.warnings.some((w) => /could not be matched/i.test(w))).toBe(true);
   });
 
   it('surfaces the model self-reported insufficientEvidence flag as a warning', () => {

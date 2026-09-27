@@ -1,18 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type JSX } from 'react';
+import { useCallback, useEffect, useState, type JSX } from 'react';
 
-import { type DashboardView } from '@gcp/shared';
+import { type CertificateSummary, type DashboardView } from '@gcp/shared';
 
 import { RequireAuth } from '@/components/auth/require-auth';
 import { AppShell } from '@/components/learner/app-shell';
 import { EmptyState } from '@/components/learner/empty-state';
+import { ErrorState } from '@/components/learner/error-state';
+import { ExamStatusSection } from '@/components/learner/exam-status-section';
 import { ProgressBar } from '@/components/learner/progress-bar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api';
+import { certificateApi } from '@/lib/certificate-api';
 import { learnerApi } from '@/lib/learner-api';
 
 function trainingStateCopy(state: string): { label: string; tone: 'success' | 'info' | 'warning' } {
@@ -28,14 +32,19 @@ function trainingStateCopy(state: string): { label: string; tone: 'success' | 'i
 
 function DashboardContent(): JSX.Element {
   const [dashboard, setDashboard] = useState<DashboardView | null>(null);
+  const [certificates, setCertificates] = useState<CertificateSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    learnerApi
-      .getDashboard()
-      .then((data) => {
-        if (!cancelled) setDashboard(data);
+    setError(null);
+    Promise.all([learnerApi.getDashboard(), certificateApi.list()])
+      .then(([dashboardData, certificateData]) => {
+        if (!cancelled) {
+          setDashboard(dashboardData);
+          setCertificates(certificateData);
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -47,14 +56,16 @@ function DashboardContent(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
+
+  const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
   if (error) {
-    return <EmptyState title="Dashboard unavailable" description={error} />;
+    return <ErrorState title="Dashboard unavailable" description={error} onRetry={reload} />;
   }
 
   if (!dashboard) {
-    return <p className="text-sm text-muted-foreground">Loading your dashboard…</p>;
+    return <SkeletonPage label="Loading your dashboard" />;
   }
 
   return (
@@ -121,17 +132,18 @@ function DashboardContent(): JSX.Element {
                 </div>
               )}
             </dl>
-            {dashboard.activeTraining.progress.examEligible && (
-              <p className="rounded-md bg-success/10 px-4 py-3 text-sm text-success">
-                You have completed all required modules and are eligible for the examination. The
-                examination itself will be available in a future release.
-              </p>
-            )}
             <div className="flex gap-3">
               <Link href={`/training/${dashboard.activeTraining.program.id}`}>
                 <Button variant="secondary">Continue training</Button>
               </Link>
             </div>
+            <ExamStatusSection
+              levelId={dashboard.activeTraining.level.id}
+              examEligible={dashboard.activeTraining.progress.examEligible}
+              programName={dashboard.activeTraining.program.title}
+              levelName={dashboard.activeTraining.level.name}
+              certificates={certificates}
+            />
           </div>
         </Card>
       ) : (

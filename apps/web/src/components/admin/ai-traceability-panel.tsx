@@ -30,11 +30,73 @@ export function AiTraceabilityPanel({
       <CardHeader>
         <CardTitle className="text-base">Provenance &amp; traceability</CardTitle>
       </CardHeader>
+
+      {/* Gate 18: source-authority separation - shown first and distinctly,
+          so a reviewer can never mistake scenario evidence for the
+          normative answer. */}
+      <div className="mb-4 border-b border-border pb-4">
+        <dl>
+          <Row
+            label="Question type"
+            value={candidate.questionGenerationType?.replaceAll('_', ' ') ?? EMPTY}
+          />
+          <Row
+            label="Normative GCP source"
+            value={candidate.normativeSource === 'ICH_E6_R3' ? 'ICH E6(R3)' : EMPTY}
+          />
+          <Row
+            label="Normative reference"
+            value={
+              candidate.normativeSourceSection ? (
+                <>
+                  Section {candidate.normativeSourceSection.sectionIdentifier}
+                  {candidate.normativeSourceSection.heading &&
+                    ` - ${candidate.normativeSourceSection.heading}`}
+                  {candidate.normativeSourceVersion && (
+                    <span className="block text-xs text-muted-foreground">
+                      {candidate.normativeSourceVersion.documentIdentifier}{' '}
+                      {candidate.normativeSourceVersion.documentVersion} (
+                      {candidate.normativeSourceVersion.reviewStatus})
+                    </span>
+                  )}
+                </>
+              ) : (
+                EMPTY
+              )
+            }
+          />
+          <Row
+            label="Scenario source"
+            value={
+              candidate.scenarioSourceType && candidate.scenarioSourceType !== 'NONE'
+                ? candidate.scenarioSourceType.replaceAll('_', ' ')
+                : 'None (direct GCP)'
+            }
+          />
+          <Row
+            label="Scenario reference"
+            value={
+              candidate.observation
+                ? `${candidate.observation.observationCode}${candidate.caseStudyVersion ? ` / ${candidate.caseStudyVersion.title}` : ''}`
+                : EMPTY
+            }
+          />
+        </dl>
+      </div>
+
       <dl>
         <Row label="Training level" value={candidate.level?.name ?? EMPTY} />
         <Row label="GCP domain" value={candidate.domain?.name ?? EMPTY} />
         <Row label="Professional role" value={candidate.professionalRole?.name ?? EMPTY} />
-        <Row label="Learning objective" value={candidate.learningObjective?.description ?? EMPTY} />
+        <Row
+          label="Learning objective"
+          value={
+            candidate.learningObjective?.description ??
+            (candidate.learningObjectiveMatchType
+              ? `${candidate.learningObjectiveMatchType.replaceAll('_', ' ')}`
+              : EMPTY)
+          }
+        />
         <Row
           label="Source"
           value={

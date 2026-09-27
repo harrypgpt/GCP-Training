@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 
 import { CaseStudiesModule } from './case-studies/case-studies.module';
+import { CaseStudyGenerationModule } from './case-study-generation/case-study-generation.module';
 import { CourseModulesModule } from './course-modules/course-modules.module';
+import { ExamsModule } from './exams/exams.module';
+import { GcpDomainsModule } from './gcp-domains/gcp-domains.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { LevelsModule } from './levels/levels.module';
 import { LookupsModule } from './lookups/lookups.module';
@@ -30,6 +33,9 @@ import { SourcesModule } from './sources/sources.module';
     ObservationsModule,
     QuestionsModule,
     LookupsModule,
+    ExamsModule,
+    GcpDomainsModule,
+    CaseStudyGenerationModule,
   ],
 })
 export class AdminContentModule {}

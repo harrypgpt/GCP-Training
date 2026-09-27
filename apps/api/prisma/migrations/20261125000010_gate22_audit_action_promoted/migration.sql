@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "audit_action" ADD VALUE 'AI_CANDIDATE_PROMOTED_TO_QUESTION';

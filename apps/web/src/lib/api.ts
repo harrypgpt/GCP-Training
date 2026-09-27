@@ -12,7 +12,13 @@ export class ApiError extends Error {
   }
 }
 
-async function apiGet<T>(path: string, schema: { parse: (value: unknown) => T }): Promise<T> {
+/** Unauthenticated GET, reused by any public (no-login-required) endpoint -
+ * currently the health check and the Gate 8 public certificate verification
+ * lookup. Never attaches a bearer token. */
+export async function apiGet<T>(
+  path: string,
+  schema: { parse: (value: unknown) => T },
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}${path}`, {

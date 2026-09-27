@@ -10,6 +10,10 @@ export class ListObjectivesQueryDto extends PaginationQueryDto {
   lessonId?: string;
 
   @IsOptional()
+  @IsUUID()
+  domainId?: string;
+
+  @IsOptional()
   @IsEnum(ContentStatus)
   reviewStatus?: ContentStatus;
 }

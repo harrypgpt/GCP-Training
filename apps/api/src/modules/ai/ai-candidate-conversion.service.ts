@@ -64,8 +64,27 @@ export class AiCandidateConversionService {
         : {}),
       ...(candidate.sourceId ? { sourceId: candidate.sourceId } : {}),
       ...(candidate.sourceSection ? { sourceSection: candidate.sourceSection } : {}),
+      // Gate 22 §10: the exact, structured ICH E6(R3) section pointer -
+      // additive alongside the free-text `sourceSection` above, and the
+      // one piece of Gate 17/18 provenance the pre-Gate-22 conversion path
+      // never carried onto the created Question/QuestionVersion.
+      ...(candidate.normativeSourceSectionId
+        ? { sourceSectionRefId: candidate.normativeSourceSectionId }
+        : {}),
+      ...(candidate.questionGenerationType
+        ? { questionGenerationType: candidate.questionGenerationType }
+        : {}),
       ...(candidate.observationId ? { observationId: candidate.observationId } : {}),
-      caseStudyIds: candidate.caseStudyLinks.map((link) => link.caseStudyId),
+      // Merge the older CaseStudy-level links (pre-Gate-17 candidates) with
+      // the case study derived from the Gate 17+ CaseStudyVersion FK, so a
+      // real CASE_APPLICATION candidate's case-study reference is never
+      // silently dropped at conversion time.
+      caseStudyIds: [
+        ...new Set([
+          ...candidate.caseStudyLinks.map((link) => link.caseStudyId),
+          ...(candidate.caseStudyVersion ? [candidate.caseStudyVersion.caseStudyId] : []),
+        ]),
+      ],
       options: candidate.options.map((option) => ({
         label: option.label,
         content: option.content,

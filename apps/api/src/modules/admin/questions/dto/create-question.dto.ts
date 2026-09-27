@@ -12,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { DifficultyLevel, QuestionType } from '@prisma/client';
+import { DifficultyLevel, QuestionGenerationType, QuestionType } from '@prisma/client';
 
 import { QuestionOptionInputDto } from './question-option.dto';
 
@@ -72,6 +72,19 @@ export class CreateQuestionDto {
   @IsString()
   @MaxLength(500)
   sourceSection?: string;
+
+  /// Gate 22 §10: an exact pointer into the structured Source model (e.g.
+  /// the real, registered ICH E6(R3) SourceSection) - additive alongside
+  /// the free-text `sourceSection` above.
+  @IsOptional()
+  @IsUUID()
+  sourceSectionRefId?: string;
+
+  /// Gate 22 §13: preserves the DIRECT_GCP/CASE_APPLICATION distinction
+  /// when a question originates from a Gate 18+ AI candidate.
+  @IsOptional()
+  @IsEnum(QuestionGenerationType)
+  questionGenerationType?: QuestionGenerationType;
 
   @IsOptional()
   @IsArray()

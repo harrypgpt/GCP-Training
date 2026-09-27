@@ -24,6 +24,7 @@ import { ListDuplicateFlagsQueryDto } from './dto/list-duplicate-flags.query.dto
 import { ListQuestionsQueryDto } from './dto/list-questions.query.dto';
 import { ResolveDuplicateDto } from './dto/resolve-duplicate.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { QuestionBankSufficiencyService } from './question-bank-sufficiency.service';
 import { QuestionsService } from './questions.service';
 
 const READ_ROLES = [UserRole.CONTENT_AUTHOR, UserRole.REVIEWER, UserRole.ADMIN];
@@ -32,12 +33,24 @@ const REVIEW_ROLES = [UserRole.REVIEWER, UserRole.ADMIN];
 
 @Controller('admin/questions')
 export class QuestionsController {
-  constructor(private readonly questions: QuestionsService) {}
+  constructor(
+    private readonly questions: QuestionsService,
+    private readonly sufficiency: QuestionBankSufficiencyService,
+  ) {}
 
   @Roles(READ_ROLES)
   @Get()
   list(@Query() query: ListQuestionsQueryDto): ReturnType<QuestionsService['list']> {
     return this.questions.list(query);
+  }
+
+  /** Gate 22 §25/§34, extended by Gate 24: admin-only inventory + blueprint
+   * coverage + ICH E6(R3) sufficiency analysis - must be registered before
+   * `:id` so "readiness" is never parsed as a question id. */
+  @Roles([UserRole.ADMIN])
+  @Get('readiness')
+  readinessSummary(): ReturnType<QuestionBankSufficiencyService['getSummary']> {
+    return this.sufficiency.getSummary();
   }
 
   @Roles(READ_ROLES)

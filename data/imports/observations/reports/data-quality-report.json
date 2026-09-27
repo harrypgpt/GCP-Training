@@ -1,0 +1,73 @@
+{
+  "normalizationVersion": "2026.12.1",
+  "generatedAt": "2026-09-23T03:04:32.548Z",
+  "observationBank": {
+    "sourceFile": "Observation Bank_2025.xlsx",
+    "totalRecords": 1833,
+    "skipped": [
+      {
+        "sourceRowNumber": 556,
+        "reason": "Empty \"Observation Details\"."
+      },
+      {
+        "sourceRowNumber": 557,
+        "reason": "Empty \"Observation Details\"."
+      },
+      {
+        "sourceRowNumber": 558,
+        "reason": "Empty \"Observation Details\"."
+      }
+    ],
+    "deidentificationReviewFlags": 228,
+    "severityDistribution": {
+      "LOW": 414,
+      "UNSET": 1400,
+      "HIGH": 19
+    },
+    "observationTypeDistribution": {
+      "CLINICAL_OPERATIONS_OBSERVATION": 1259,
+      "AUDIT_OBSERVATION": 574
+    }
+  },
+  "fdaWarningLetters": {
+    "sourceFile": "FDA_Clinical_Research_Warning_Letters_Observations_Extract.xlsx",
+    "totalRecords": 35,
+    "skipped": [],
+    "deidentificationReviewFlags": 0
+  },
+  "reconciliation": {
+    "masterSheets": [
+      "Read Me",
+      "Executive Summary",
+      "Warning Letters",
+      "Observation Themes",
+      "Computerized Systems",
+      "Software Compliance Themes"
+    ],
+    "olderSheets": ["Read Me", "Executive Summary", "Warning Letters", "Observation Themes"],
+    "sheetsOnlyInMaster": ["Computerized Systems", "Software Compliance Themes"],
+    "perSheet": {
+      "Read Me": {
+        "masterRows": 9,
+        "olderRows": 8,
+        "identical": false
+      },
+      "Executive Summary": {
+        "masterRows": 9,
+        "olderRows": 6,
+        "identical": false
+      },
+      "Warning Letters": {
+        "masterRows": 26,
+        "olderRows": 26,
+        "identical": true
+      },
+      "Observation Themes": {
+        "masterRows": 9,
+        "olderRows": 9,
+        "identical": true
+      }
+    },
+    "decision": "The older workbook's observation-bearing sheets (Warning Letters) are an exact subset of the master workbook (identical row content); the master additionally has: Computerized Systems, Software Compliance Themes. Only the master workbook is imported; the older workbook is reconciled-and-superseded, not imported. (Documentation-only sheets such as \"Read Me\"/\"Executive Summary\" may differ in wording between the two files - this does not affect the import decision.)"
+  }
+}

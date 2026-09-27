@@ -27,6 +27,7 @@ const VERSION_DETAIL_INCLUDE = {
   learningObjective: { select: { id: true, description: true } },
   observation: { select: { id: true, observationCode: true, description: true } },
   source: { select: { id: true, title: true } },
+  sourceSectionRef: { select: { id: true, sectionIdentifier: true, heading: true } },
   author: { select: { id: true, email: true } },
   reviewer: { select: { id: true, email: true } },
   options: { orderBy: { sortOrder: 'asc' } },
@@ -78,6 +79,8 @@ export interface QuestionVersionDetail extends QuestionVersionSummary {
   observation: { id: string; observationCode: string; description: string } | null;
   source: { id: string; title: string } | null;
   sourceSection: string | null;
+  sourceSectionRef: { id: string; sectionIdentifier: string; heading: string | null } | null;
+  questionGenerationType: string | null;
   caseStudies: { id: string; caseCode: string; title: string }[];
   options: QuestionOptionView[];
   author: { id: string; email: string } | null;
@@ -112,6 +115,11 @@ export interface QuestionListItem {
     domain: { id: string; name: string } | null;
     author: { id: string; email: string } | null;
     reviewer: { id: string; email: string } | null;
+    /** Gate 22 §34: surfaced as a list column so the normative ICH
+     * reference doesn't require opening the detail page to see. */
+    sourceSectionRef: { id: string; sectionIdentifier: string } | null;
+    questionGenerationType: string | null;
+    caseStudyCount: number;
   };
 }
 
@@ -167,6 +175,8 @@ export class QuestionsService {
           domain: { select: { id: true, name: true } },
           author: { select: { id: true, email: true } },
           reviewer: { select: { id: true, email: true } },
+          sourceSectionRef: { select: { id: true, sectionIdentifier: true } },
+          _count: { select: { caseStudyLinks: true } },
         },
         orderBy: { updatedAt: 'desc' },
         ...paginationSkipTake(query.page, query.pageSize),
@@ -191,6 +201,9 @@ export class QuestionsService {
         domain: v.domain,
         author: v.author,
         reviewer: v.reviewer,
+        sourceSectionRef: v.sourceSectionRef,
+        questionGenerationType: v.questionGenerationType,
+        caseStudyCount: v._count.caseStudyLinks,
       },
     }));
 
@@ -292,6 +305,12 @@ export class QuestionsService {
           ...(dto.observationId !== undefined ? { observationId: dto.observationId } : {}),
           ...(dto.sourceId !== undefined ? { sourceId: dto.sourceId } : {}),
           ...(dto.sourceSection !== undefined ? { sourceSection: dto.sourceSection } : {}),
+          ...(dto.sourceSectionRefId !== undefined
+            ? { sourceSectionRefId: dto.sourceSectionRefId }
+            : {}),
+          ...(dto.questionGenerationType !== undefined
+            ? { questionGenerationType: dto.questionGenerationType }
+            : {}),
           authorId: actorId,
           options: {
             create: dto.options.map((o, index) => ({
@@ -661,6 +680,7 @@ export class QuestionsService {
     learningObjectiveId?: string;
     observationId?: string;
     sourceId?: string;
+    sourceSectionRefId?: string;
     caseStudyIds?: string[];
   }): Promise<void> {
     const checks: [string | undefined, () => Promise<unknown>, string][] = [
@@ -693,6 +713,11 @@ export class QuestionsService {
         dto.sourceId,
         () => this.prisma.source.findUnique({ where: { id: dto.sourceId! } }),
         'Source not found.',
+      ],
+      [
+        dto.sourceSectionRefId,
+        () => this.prisma.sourceSection.findUnique({ where: { id: dto.sourceSectionRefId! } }),
+        'Source section not found.',
       ],
     ];
 
@@ -778,6 +803,8 @@ export class QuestionsService {
       observation: version.observation,
       source: version.source,
       sourceSection: version.sourceSection,
+      sourceSectionRef: version.sourceSectionRef,
+      questionGenerationType: version.questionGenerationType,
       caseStudies: version.caseStudyLinks.map((l) => l.caseStudy),
       options: version.options.map((o) => ({
         id: o.id,

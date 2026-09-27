@@ -1,0 +1,118 @@
+{
+  "generatedAt": "2026-09-26T02:22:15.406Z",
+  "skipped": false,
+  "reason": null,
+  "items": [
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "II.1 - Rights, Safety and Well-Being",
+      "generationStatus": "SUCCEEDED",
+      "latencyMs": 3020,
+      "generationId": "874c5763-e787-4f34-b1df-d35cf07a3988",
+      "candidateId": "6b38fa71-dddf-4ad4-b1a3-6003f1eed80d",
+      "candidateStatus": "READY_FOR_REVIEW",
+      "tokenMetadata": "NOT AVAILABLE (not persisted by the current provider interface)"
+    },
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "4.3.3 - Data Governance - Computerised Systems - Security",
+      "generationStatus": "SUCCEEDED",
+      "latencyMs": 2599,
+      "generationId": "ec4c31d7-d965-4749-870d-50183d140bc0",
+      "candidateId": "a68c0aa8-3d9a-4120-bb45-34fb1ea4ac9a",
+      "candidateStatus": "READY_FOR_REVIEW",
+      "tokenMetadata": "NOT AVAILABLE (not persisted by the current provider interface)"
+    },
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "II.7 - Proportionality of Trial Processes",
+      "generationStatus": "SUCCEEDED",
+      "latencyMs": 2378,
+      "generationId": "22023581-020a-4615-adc8-5797c6f79de4",
+      "candidateId": "df9553d4-9d55-4774-b73a-4565b8c28025",
+      "candidateStatus": "READY_FOR_REVIEW",
+      "tokenMetadata": "NOT AVAILABLE (not persisted by the current provider interface)"
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "OBS-FDA-WL-729750 (protocol deviation) -> 2.5 Compliance with Protocol",
+      "scenarioCaseStudyVersionId": "071276cf-8214-43a4-8516-d35e7b14407c",
+      "generationStatus": "FAILED",
+      "errorCode": "EXTERNAL_CONTENT_BLOCKED",
+      "errorMessage": "The knowledge backing this case study is not both de-identified and marked SAFE_FOR_EXTERNAL_AI, and cannot be sent to an external AI provider."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "OBS-OBK-AUDIT-000039 (LIMS software) -> 4.3.4 Computerised Systems Validation",
+      "scenarioCaseStudyVersionId": "538022d1-bb1f-414a-a9ae-0eac454cac2a",
+      "generationStatus": "FAILED",
+      "errorCode": "EXTERNAL_CONTENT_BLOCKED",
+      "errorMessage": "The knowledge backing this case study is not both de-identified and marked SAFE_FOR_EXTERNAL_AI, and cannot be sent to an external AI provider."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "OBS-OBK-AUDIT-000005 (SOP review) -> II.9 Reliable Results",
+      "scenarioCaseStudyVersionId": "94e99071-1ad3-4450-b257-585f529dff71",
+      "generationStatus": "FAILED",
+      "errorCode": "EXTERNAL_CONTENT_BLOCKED",
+      "errorMessage": "The knowledge backing this case study is not both de-identified and marked SAFE_FOR_EXTERNAL_AI, and cannot be sent to an external AI provider."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "OBS-OBK-CLINICAL-000334 (ICF review) -> 2.8 Informed Consent of Trial Participants",
+      "scenarioCaseStudyVersionId": "e252bdfe-76df-481a-b55a-4eb1d91666d4",
+      "generationStatus": "FAILED",
+      "errorCode": "EXTERNAL_CONTENT_BLOCKED",
+      "errorMessage": "The knowledge backing this case study is not both de-identified and marked SAFE_FOR_EXTERNAL_AI, and cannot be sent to an external AI provider."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "normativeSourceSectionRef": "OBS-FDA-WL-623671 (record retention; no dedicated retention section registered) -> II.9 Reliable Results",
+      "scenarioCaseStudyVersionId": "d274bd84-fffd-43bf-8431-123070569503",
+      "generationStatus": "FAILED",
+      "errorCode": "EXTERNAL_CONTENT_BLOCKED",
+      "errorMessage": "The knowledge backing this case study is not both de-identified and marked SAFE_FOR_EXTERNAL_AI, and cannot be sent to an external AI provider."
+    }
+  ],
+  "aggregate": {
+    "directGcp": {
+      "attempted": 3,
+      "successful": 3,
+      "validationFailed": 0,
+      "failed": 0
+    },
+    "caseApplication": {
+      "attempted": 5,
+      "successful": 0,
+      "validationFailed": 0,
+      "failed": 5
+    },
+    "total": {
+      "attempted": 8,
+      "successful": 3,
+      "validationFailed": 0,
+      "failed": 5
+    },
+    "volumeGuardFinalCounts": {
+      "directGcp": 3,
+      "caseApplication": 5,
+      "total": 8
+    }
+  }
+}

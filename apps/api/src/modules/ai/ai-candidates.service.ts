@@ -23,6 +23,14 @@ export const CANDIDATE_INCLUDE = {
   source: { select: { id: true, title: true } },
   observation: { select: { id: true, observationCode: true, description: true } },
   reviewer: { select: { id: true, email: true } },
+  // Gate 18: the candidate's normative ICH E6(R3) reference and the
+  // case-study version it was scenario-grounded on (Gate 17), included so
+  // the review UI can show real, human-readable labels rather than bare IDs.
+  normativeSourceVersion: {
+    select: { id: true, documentIdentifier: true, documentVersion: true, reviewStatus: true },
+  },
+  normativeSourceSection: { select: { id: true, sectionIdentifier: true, heading: true } },
+  caseStudyVersion: { select: { id: true, title: true, caseStudyId: true } },
   run: {
     select: {
       id: true,
@@ -36,6 +44,12 @@ export const CANDIDATE_INCLUDE = {
       initiatedBy: { select: { id: true, email: true } },
       createdAt: true,
     },
+  },
+  // Gate 21: the structured human quality-review record, when one exists -
+  // included so the review UI can show a prior review without a second
+  // request, and so tests can assert on it directly from `get()`.
+  qualityReview: {
+    include: { reviewer: { select: { id: true, email: true } } },
   },
 } satisfies Prisma.AiQuestionCandidateInclude;
 

@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/training', label: 'Training' },
+  { href: '/certificates', label: 'Certificates' },
   { href: '/profile', label: 'Profile' },
 ] as const;
 

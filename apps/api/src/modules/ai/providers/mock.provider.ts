@@ -24,6 +24,14 @@ import {
  *   "malformed"               -> returns text that is not valid JSON
  *   "insufficient_evidence"   -> returns a structurally valid output with
  *                                 insufficientEvidence: true
+ *   "unsupported_claim"       -> (CASE_STUDY_GENERATION only) returns an
+ *                                 otherwise well-formed candidate that also
+ *                                 cites a fabricated evidence reference not
+ *                                 present anywhere in the supplied grounding
+ *                                 context - deliberately exercises the
+ *                                 deterministic validator's unsupported-
+ *                                 evidence-reference check (Gate 16 §40),
+ *                                 never a real model hallucination.
  */
 @Injectable()
 export class MockAiProvider implements AiProvider {
@@ -69,6 +77,8 @@ export class MockAiProvider implements AiProvider {
       case AiOperation.QUESTION_GENERATION:
       case AiOperation.QUESTION_VARIATION:
         return this.questionOutput(request, insufficientEvidence);
+      case AiOperation.CASE_STUDY_GENERATION:
+        return this.caseStudyOutput(request, insufficientEvidence);
       default:
         return { note: `No deterministic mock output defined for ${request.operation}` };
     }
@@ -126,13 +136,96 @@ export class MockAiProvider implements AiProvider {
         'The investigator holds primary responsibility for ensuring valid consent precedes any study procedure.',
       rationale:
         'This tests understanding of investigator accountability for consent timing, a foundational GCP principle.',
-      evidenceUsed,
+      evidenceUsed: [
+        ...evidenceUsed,
+        ...(request.context.simulate === 'unsupported_claim'
+          ? [
+              'OBS-999-FABRICATED - an unrelated vendor-kickback observation never supplied as evidence',
+            ]
+          : []),
+      ],
       reasoningDimensions: ['responsibility attribution', 'timing/sequence'],
       modelWarnings: [],
       insufficientEvidence,
       ...(request.context.variantLabel
         ? { variantLabel: request.context.variantLabel as string }
         : {}),
+    };
+  }
+
+  /** Gate 15 §31: deterministic, structured case-study output that
+   * references ONLY the evidence actually supplied in `request.context` -
+   * proof (exercised by tests) that this provider cannot invent an
+   * arbitrary source/observation identifier. */
+  private caseStudyOutput(request: AiProviderRequest, insufficientEvidence: boolean): unknown {
+    const primaryObservation = request.context.primaryObservation as
+      | { id: string; label: string }
+      | undefined;
+    const domain = request.context.domain as { id: string; label: string } | null | undefined;
+    const learningObjective = request.context.learningObjective as
+      | { id: string; label: string }
+      | null
+      | undefined;
+    const trainingInterpretation = request.context.trainingInterpretation as
+      | { id: string; label: string }
+      | null
+      | undefined;
+
+    if (insufficientEvidence || !primaryObservation) {
+      return {
+        title: 'Insufficient evidence',
+        scenario: 'Insufficient evidence was supplied to construct a case study.',
+        participantRoles: [],
+        decisionPoint: 'N/A',
+        evidencePresentedToLearner: [],
+        learnerTask: 'N/A',
+        factualBoundaryStatements: [],
+        assumptions: [],
+        generatedLimitations: ['Insufficient evidence supplied.'],
+        qualityWarnings: [],
+        evidenceUsed: [],
+        insufficientEvidence: true,
+      };
+    }
+
+    return {
+      title: `Scenario: ${primaryObservation.label.slice(0, 60)}`,
+      scenario: `A reviewer encounters the following situation, grounded directly in ${primaryObservation.label}.`,
+      context: domain ? `This scenario concerns the ${domain.label} domain.` : undefined,
+      setting: 'A routine internal review at a clinical trial site.',
+      participantRoles: ['Reviewer', 'Site staff member'],
+      situation: `The reviewer is examining a record related to: ${primaryObservation.label}.`,
+      observedIssue: primaryObservation.label,
+      decisionPoint: 'What should the reviewer do next, given only the evidence presented?',
+      evidencePresentedToLearner: [primaryObservation.label],
+      learnerTask: 'Identify the appropriate next action based strictly on the evidence presented.',
+      expectedCompetency: 'Apply GCP principles to a real observed deficiency.',
+      educationalRationale: 'Grounds the learner in a real, curated practical observation.',
+      factualBoundaryStatements: [
+        { type: 'SUPPORTED_FACT', text: primaryObservation.label },
+        ...(trainingInterpretation
+          ? [{ type: 'TRAINING_INTERPRETATION', text: trainingInterpretation.label }]
+          : []),
+        {
+          type: 'SCENARIO_CONSTRUCTION',
+          text: 'A reviewer encounters this during a routine internal review.',
+        },
+      ],
+      assumptions: [],
+      generatedLimitations: [
+        'This is a deterministic mock candidate for testing, not real AI content.',
+      ],
+      qualityWarnings: [],
+      evidenceUsed: [
+        primaryObservation.label,
+        ...(learningObjective ? [learningObjective.label] : []),
+        ...(request.context.simulate === 'unsupported_claim'
+          ? [
+              'OBS-999-FABRICATED - an unrelated vendor-kickback observation never supplied as evidence',
+            ]
+          : []),
+      ],
+      insufficientEvidence: false,
     };
   }
 }

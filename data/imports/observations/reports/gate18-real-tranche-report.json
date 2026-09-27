@@ -1,0 +1,80 @@
+{
+  "knownLimitation": "The real curated observation bank contains zero PROPRIETARY_OBSERVATION (\"expert observation\") rows at the time of this run - none could be included. Not fabricated.",
+  "items": [
+    {
+      "questionType": "DIRECT_GCP",
+      "normativeIchReference": "ICH E6(R3) Section I",
+      "scenarioSource": "NONE",
+      "reviewResult": "NOT_YET_REVIEWED",
+      "candidateId": "0b8bbdc3-8c8c-406c-8118-805c58825c51",
+      "validationResult": "READY_FOR_REVIEW",
+      "provider": "mock",
+      "promptVersion": "direct-gcp-question-generation-v1"
+    },
+    {
+      "questionType": "CASE_APPLICATION",
+      "caseStudyVersionId": "071276cf-8214-43a4-8516-d35e7b14407c",
+      "normativeIchReference": "ICH E6(R3) Section I",
+      "reviewResult": "NOT_YET_REVIEWED",
+      "observationCode": "OBS-FDA-WL-729750",
+      "trainingInterpretationId": "8d716b2e-2137-4328-9a5b-08eea34842c9",
+      "candidateId": "06c513b3-311b-467a-90f7-b350d8858969",
+      "validationResult": "READY_FOR_REVIEW",
+      "scenarioSource": "FDA_WARNING_LETTER",
+      "provider": "mock",
+      "promptVersion": "case-study-question-generation-v2"
+    },
+    {
+      "questionType": "CASE_APPLICATION",
+      "caseStudyVersionId": "538022d1-bb1f-414a-a9ae-0eac454cac2a",
+      "normativeIchReference": "ICH E6(R3) Section I",
+      "reviewResult": "NOT_YET_REVIEWED",
+      "observationCode": "OBS-OBK-AUDIT-000039",
+      "trainingInterpretationId": "463ae28f-e987-4c36-bfcc-169bb1c766d0",
+      "candidateId": "dc4997a1-88fc-4020-912a-d014f98ed31d",
+      "validationResult": "READY_FOR_REVIEW",
+      "scenarioSource": "PRACTICAL_OBSERVATION",
+      "provider": "mock",
+      "promptVersion": "case-study-question-generation-v2"
+    },
+    {
+      "questionType": "CASE_APPLICATION",
+      "caseStudyVersionId": "94e99071-1ad3-4450-b257-585f529dff71",
+      "normativeIchReference": "ICH E6(R3) Section I",
+      "reviewResult": "NOT_YET_REVIEWED",
+      "observationCode": "OBS-OBK-AUDIT-000005",
+      "trainingInterpretationId": "3225999e-2e2a-441f-8c8a-e3ba4148e17b",
+      "candidateId": "3f076e70-8c1d-4e4b-9125-53075ceea607",
+      "validationResult": "READY_FOR_REVIEW",
+      "scenarioSource": "PRACTICAL_OBSERVATION",
+      "provider": "mock",
+      "promptVersion": "case-study-question-generation-v2"
+    },
+    {
+      "questionType": "CASE_APPLICATION",
+      "caseStudyVersionId": "e252bdfe-76df-481a-b55a-4eb1d91666d4",
+      "normativeIchReference": "ICH E6(R3) Section I",
+      "reviewResult": "NOT_YET_REVIEWED",
+      "observationCode": "OBS-OBK-CLINICAL-000334",
+      "trainingInterpretationId": "ecb7aa51-a766-4f55-9806-6f806adc4b7c",
+      "candidateId": "9c517bb5-c007-4655-9b08-869652147af5",
+      "validationResult": "READY_FOR_REVIEW",
+      "scenarioSource": "PRACTICAL_OBSERVATION",
+      "provider": "mock",
+      "promptVersion": "case-study-question-generation-v2"
+    },
+    {
+      "questionType": "CASE_APPLICATION",
+      "caseStudyVersionId": "d274bd84-fffd-43bf-8431-123070569503",
+      "normativeIchReference": "ICH E6(R3) Section I",
+      "reviewResult": "NOT_YET_REVIEWED",
+      "observationCode": "OBS-FDA-WL-623671",
+      "trainingInterpretationId": "41c4830c-6ac1-4dca-be2f-f38e7d0a881b",
+      "candidateId": "c6f5124e-cb10-4af6-8661-8e0e4838d142",
+      "validationResult": "READY_FOR_REVIEW",
+      "scenarioSource": "FDA_WARNING_LETTER",
+      "provider": "mock",
+      "promptVersion": "case-study-question-generation-v2"
+    }
+  ]
+}

@@ -58,9 +58,14 @@ function QuestionBankList(): JSX.Element {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-2xl font-semibold text-foreground">Question bank</h1>
-        <Link href="/admin/questions/new">
-          <Button>New question</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/questions/readiness">
+            <Button variant="secondary">Readiness report</Button>
+          </Link>
+          <Link href="/admin/questions/new">
+            <Button>New question</Button>
+          </Link>
+        </div>
       </div>
 
       <Card className="space-y-4">
@@ -219,6 +224,8 @@ function QuestionBankList(): JSX.Element {
                 <th className="px-4 py-3">Difficulty</th>
                 <th className="px-4 py-3">Level</th>
                 <th className="px-4 py-3">Domain</th>
+                <th className="px-4 py-3">ICH ref.</th>
+                <th className="px-4 py-3">Case study</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Published</th>
                 <th className="px-4 py-3">Author</th>
@@ -250,6 +257,16 @@ function QuestionBankList(): JSX.Element {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {q.latestVersion.domain?.name ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {q.latestVersion.sourceSectionRef?.sectionIdentifier ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {q.latestVersion.caseStudyCount > 0 ? (
+                        <Badge tone="neutral">{q.latestVersion.caseStudyCount}</Badge>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <Badge tone={status.tone}>{status.label}</Badge>

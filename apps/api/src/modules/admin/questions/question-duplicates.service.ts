@@ -4,11 +4,21 @@ import { ContentStatus, DuplicateMatchType, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 
-function normalizeStem(stem: string): string {
+export interface DuplicateFlagSummary {
+  byMatchType: Record<string, number>;
+  unresolvedCount: number;
+  resolvedCount: number;
+}
+
+// Exported (Gate 20 §22) so a script comparing pre-conversion
+// AiQuestionCandidate rows (which this service does not scan - it only
+// scans converted/published QuestionVersion rows) can reuse the exact same
+// normalization instead of re-implementing it a second place.
+export function normalizeStem(stem: string): string {
   return stem.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-function normalizeOptionSet(contents: string[]): string {
+export function normalizeOptionSet(contents: string[]): string {
   return contents
     .map((c) => c.trim().toLowerCase().replace(/\s+/g, ' '))
     .sort()
@@ -27,6 +37,28 @@ export class QuestionDuplicatesService {
   private readonly logger = new Logger(QuestionDuplicatesService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Gate 24 §10: a read-only summary of the flags this service has already
+   * recorded - reused by the readiness/sufficiency report rather than
+   * having a second consumer query `questionDuplicateFlag` directly. Never
+   * runs detection itself, never resolves/deletes anything. */
+  async summarize(): Promise<DuplicateFlagSummary> {
+    const flags = await this.prisma.questionDuplicateFlag.findMany({
+      select: { matchType: true, resolvedAt: true },
+    });
+    const byMatchType: Record<string, number> = {};
+    let unresolvedCount = 0;
+    let resolvedCount = 0;
+    for (const flag of flags) {
+      byMatchType[flag.matchType] = (byMatchType[flag.matchType] ?? 0) + 1;
+      if (flag.resolvedAt) {
+        resolvedCount += 1;
+      } else {
+        unresolvedCount += 1;
+      }
+    }
+    return { byMatchType, unresolvedCount, resolvedCount };
+  }
 
   /** Best-effort: a failure here must never break the caller's workflow transition. */
   async detectAndFlag(versionId: string): Promise<void> {

@@ -198,7 +198,13 @@ describe('Admin content (e2e)', () => {
       const objective = await request(app.getHttpServer())
         .post('/api/admin/learning-objectives')
         .set(...auth(adminToken))
-        .send({ lessonId, description: 'Understand the GCP principle in question' })
+        .send({
+          code: `LO-E2E-${lessonId.slice(0, 8).toUpperCase()}`,
+          title: 'Understand the GCP principle',
+          lessonId,
+          description: 'Understand the GCP principle in question',
+          sourceBasis: 'CURRICULUM_REQUIREMENT',
+        })
         .expect(201);
       const objectiveId = (objective.body as { id: string }).id;
 

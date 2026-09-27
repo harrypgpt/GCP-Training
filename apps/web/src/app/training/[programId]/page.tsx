@@ -9,10 +9,13 @@ import { type AvailableProgram, type EnrollmentView, type LevelDetail } from '@g
 import { RequireAuth } from '@/components/auth/require-auth';
 import { AppShell } from '@/components/learner/app-shell';
 import { EmptyState } from '@/components/learner/empty-state';
+import { ErrorState } from '@/components/learner/error-state';
 import { stateDisplay } from '@/components/learner/state-display';
 import { Badge } from '@/components/ui/badge';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api';
 import { learnerApi } from '@/lib/learner-api';
 
@@ -65,16 +68,28 @@ function ProgramLevels({ programId }: { programId: string }): JSX.Element {
   }
 
   if (error) {
-    return <EmptyState title="Something went wrong" description={error} />;
+    return (
+      <ErrorState
+        description={error}
+        onRetry={() => {
+          load().catch((err: unknown) => {
+            setError(
+              err instanceof ApiError ? err.message : 'Unable to load this training program.',
+            );
+          });
+        }}
+      />
+    );
   }
 
   if (!program) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <SkeletonPage label="Loading training program" />;
   }
 
   if (levelDetail) {
     return (
       <div className="space-y-6">
+        <Breadcrumbs items={[{ label: 'Training', href: '/training' }, { label: program.title }]} />
         <div>
           <h1 className="font-serif text-2xl font-semibold text-foreground">{program.title}</h1>
           <p className="text-sm text-muted-foreground">{levelDetail.name} level</p>

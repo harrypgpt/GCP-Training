@@ -1,6 +1,11 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 
-import { AuditAction, ContentErrorCode, type WorkflowAction } from '@gcp/shared';
+import {
+  AuditAction,
+  ContentErrorCode,
+  ObservationErrorCode,
+  type WorkflowAction,
+} from '@gcp/shared';
 import { ContentStatus, type LearningObjective } from '@prisma/client';
 
 import { AuditService } from '../../../common/audit/audit.service';
@@ -27,6 +32,7 @@ export class ObjectivesService {
   async list(query: ListObjectivesQueryDto): Promise<PaginatedResult<LearningObjective>> {
     const where = {
       ...(query.lessonId ? { lessonId: query.lessonId } : {}),
+      ...(query.domainId ? { domainId: query.domainId } : {}),
       ...(query.reviewStatus ? { reviewStatus: query.reviewStatus } : {}),
       ...(query.search ? { description: containsInsensitive(query.search) } : {}),
     };
@@ -52,32 +58,59 @@ export class ObjectivesService {
   }
 
   async create(dto: CreateObjectiveDto, actorId: string): Promise<LearningObjective> {
-    const lesson = await this.prisma.lesson.findUnique({ where: { id: dto.lessonId } });
-    if (!lesson) {
-      throw new AppException(
-        HttpStatus.BAD_REQUEST,
-        ContentErrorCode.PARENT_NOT_FOUND,
-        'Lesson not found.',
-      );
+    if (dto.lessonId) {
+      const lesson = await this.prisma.lesson.findUnique({ where: { id: dto.lessonId } });
+      if (!lesson) {
+        throw new AppException(
+          HttpStatus.BAD_REQUEST,
+          ContentErrorCode.PARENT_NOT_FOUND,
+          'Lesson not found.',
+        );
+      }
+    }
+    if (dto.domainId) {
+      await this.assertDomainExists(dto.domainId);
+    }
+    await this.assertCodeAvailable(dto.code);
+    if (dto.professionalRoleIds?.length) {
+      await this.assertRolesExist(dto.professionalRoleIds);
     }
 
     const sortOrder = dto.sortOrder ?? (await this.nextSortOrder(dto.lessonId));
 
     const objective = await this.prisma.learningObjective.create({
       data: {
-        lessonId: dto.lessonId,
+        code: dto.code,
+        title: dto.title,
         description: dto.description,
+        lessonId: dto.lessonId ?? null,
+        domainId: dto.domainId ?? null,
+        ...(dto.topic !== undefined ? { topic: dto.topic } : {}),
+        sourceBasis: dto.sourceBasis,
+        ...(dto.rationale !== undefined ? { rationale: dto.rationale } : {}),
+        ...(dto.difficulty !== undefined ? { difficulty: dto.difficulty } : {}),
         sortOrder,
         createdById: actorId,
+        ...(dto.professionalRoleIds?.length
+          ? {
+              professionalRoles: {
+                createMany: {
+                  data: dto.professionalRoleIds.map((professionalRoleId) => ({
+                    professionalRoleId,
+                  })),
+                },
+              },
+            }
+          : {}),
       },
     });
 
     await this.audit.record({
-      action: AuditAction.CONTENT_CREATED,
+      action: AuditAction.LEARNING_OBJECTIVE_CREATED,
       entity: 'learning_objective',
       entityId: objective.id,
       actorId,
-      metadata: { lessonId: dto.lessonId },
+      metadata: { code: dto.code, domainId: dto.domainId ?? null, sourceBasis: dto.sourceBasis },
     });
 
     return objective;
@@ -85,14 +118,36 @@ export class ObjectivesService {
 
   async update(id: string, dto: UpdateObjectiveDto, actorId: string): Promise<LearningObjective> {
     await this.get(id);
+    if (dto.domainId) {
+      await this.assertDomainExists(dto.domainId);
+    }
+    if (dto.professionalRoleIds) {
+      await this.assertRolesExist(dto.professionalRoleIds);
+    }
+    const { professionalRoleIds, ...scalarChanges } = dto;
 
-    const updated = await this.prisma.learningObjective.update({
-      where: { id },
-      data: { ...dto, version: { increment: 1 } },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (professionalRoleIds) {
+        await tx.learningObjectiveProfessionalRole.deleteMany({
+          where: { learningObjectiveId: id },
+        });
+        if (professionalRoleIds.length > 0) {
+          await tx.learningObjectiveProfessionalRole.createMany({
+            data: professionalRoleIds.map((professionalRoleId) => ({
+              learningObjectiveId: id,
+              professionalRoleId,
+            })),
+          });
+        }
+      }
+      return tx.learningObjective.update({
+        where: { id },
+        data: { ...scalarChanges, version: { increment: 1 } },
+      });
     });
 
     await this.audit.record({
-      action: AuditAction.CONTENT_MODIFIED,
+      action: AuditAction.LEARNING_OBJECTIVE_UPDATED,
       entity: 'learning_objective',
       entityId: id,
       actorId,
@@ -176,12 +231,47 @@ export class ObjectivesService {
     });
   }
 
-  private async nextSortOrder(lessonId: string): Promise<number> {
+  private async nextSortOrder(lessonId?: string): Promise<number> {
     const last = await this.prisma.learningObjective.findFirst({
-      where: { lessonId },
+      where: lessonId ? { lessonId } : {},
       orderBy: { sortOrder: 'desc' },
       select: { sortOrder: true },
     });
     return (last?.sortOrder ?? -1) + 1;
+  }
+
+  private async assertCodeAvailable(code: string): Promise<void> {
+    const existing = await this.prisma.learningObjective.findUnique({ where: { code } });
+    if (existing) {
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ContentErrorCode.CODE_CONFLICT,
+        `A learning objective with code "${code}" already exists.`,
+      );
+    }
+  }
+
+  private async assertDomainExists(domainId: string): Promise<void> {
+    const domain = await this.prisma.gcpDomain.findUnique({ where: { id: domainId } });
+    if (!domain) {
+      throw new AppException(
+        HttpStatus.BAD_REQUEST,
+        ObservationErrorCode.DOMAIN_NOT_FOUND,
+        'GCP domain not found.',
+      );
+    }
+  }
+
+  private async assertRolesExist(professionalRoleIds: string[]): Promise<void> {
+    const count = await this.prisma.professionalRole.count({
+      where: { id: { in: professionalRoleIds } },
+    });
+    if (count !== new Set(professionalRoleIds).size) {
+      throw new AppException(
+        HttpStatus.BAD_REQUEST,
+        ObservationErrorCode.PROFESSIONAL_ROLE_NOT_FOUND,
+        'One or more professional roles not found.',
+      );
+    }
   }
 }

@@ -1,15 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type JSX } from 'react';
+import { useCallback, useEffect, useState, type JSX } from 'react';
 
 import { type AvailableProgram, type EnrollmentView } from '@gcp/shared';
 
 import { RequireAuth } from '@/components/auth/require-auth';
 import { AppShell } from '@/components/learner/app-shell';
 import { EmptyState } from '@/components/learner/empty-state';
+import { ErrorState } from '@/components/learner/error-state';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api';
 import { learnerApi } from '@/lib/learner-api';
 
@@ -17,9 +19,11 @@ function TrainingCatalog(): JSX.Element {
   const [programs, setPrograms] = useState<AvailableProgram[] | null>(null);
   const [enrollments, setEnrollments] = useState<EnrollmentView[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setError(null);
     Promise.all([learnerApi.getPrograms(), learnerApi.listEnrollments()])
       .then(([programData, enrollmentData]) => {
         if (!cancelled) {
@@ -35,14 +39,16 @@ function TrainingCatalog(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
+
+  const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
   if (error) {
-    return <EmptyState title="Training catalog unavailable" description={error} />;
+    return <ErrorState title="Training catalog unavailable" description={error} onRetry={reload} />;
   }
 
   if (!programs) {
-    return <p className="text-sm text-muted-foreground">Loading available training…</p>;
+    return <SkeletonPage label="Loading available training" />;
   }
 
   if (programs.length === 0) {

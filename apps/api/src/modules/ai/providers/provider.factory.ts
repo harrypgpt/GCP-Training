@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
 import { AppConfigService } from '../../../config/app-config.service';
+import { AiProviderError } from '../interfaces/ai-types';
 import { type AiProvider } from '../interfaces/ai-provider.interface';
+import { GeminiProvider } from './gemini.provider';
 import { MockAiProvider } from './mock.provider';
 import { OpenAiProvider } from './openai.provider';
 
@@ -14,15 +16,26 @@ export class AiProviderFactory {
     private readonly config: AppConfigService,
     private readonly mock: MockAiProvider,
     private readonly openai: OpenAiProvider,
+    private readonly gemini: GeminiProvider,
   ) {}
 
   getProvider(): AiProvider {
     switch (this.config.ai.provider) {
+      case 'mock':
+        return this.mock;
       case 'openai':
         return this.openai;
-      case 'mock':
+      case 'gemini':
+        return this.gemini;
       default:
-        return this.mock;
+        // Unreachable while AI_PROVIDER is validated by env.schema.ts's
+        // zod enum - kept as an explicit fail-fast rather than silently
+        // falling back to the mock provider for an unrecognised value.
+        throw new AiProviderError(
+          'PROVIDER_UNAVAILABLE',
+          `Unsupported AI_PROVIDER: "${String(this.config.ai.provider)}"`,
+          false,
+        );
     }
   }
 

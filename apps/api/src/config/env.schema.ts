@@ -36,6 +36,11 @@ export const envSchema = z
         'DATABASE_URL must be a PostgreSQL connection string',
       ),
 
+    /** Base URL of the learner-facing web app - used only to build the
+     * public certificate verification URL (Gate 8). Never hard-code
+     * localhost/a dev domain at the call site; read this instead. */
+    PUBLIC_WEB_URL: z.string().url().default('http://localhost:3000'),
+
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().positive().default(60),
     RATE_LIMIT_LIMIT: z.coerce.number().int().positive().default(120),
 
@@ -82,7 +87,7 @@ export const envSchema = z
       .enum(['true', 'false'])
       .default('true')
       .transform((value) => value === 'true'),
-    AI_PROVIDER: z.enum(['mock', 'openai']).default('mock'),
+    AI_PROVIDER: z.enum(['mock', 'openai', 'gemini']).default('mock'),
     AI_MODEL: z.string().default('mock-v1'),
     AI_MAX_TOKENS: z.coerce.number().int().positive().default(2000),
     AI_TEMPERATURE: z.coerce.number().min(0).max(2).default(0.2),
@@ -99,6 +104,10 @@ export const envSchema = z
     AI_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
     /** Never sent to the frontend; read only by the (real) OpenAI provider. */
     OPENAI_API_KEY: z.string().optional(),
+    /** Never sent to the frontend; read only by the (real) Gemini provider
+     * (Gate 17). Required only when AI_PROVIDER=gemini - absent/unused for
+     * mock and openai, exactly like OPENAI_API_KEY above. */
+    GEMINI_API_KEY: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.MAIL_TRANSPORT === 'smtp' && (!env.SMTP_HOST || !env.SMTP_PORT)) {
@@ -113,6 +122,13 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['OPENAI_API_KEY'],
         message: 'OPENAI_API_KEY is required when AI_PROVIDER=openai',
+      });
+    }
+    if (env.AI_PROVIDER === 'gemini' && !env.GEMINI_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['GEMINI_API_KEY'],
+        message: 'GEMINI_API_KEY is required when AI_PROVIDER=gemini',
       });
     }
   });

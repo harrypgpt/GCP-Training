@@ -9,11 +9,11 @@ import { RequireAdminRole } from '@/components/admin/require-admin-role';
 import { AdminShell } from '@/components/admin/admin-shell';
 import { AiQualityReport } from '@/components/admin/ai-quality-report';
 import { AiTraceabilityPanel } from '@/components/admin/ai-traceability-panel';
+import { QualityReviewForm, QualityReviewSummary } from '@/components/admin/quality-review-form';
 import { aiCandidateStatusDisplay, difficultyDisplay } from '@/components/admin/status-display';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { textareaClass } from '@/components/ui/form-styles';
 import { ApiError } from '@/lib/api';
 import { aiApi } from '@/lib/ai-api';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -28,9 +28,7 @@ function ReviewerActions({
   onChanged: () => Promise<void>;
 }): JSX.Element | null {
   const { user } = useAuth();
-  const [rejectReason, setRejectReason] = useState('');
-  const [showRejectForm, setShowRejectForm] = useState(false);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [converted, setConverted] = useState<{ id: string; code: string } | null>(null);
 
@@ -39,44 +37,13 @@ function ReviewerActions({
     return null;
   }
 
-  const canAcceptReject =
-    candidate.status === 'READY_FOR_REVIEW' || candidate.status === 'IN_REVIEW';
+  const canReviewNow =
+    (candidate.status === 'READY_FOR_REVIEW' || candidate.status === 'IN_REVIEW') &&
+    !candidate.qualityReview;
   const canConvert = candidate.status === 'ACCEPTED' && !candidate.convertedQuestionId;
 
-  async function handleAccept(): Promise<void> {
-    setBusy('accept');
-    setError(null);
-    try {
-      await aiApi.acceptCandidate(candidate.id);
-      await onChanged();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to accept this candidate.');
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function handleReject(): Promise<void> {
-    if (rejectReason.trim().length < 3) {
-      setError('A rejection reason of at least 3 characters is required.');
-      return;
-    }
-    setBusy('reject');
-    setError(null);
-    try {
-      await aiApi.rejectCandidate(candidate.id, rejectReason.trim());
-      setShowRejectForm(false);
-      setRejectReason('');
-      await onChanged();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to reject this candidate.');
-    } finally {
-      setBusy(null);
-    }
-  }
-
   async function handleConvert(): Promise<void> {
-    setBusy('convert');
+    setBusy(true);
     setError(null);
     try {
       const result = await aiApi.convertCandidate(candidate.id);
@@ -85,97 +52,72 @@ function ReviewerActions({
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to convert this candidate.');
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Reviewer actions</CardTitle>
-      </CardHeader>
-
+    <div className="space-y-6">
       {candidate.status === 'REJECTED' && candidate.rejectionReason && (
-        <p className="mb-3 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Rejected: </span>
-          {candidate.rejectionReason}
-        </p>
+        <Card>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Rejected: </span>
+            {candidate.rejectionReason}
+          </p>
+        </Card>
       )}
 
       {candidate.convertedQuestionId && (
-        <div className="mb-3 rounded-md bg-success/10 px-4 py-3 text-sm text-success">
-          Converted to a DRAFT question in the question bank.{' '}
-          <Link href={`/admin/questions/${candidate.convertedQuestionId}`} className="underline">
-            View question →
-          </Link>
-        </div>
+        <Card>
+          <div className="rounded-md bg-success/10 px-4 py-3 text-sm text-success">
+            Converted to a DRAFT question in the question bank.{' '}
+            <Link href={`/admin/questions/${candidate.convertedQuestionId}`} className="underline">
+              View question →
+            </Link>
+          </div>
+        </Card>
       )}
 
       {converted && !candidate.convertedQuestionId && (
-        <div className="mb-3 rounded-md bg-success/10 px-4 py-3 text-sm text-success">
-          Created draft question {converted.code}.{' '}
-          <Link href={`/admin/questions/${converted.id}`} className="underline">
-            View question →
-          </Link>
-        </div>
+        <Card>
+          <div className="rounded-md bg-success/10 px-4 py-3 text-sm text-success">
+            Created draft question {converted.code}.{' '}
+            <Link href={`/admin/questions/${converted.id}`} className="underline">
+              View question →
+            </Link>
+          </div>
+        </Card>
       )}
 
-      {canAcceptReject && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Button disabled={busy !== null} onClick={() => void handleAccept()}>
-              {busy === 'accept' ? 'Accepting…' : 'Accept candidate'}
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={busy !== null}
-              onClick={() => setShowRejectForm((s) => !s)}
-            >
-              Reject
-            </Button>
-          </div>
-          {showRejectForm && (
-            <div className="space-y-2">
-              <textarea
-                className={textareaClass}
-                rows={3}
-                placeholder="Reason for rejection (visible in the audit trail)"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-              />
-              <Button
-                variant="secondary"
-                disabled={busy !== null}
-                onClick={() => void handleReject()}
-              >
-                {busy === 'reject' ? 'Rejecting…' : 'Confirm rejection'}
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+      {candidate.qualityReview && <QualityReviewSummary review={candidate.qualityReview} />}
+
+      {canReviewNow && <QualityReviewForm candidate={candidate} onChanged={onChanged} />}
 
       {canConvert && (
-        <div className="space-y-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Convert to draft question</CardTitle>
+          </CardHeader>
           <p className="text-sm text-muted-foreground">
             Converting <strong>creates a DRAFT question in the existing question bank</strong> — it
             does not publish anything. The new draft still goes through the normal submit-for-review
             → approve → publish workflow like any human-authored question.
           </p>
-          <Button disabled={busy !== null} onClick={() => void handleConvert()}>
-            {busy === 'convert' ? 'Converting…' : 'Convert to draft question'}
+          <Button disabled={busy} className="mt-3" onClick={() => void handleConvert()}>
+            {busy ? 'Converting…' : 'Convert to draft question'}
           </Button>
-        </div>
+          {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+        </Card>
       )}
 
-      {!canAcceptReject && !canConvert && candidate.status !== 'REJECTED' && (
-        <p className="text-sm text-muted-foreground">
-          No reviewer action is currently available for this candidate&apos;s status.
-        </p>
+      {!canReviewNow && !canConvert && !candidate.qualityReview && (
+        <Card>
+          <p className="text-sm text-muted-foreground">
+            No reviewer action is currently available for this candidate&apos;s status.
+          </p>
+        </Card>
       )}
-
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
-    </Card>
+    </div>
   );
 }
 

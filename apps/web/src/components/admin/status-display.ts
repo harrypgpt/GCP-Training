@@ -48,3 +48,14 @@ const AI_CANDIDATE_STATUS_DISPLAY: Record<string, { label: string; tone: BadgeTo
 export function aiCandidateStatusDisplay(status: string): { label: string; tone: BadgeTone } {
   return AI_CANDIDATE_STATUS_DISPLAY[status] ?? { label: status, tone: 'neutral' };
 }
+
+const EXAM_VERSION_STATUS_DISPLAY: Record<string, { label: string; tone: BadgeTone }> = {
+  DRAFT: { label: 'Draft', tone: 'neutral' },
+  ACTIVE: { label: 'Active', tone: 'success' },
+  INACTIVE: { label: 'Inactive', tone: 'warning' },
+  ARCHIVED: { label: 'Archived', tone: 'neutral' },
+};
+
+export function examVersionStatusDisplay(status: string): { label: string; tone: BadgeTone } {
+  return EXAM_VERSION_STATUS_DISPLAY[status] ?? { label: status, tone: 'neutral' };
+}

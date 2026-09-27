@@ -45,6 +45,19 @@ export class GenerationContextDto {
    * documented as a production capability.
    */
   @IsOptional()
-  @IsIn(['timeout', 'unavailable', 'refused', 'malformed', 'insufficient_evidence'])
-  simulate?: 'timeout' | 'unavailable' | 'refused' | 'malformed' | 'insufficient_evidence';
+  @IsIn([
+    'timeout',
+    'unavailable',
+    'refused',
+    'malformed',
+    'insufficient_evidence',
+    'unsupported_claim',
+  ])
+  simulate?:
+    | 'timeout'
+    | 'unavailable'
+    | 'refused'
+    | 'malformed'
+    | 'insufficient_evidence'
+    | 'unsupported_claim';
 }

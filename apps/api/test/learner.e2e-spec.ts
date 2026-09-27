@@ -172,7 +172,13 @@ describe('Learner (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/admin/learning-objectives')
       .set(...auth(adminToken))
-      .send({ lessonId: lesson1Id, description: 'Understand informed consent' })
+      .send({
+        code: `LO-E2E-LEARNER-${lesson1Id.slice(0, 8).toUpperCase()}`,
+        title: 'Understand informed consent',
+        lessonId: lesson1Id,
+        description: 'Understand informed consent',
+        sourceBasis: 'CURRICULUM_REQUIREMENT',
+      })
       .expect(201);
 
     // Publish the whole hierarchy (program, level, both modules, all lessons).

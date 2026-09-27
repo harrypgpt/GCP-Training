@@ -12,6 +12,12 @@ const navItems = [
   { href: '/admin/questions', label: 'Question bank' },
   { href: '/admin/questions/duplicate-flags', label: 'Duplicate flags' },
   { href: '/admin/ai', label: 'AI workspace' },
+  { href: '/admin/exams', label: 'Exams' },
+  { href: '/admin/sources', label: 'Sources' },
+  { href: '/admin/observations', label: 'Observations' },
+  { href: '/admin/observation-imports', label: 'Observation imports' },
+  { href: '/admin/observation-curation', label: 'Observation curation' },
+  { href: '/admin/case-study-specifications', label: 'Case-study specifications' },
 ] as const;
 
 export function AdminShell({ children }: { children: ReactNode }): JSX.Element {

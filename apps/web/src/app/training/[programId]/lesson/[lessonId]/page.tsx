@@ -9,11 +9,13 @@ import { type LessonDetail } from '@gcp/shared';
 import { RequireAuth } from '@/components/auth/require-auth';
 import { AppShell } from '@/components/learner/app-shell';
 import { CaseStudyCard } from '@/components/learner/case-study-card';
-import { EmptyState } from '@/components/learner/empty-state';
+import { ErrorState } from '@/components/learner/error-state';
 import { stateDisplay } from '@/components/learner/state-display';
 import { Badge } from '@/components/ui/badge';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api';
 import { learnerApi } from '@/lib/learner-api';
 
@@ -50,23 +52,34 @@ function LessonView({ programId, lessonId }: { programId: string; lessonId: stri
   }
 
   if (error) {
-    return <EmptyState title="Lesson unavailable" description={error} />;
+    return (
+      <ErrorState
+        title="Lesson unavailable"
+        description={error}
+        onRetry={() => {
+          load().catch((err: unknown) => {
+            setError(err instanceof ApiError ? err.message : 'Unable to load this lesson.');
+          });
+        }}
+      />
+    );
   }
 
   if (!lesson) {
-    return <p className="text-sm text-muted-foreground">Loading lesson…</p>;
+    return <SkeletonPage label="Loading lesson" />;
   }
 
   const completionDisplay = stateDisplay(lesson.completionState);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <Link
-        href={`/training/${programId}/module/${lesson.moduleId}`}
-        className="text-sm text-accent underline"
-      >
-        ← Back to module
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: 'Training', href: '/training' },
+          { label: 'Module', href: `/training/${programId}/module/${lesson.moduleId}` },
+          { label: lesson.title },
+        ]}
+      />
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">

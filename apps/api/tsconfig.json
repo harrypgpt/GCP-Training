@@ -9,6 +9,6 @@
     },
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "prisma/seed.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "prisma/seed.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

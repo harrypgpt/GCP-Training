@@ -12,6 +12,7 @@ import { AdminContentModule } from './modules/admin/admin-content.module';
 import { AiModule } from './modules/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/jwt-auth.guard';
+import { CertificatesModule } from './modules/certificates/certificates.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearnerContentModule } from './modules/learner/learner-content.module';
 import { MailerModule } from './modules/mailer/mailer.module';
@@ -38,6 +39,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AdminContentModule,
     AiModule,
     LearnerContentModule,
+    CertificatesModule,
     HealthModule,
   ],
   providers: [

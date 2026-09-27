@@ -20,7 +20,23 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:status": "prisma migrate status",
     "prisma:studio": "prisma studio",
-    "db:seed": "ts-node prisma/seed.ts"
+    "db:seed": "ts-node prisma/seed.ts",
+    "observations:normalize": "ts-node scripts/normalize-observations.ts",
+    "observations:import": "ts-node scripts/import-observations.ts",
+    "taxonomy:seed": "ts-node scripts/seed-gcp-taxonomy.ts",
+    "observations:curate": "ts-node scripts/curate-real-observations.ts",
+    "gate16:real-tranche": "ts-node scripts/run-gate16-real-tranche.ts",
+    "gate17:real-tranche": "ts-node scripts/run-gate17-real-tranche.ts",
+    "gemini:smoke-test": "ts-node scripts/gemini-smoke-test.ts",
+    "gate18:register-ich-e6r3": "ts-node scripts/register-ich-e6r3.ts",
+    "gate18:real-tranche": "ts-node scripts/run-gate18-real-tranche.ts",
+    "gate19:real-pilot": "ts-node scripts/run-gate19-real-gemini-pilot.ts",
+    "gate20:approve-pilot-tranche": "ts-node scripts/approve-gate20-pilot-tranche.ts",
+    "gate20:real-pilot": "ts-node scripts/run-gate20-real-gemini-case-application-pilot.ts",
+    "gate20:duplicate-check": "ts-node scripts/gate20-duplicate-check.ts",
+    "gate21:real-tranche-review": "ts-node scripts/run-gate21-real-tranche-review.ts",
+    "gate22:real-promotion": "ts-node scripts/run-gate22-real-promotion.ts",
+    "gate24:real-data-verification": "ts-node scripts/run-gate24-real-data-verification.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -42,6 +58,7 @@
     "nodemailer": "6.9.16",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.1",
+    "xlsx": "^0.18.5",
     "zod": "3.24.1"
   },
   "devDependencies": {
