@@ -12,6 +12,7 @@ import { ExamBlueprintValidationService } from '../../admin/exams/exam-blueprint
 import { type SubmitExamDto } from './dto/submit-exam.dto';
 import { isProfileComplete } from '../common/profile-completion';
 import { TrainingStateComputer } from '../common/training-state.service';
+import { IchE6R3ReadingService } from '../training/ich-e6r3-reading.service';
 import {
   BlueprintSelectionError,
   ExamQuestionSelectionService,
@@ -122,6 +123,7 @@ export class LearnerExamAttemptService {
     private readonly trainingState: TrainingStateComputer,
     private readonly blueprintValidation: ExamBlueprintValidationService,
     private readonly selection: ExamQuestionSelectionService,
+    private readonly ichReading: IchE6R3ReadingService,
   ) {}
 
   async startExam(userId: string, examId: string): Promise<ExamAttemptSummary> {
@@ -192,7 +194,7 @@ export class LearnerExamAttemptService {
       );
     }
 
-    await this.assertLearnerEligible(userId, exam.trainingProgramId, examVersion.levelId);
+    await this.assertLearnerEligible(userId, exam.trainingProgramId, examVersion.levelId, examVersionId);
 
     // Revalidate the blueprint NOW - it may have been valid when activated
     // but infeasible today (e.g. questions since archived). Never assume
@@ -211,7 +213,7 @@ export class LearnerExamAttemptService {
 
     let selectionResult;
     try {
-      selectionResult = await this.selection.select(examVersionId);
+      selectionResult = await this.selection.select(examVersionId, userId);
     } catch (error) {
       if (error instanceof BlueprintSelectionError) {
         this.logger.warn(
@@ -329,6 +331,9 @@ export class LearnerExamAttemptService {
         examVersionId,
         attemptNumber,
         questionCount: selectionResult.orderedQuestionVersionIds.length,
+        // Gate 29 §15: admin-visible, never hidden - empty whenever the
+        // unseen-eligible pool alone was sufficient for this attempt.
+        reusedQuestionIds: selectionResult.reusedQuestionIds,
       },
     });
 
@@ -616,6 +621,7 @@ export class LearnerExamAttemptService {
     userId: string,
     trainingProgramId: string,
     levelId: string,
+    examVersionId: string,
   ): Promise<void> {
     const profile = await this.prisma.learnerProfile.findUnique({ where: { userId } });
     if (!profile || !isProfileComplete(profile)) {
@@ -645,6 +651,44 @@ export class LearnerExamAttemptService {
         'Complete all required training before starting this exam.',
       );
     }
+
+    // Gate 29 §6/§20: server-side, unconditional for exams that are
+    // genuinely grounded in the ICH E6(R3) guideline - determined from the
+    // exam's OWN blueprint (at least one active rule citing a normative
+    // ICH E6(R3) section, or constrained to DIRECT_GCP/CASE_APPLICATION),
+    // never a hardcoded exam id. This platform's exam engine is general
+    // purpose (Gate 7B) and serves programs with no relationship to ICH
+    // E6(R3) at all; only an exam whose own configuration ties it to that
+    // guideline requires the learner to have read it. Never relies on the
+    // frontend hiding the "start exam" button.
+    const ichGrounded = await this.isIchE6R3GroundedExam(examVersionId);
+    const ichComplete = !ichGrounded || (await this.ichReading.isTrainingComplete(userId));
+    if (!ichComplete) {
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ExamAttemptErrorCode.TRAINING_NOT_COMPLETE,
+        'Complete reading the ICH E6(R3) guideline before starting this exam.',
+      );
+    }
+  }
+
+  /** Gate 29: an exam is "ICH E6(R3)-grounded" only if its own active
+   * blueprint rules say so - either a rule citing a real normative section
+   * (the exact Gate 25 mechanism) or a rule constrained to
+   * DIRECT_GCP/CASE_APPLICATION (which always traces back to ICH E6(R3) as
+   * normative basis regardless of section, per Gate 29 §26). An exam built
+   * from plain question-type/difficulty rules with neither is a different
+   * program's exam and is never subject to this reading requirement. */
+  private async isIchE6R3GroundedExam(examVersionId: string): Promise<boolean> {
+    const groundedRule = await this.prisma.examBlueprintRule.findFirst({
+      where: {
+        blueprint: { examVersionId },
+        isActive: true,
+        OR: [{ normativeSourceSectionId: { not: null } }, { questionGenerationType: { not: null } }],
+      },
+      select: { id: true },
+    });
+    return groundedRule !== null;
   }
 
   private toSummary(attempt: AttemptWithExam): ExamAttemptSummary {

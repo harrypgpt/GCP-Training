@@ -48,6 +48,14 @@ export class ExamsController {
     return this.exams.create(dto, user.id);
   }
 
+  /** Gate 25 §17: admin-facing lookup of the sections an ICH E6(R3)
+   * blueprint rule may reference - registered before `:id` so this literal
+   * segment is never parsed as an exam id. */
+  @Get('ich-e6r3-sections')
+  listIchE6R3Sections(): ReturnType<ExamBlueprintService['listIchE6R3Sections']> {
+    return this.blueprints.listIchE6R3Sections();
+  }
+
   @Get(':id')
   get(@Param('id') id: string): ReturnType<ExamsService['get']> {
     return this.exams.get(id);

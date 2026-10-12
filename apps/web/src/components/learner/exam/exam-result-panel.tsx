@@ -1,7 +1,9 @@
 import { type ExamAttemptResult } from '@gcp/shared';
+import Link from 'next/link';
 import { type JSX } from 'react';
 
 import { CertificateIssueCta } from '@/components/certificates/certificate-issue-cta';
+import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { ExamErrorState } from './exam-error-state';
 import { type ExamResultLoadState } from './use-exam-result';
@@ -80,7 +82,25 @@ function FinalizedCard({
         Evaluated: {new Date(result.evaluatedAt).toLocaleString()}
       </p>
 
-      {passed && <CertificateIssueCta attemptId={attemptId} />}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link href={`/exams/attempts/${attemptId}/review`}>
+          <Button variant="secondary">Review your answers</Button>
+        </Link>
+      </div>
+
+      {passed ? (
+        <div className="mt-2">
+          <CertificateIssueCta attemptId={attemptId} />
+        </div>
+      ) : (
+        <p className="mt-4 rounded-md bg-warning/10 px-4 py-3 text-sm text-warning">
+          Read the ICH E6(R3) guideline through to the end again before you can start a new attempt.{' '}
+          <Link href="/training/ich-e6r3" className="font-medium underline">
+            Go to the guideline
+          </Link>
+          .
+        </p>
+      )}
     </Card>
   );
 }

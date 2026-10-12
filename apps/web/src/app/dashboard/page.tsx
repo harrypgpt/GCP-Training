@@ -132,9 +132,12 @@ function DashboardContent(): JSX.Element {
                 </div>
               )}
             </dl>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link href={`/training/${dashboard.activeTraining.program.id}`}>
                 <Button variant="secondary">Continue training</Button>
+              </Link>
+              <Link href="/training/ich-e6r3">
+                <Button variant="secondary">Read ICH E6(R3)</Button>
               </Link>
             </div>
             <ExamStatusSection

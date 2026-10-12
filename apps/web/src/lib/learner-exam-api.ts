@@ -4,11 +4,13 @@ import {
   examAttemptQuestionsResponseSchema,
   examAttemptResultSchema,
   examAttemptSummarySchema,
+  examReviewViewSchema,
   submitExamResponseSchema,
   type CurrentExamView,
   type ExamAttemptQuestionsResponse,
   type ExamAttemptResult,
   type ExamAttemptSummaryView,
+  type ExamReviewView,
   type SubmitExamRequest,
   type SubmitExamResponse,
 } from '@gcp/shared';
@@ -76,5 +78,15 @@ export const learnerExamApi = {
    */
   getResult(attemptId: string): Promise<ExamAttemptResult> {
     return authenticatedJson(LEARNER_EXAM_ROUTES.result(attemptId), examAttemptResultSchema);
+  },
+
+  /**
+   * Gate 29 §19: per-question answer review. Available only once the
+   * server considers the attempt finalized (PASSED/FAILED) - a 409 for
+   * anything still in progress, enforced server-side, never by hiding this
+   * call in the UI alone.
+   */
+  getReview(attemptId: string): Promise<ExamReviewView> {
+    return authenticatedJson(LEARNER_EXAM_ROUTES.review(attemptId), examReviewViewSchema);
   },
 };

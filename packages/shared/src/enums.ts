@@ -1170,6 +1170,14 @@ export const ExamErrorCode = {
    * MAX_TOTAL_REQUIRED_QUESTIONS - a safety ceiling, never an exam-size
    * limit. */
   BLUEPRINT_VOLUME_LIMIT_EXCEEDED: 'BLUEPRINT_VOLUME_LIMIT_EXCEEDED',
+  /** Gate 25 §5: a rule's `normativeSourceSectionId` did not resolve to a
+   * section of the registered, PUBLISHED, AUTHORITATIVE_REGULATORY ICH
+   * E6(R3) SourceVersion - never leaks which specific check failed. */
+  BLUEPRINT_NORMATIVE_SECTION_INVALID: 'BLUEPRINT_NORMATIVE_SECTION_INVALID',
+  /** Gate 25 §12: more than one rule in the same blueprint references the
+   * same normative ICH E6(R3) section - requirements are never silently
+   * merged or summed. */
+  DUPLICATE_NORMATIVE_SECTION_REQUIREMENT: 'DUPLICATE_NORMATIVE_SECTION_REQUIREMENT',
 } as const;
 export type ExamErrorCode = (typeof ExamErrorCode)[keyof typeof ExamErrorCode];
 

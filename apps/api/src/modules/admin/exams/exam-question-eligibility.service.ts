@@ -43,6 +43,10 @@ export interface EligibleCandidate {
   learningObjectiveId: string | null;
   hasCaseStudy: boolean;
   hasSource: boolean;
+  /** Gate 25: the candidate's own persisted normative section reference. */
+  sourceSectionRefId: string | null;
+  /** Gate 29: DIRECT_GCP or CASE_APPLICATION (or null for legacy unclassified). */
+  questionGenerationType: string | null;
   optionIds: string[];
 }
 
@@ -55,6 +59,11 @@ export interface EligibilityFilter {
   learningObjectiveId?: string;
   caseStudyRequired?: boolean;
   sourceRequired?: boolean;
+  /** Gate 25: restrict to questions grounded in this exact ICH E6(R3)
+   * `SourceSection` - never inferred, only ever the persisted FK. */
+  normativeSourceSectionId?: string;
+  /** Gate 29: restrict to DIRECT_GCP or CASE_APPLICATION only. */
+  questionGenerationType?: 'DIRECT_GCP' | 'CASE_APPLICATION';
 }
 
 const CANDIDATE_INCLUDE = {
@@ -108,6 +117,12 @@ export class ExamQuestionEligibilityService {
       ...(filter.learningObjectiveId ? { learningObjectiveId: filter.learningObjectiveId } : {}),
       ...(filter.caseStudyRequired ? { caseStudyLinks: { some: {} } } : {}),
       ...(filter.sourceRequired ? { sourceId: { not: null } } : {}),
+      ...(filter.normativeSourceSectionId
+        ? { sourceSectionRefId: filter.normativeSourceSectionId }
+        : {}),
+      ...(filter.questionGenerationType
+        ? { questionGenerationType: filter.questionGenerationType }
+        : {}),
     };
   }
 
@@ -159,6 +174,8 @@ export class ExamQuestionEligibilityService {
         learningObjectiveId: c.learningObjectiveId,
         hasCaseStudy: c.caseStudyLinks.length > 0,
         hasSource: c.sourceId !== null,
+        sourceSectionRefId: c.sourceSectionRefId,
+        questionGenerationType: c.questionGenerationType,
         optionIds: c.options.filter((o) => o.isActive).map((o) => o.id),
       }));
   }

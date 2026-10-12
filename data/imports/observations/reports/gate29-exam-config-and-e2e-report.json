@@ -1,0 +1,1925 @@
+{
+  "generatedAt": "2026-09-27T13:37:39.764Z",
+  "examId": "d9f85d23-bc8a-4f40-817a-c715e7ec9114",
+  "examVersionId": "b720050c-efc6-4c44-a71b-1fc3f0dcf4e4",
+  "blueprintValidation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "checks": [
+      {
+        "name": "blueprint_exists",
+        "passed": true
+      },
+      {
+        "name": "question_count_positive",
+        "passed": true,
+        "detail": "20"
+      },
+      {
+        "name": "pass_percentage_valid",
+        "passed": true,
+        "detail": "80"
+      },
+      {
+        "name": "total_marks_positive",
+        "passed": true,
+        "detail": "20"
+      },
+      {
+        "name": "duration_minutes_valid",
+        "passed": true,
+        "detail": "60"
+      },
+      {
+        "name": "max_attempts_positive",
+        "passed": true,
+        "detail": "5"
+      },
+      {
+        "name": "rules_have_dimensions",
+        "passed": true
+      },
+      {
+        "name": "exact_count_not_contradictory",
+        "passed": true
+      },
+      {
+        "name": "minimum_not_greater_than_maximum",
+        "passed": true
+      },
+      {
+        "name": "exact_count_sum_within_total",
+        "passed": true,
+        "detail": "20/20"
+      },
+      {
+        "name": "exclusive_group_sums_within_total",
+        "passed": true
+      },
+      {
+        "name": "question_types_valid",
+        "passed": true
+      },
+      {
+        "name": "difficulty_values_valid",
+        "passed": true
+      },
+      {
+        "name": "domains_exist",
+        "passed": true
+      },
+      {
+        "name": "professional_roles_exist",
+        "passed": true
+      },
+      {
+        "name": "levels_exist",
+        "passed": true
+      },
+      {
+        "name": "learning_objectives_exist",
+        "passed": true
+      },
+      {
+        "name": "normative_sections_exist",
+        "passed": true
+      },
+      {
+        "name": "normative_sections_are_ich_authoritative",
+        "passed": true
+      },
+      {
+        "name": "no_duplicate_rules",
+        "passed": true
+      },
+      {
+        "name": "no_duplicate_normative_section_requirements",
+        "passed": true
+      },
+      {
+        "name": "sufficient_overall_pool",
+        "passed": true,
+        "detail": "27/20"
+      },
+      {
+        "name": "mandatory_rules_have_sufficient_pool",
+        "passed": true
+      },
+      {
+        "name": "blueprint_feasible",
+        "passed": true
+      }
+    ]
+  },
+  "learnerEmail": "gate29-pilot-learner-1790516141024@gcp-training.local",
+  "totalIchE6R3Sections": 68,
+  "securityProofs": {
+    "examBlockedBeforeAnyTraining": true,
+    "examBlockedWithLessonOnlyNoIchReading": true,
+    "noAnswerKeyInLearnerQuestionResponse": true,
+    "examBlockedAfterFailUntilRetraining": true,
+    "reviewBlockedDuringActiveAttempt": true
+  },
+  "attempt1": {
+    "attemptId": "5e52f095-2b08-4b85-a20f-7d5742b5e45c",
+    "result": {
+      "attemptId": "5e52f095-2b08-4b85-a20f-7d5742b5e45c",
+      "status": "FAILED",
+      "resultStatus": "FINALIZED",
+      "rawScore": 5,
+      "totalMarks": 20,
+      "percentage": 25,
+      "passPercentage": 80,
+      "evaluatedAt": "2026-09-27T13:36:41.382Z",
+      "totalQuestions": 20,
+      "answeredQuestions": 20,
+      "unansweredQuestions": 0
+    }
+  },
+  "attempt2": {
+    "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+    "result": {
+      "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+      "status": "PASSED",
+      "resultStatus": "FINALIZED",
+      "rawScore": 20,
+      "totalMarks": 20,
+      "percentage": 100,
+      "passPercentage": 80,
+      "evaluatedAt": "2026-09-27T13:37:39.563Z",
+      "totalQuestions": 20,
+      "answeredQuestions": 20,
+      "unansweredQuestions": 0
+    },
+    "overlapWithAttempt1QuestionCount": 14
+  },
+  "review": {
+    "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+    "status": "PASSED",
+    "questions": [
+      {
+        "attemptQuestionId": "93675886-0720-448f-891e-ba45ee95e4d7",
+        "stem": "Under ICH E6(R3), what fundamental concept forms the foundation of Quality by Design (QbD) in clinical trials?",
+        "options": [
+          {
+            "optionId": "5f3d1854-878b-4244-a48f-3abfbdfebd22",
+            "text": "Replacing human investigator oversight with automated digital monitoring"
+          },
+          {
+            "optionId": "f322a683-eb75-4343-97f1-f42236afa9f2",
+            "text": "Identifying Critical to Quality (CtQ) factors early to support design and risk management"
+          },
+          {
+            "optionId": "b2446b3c-0f13-49b2-8750-df1ca4bd2cfd",
+            "text": "Standardizing protocol amendments across all international jurisdictions"
+          },
+          {
+            "optionId": "fa23fa8b-1068-4752-8265-fb1f7d59195e",
+            "text": "Performing 100% source data verification (SDV) for all trial participants"
+          }
+        ],
+        "selectedOptionId": "f322a683-eb75-4343-97f1-f42236afa9f2",
+        "correctOptionId": "f322a683-eb75-4343-97f1-f42236afa9f2",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) emphasizes Quality by Design (QbD) principles where trials are designed to incorporate parameters critical to participant safety and data reliability (Critical to Quality factors) from the outset.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.7",
+          "heading": "Principle 7 - Proportionality of Trial Processes"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "3bda468c-9102-45ac-b42e-1ec0303673ff",
+        "stem": "Which of the following best describes the investigator’s responsibility regarding Informed Consent in ICH E6(R3)?",
+        "options": [
+          {
+            "optionId": "7fc0e498-401e-49b3-b8cb-ebf9b6fab60c",
+            "text": "Consent is a continuous process, and electronic consent (eConsent) must ensure understanding and compliance with ethical standards"
+          },
+          {
+            "optionId": "ff454606-5f6a-445c-a5a5-daf13d5f369a",
+            "text": "Consent documentation is only audited if an adverse event occurs"
+          },
+          {
+            "optionId": "66421a06-ed1e-49ca-a54f-c19a4542479c",
+            "text": "Consent can be waived at the investigator's discretion for operational convenience"
+          },
+          {
+            "optionId": "1770297c-404c-4182-a09e-65e45e8d31bd",
+            "text": "Consent must always be documented using physical pen-and-paper forms"
+          }
+        ],
+        "selectedOptionId": "7fc0e498-401e-49b3-b8cb-ebf9b6fab60c",
+        "correctOptionId": "7fc0e498-401e-49b3-b8cb-ebf9b6fab60c",
+        "isCorrect": true,
+        "explanation": "E6(R3) recognizes modern consent modalities (e.g., eConsent) while reiterating that informed consent is an ongoing dialogue requiring adequate information, comprehension, and voluntary agreement.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "2.8",
+          "heading": "Investigator - Informed Consent of Trial Participants"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "531d42ee-1401-478d-9e2b-8a6b59463771",
+        "stem": "In the context of ICH E6(R3) data governance, what does the 'ALCOA+' framework require for trial records?",
+        "options": [
+          {
+            "optionId": "9496a460-8665-40cf-b17b-cb11ba7a82c9",
+            "text": "Authenticated, Logged, Corrected, Optimized, Analytical — plus Secure"
+          },
+          {
+            "optionId": "320e4449-84df-4641-a6b6-fa9dd676e828",
+            "text": "Attributable, Legible, Contemporaneous, Original, Accurate — plus Complete, Consistent, Enduring, and Available"
+          },
+          {
+            "optionId": "1da07ed3-c5c8-480e-b57e-3f4798ad8b25",
+            "text": "Approved, Licensed, Official, Audited, Archived — plus Synchronized"
+          },
+          {
+            "optionId": "912c8e51-dfd7-4c33-9293-1a09c3c09bcd",
+            "text": "Automated, Linked, Certified, Organized, Accessible — plus Encrypted and Digitized"
+          }
+        ],
+        "selectedOptionId": "320e4449-84df-4641-a6b6-fa9dd676e828",
+        "correctOptionId": "320e4449-84df-4641-a6b6-fa9dd676e828",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) reinforces ALCOA+ principles as the standard for ensuring data integrity across both paper-based and electronic trial records throughout the data lifecycle.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.9",
+          "heading": "Principle 9 - Reliable Results"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "0d151a4c-d863-49ff-b751-ccec695761df",
+        "stem": "In E6(R3), what guidance is provided regarding clinical trial software user access management?",
+        "options": [
+          {
+            "optionId": "acbaeb41-df2b-4c3e-bea0-473080fdecdf",
+            "text": "System passwords must be updated only upon regulatory request"
+          },
+          {
+            "optionId": "80d041b2-9b2c-4089-baeb-c56bc61ed1ca",
+            "text": "User access does not need to be revoked when study personnel depart the site"
+          },
+          {
+            "optionId": "81a429ff-e7d9-40d1-96fd-7b2b6c496c27",
+            "text": "Generic shared accounts are encouraged to streamline data entry at trial sites"
+          },
+          {
+            "optionId": "2fa95093-a02b-43bb-bf56-68fc7197496b",
+            "text": "Access rights must be role-based, authorized, individual, and auditable across all computerized systems"
+          }
+        ],
+        "selectedOptionId": "2fa95093-a02b-43bb-bf56-68fc7197496b",
+        "correctOptionId": "2fa95093-a02b-43bb-bf56-68fc7197496b",
+        "isCorrect": true,
+        "explanation": "Data integrity rules in E6(R3) demand unique user identities, role-based access permissions, and secure authentication to maintain accountability.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "4.3.3",
+          "heading": "Data Governance - Computerised Systems - Security"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "1b670338-e13f-4d81-a508-b41c6d98ea75",
+        "stem": "An academic sponsor is planning an interventional clinical trial of an investigational product that is not intended to support a marketing authorisation application. According to ICH E6(R3) (Section I: Guideline Scope), which statement correctly describes the applicability of the guideline to this trial?",
+        "options": [
+          {
+            "optionId": "7b871f9f-c4ca-4394-a9cc-17b4a2cbf9d4",
+            "text": "The guideline prohibits applying GCP principles to trials that will not be submitted to regulatory authorities."
+          },
+          {
+            "optionId": "96aa6e5d-1f4d-4cfe-a1b6-35f7dc678229",
+            "text": "The guideline applies exclusively to commercially sponsored trials and excludes all academic or investigator-initiated trials."
+          },
+          {
+            "optionId": "fed81b14-9412-40ad-9071-c19a77d685fb",
+            "text": "The entire guideline is universally mandatory for all interventional trials regardless of local regulatory requirements."
+          },
+          {
+            "optionId": "02622b2b-f4b8-4de4-9b0d-01a367991299",
+            "text": "The Principles of GCP in the guideline may also be applicable to such trials in accordance with local requirements."
+          }
+        ],
+        "selectedOptionId": "02622b2b-f4b8-4de4-9b0d-01a367991299",
+        "correctOptionId": "02622b2b-f4b8-4de4-9b0d-01a367991299",
+        "isCorrect": true,
+        "explanation": "According to ICH E6(R3) Section I (Guideline Scope), the guideline applies to interventional clinical trials of investigational products intended to be submitted to regulatory authorities. However, it specifically notes that the Principles of GCP in the guideline may also be applicable to other interventional clinical trials of investigational products that are not intended to support marketing authorisation applications, in accordance with local requirements.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "I.Guideline-Scope",
+          "heading": "Guideline Scope"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "9354e8df-e457-4112-a145-a393f3a6eab3",
+        "stem": "Under ICH E6(R3), what key element must sponsors include in the protocol regarding Critical to Quality (CtQ) factors?",
+        "options": [
+          {
+            "optionId": "ec3eef73-7afb-4316-9c5f-86351327864f",
+            "text": "Identification of CtQ factors and the operational strategies designed to protect them"
+          },
+          {
+            "optionId": "9d55eba8-e828-4f34-a877-531336f6bea2",
+            "text": "Detailed resume signatures of all sub-investigators"
+          },
+          {
+            "optionId": "b95abd5a-485a-4517-88d6-64b4fb27ffe3",
+            "text": "Financial guarantees for clinical trial publication rights"
+          },
+          {
+            "optionId": "b2116bc5-b0fd-4c6d-b389-d79d38fdeb11",
+            "text": "A mandatory requirement for 100% source document audit at every site visit"
+          }
+        ],
+        "selectedOptionId": "ec3eef73-7afb-4316-9c5f-86351327864f",
+        "correctOptionId": "ec3eef73-7afb-4316-9c5f-86351327864f",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) mandates that protocol design clearly articulates CtQ factors and outlines proportionate strategies to mitigate risks to those key operational and scientific areas.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.7",
+          "heading": "Principle 7 - Proportionality of Trial Processes"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "64dfded1-0251-433f-b2d9-eac9bd0d0fe6",
+        "stem": "According to ICH E6(R3) Section 4.3.3, which of the following practices must be implemented regarding the security of computerised systems and trial data?",
+        "options": [
+          {
+            "optionId": "6db660f5-f418-4c7d-b7d4-d076617bede4",
+            "text": "Security controls and user authentication requirements only need to be managed initially when the computerised system is first deployed."
+          },
+          {
+            "optionId": "3978eaea-4141-4500-8f31-35492d2d69ba",
+            "text": "The responsible party must ensure security controls, including user management and ongoing measures to prevent, detect, and/or mitigate security breaches, are implemented and maintained."
+          },
+          {
+            "optionId": "a7f22a5e-7c33-4668-844b-04bd7ff01084",
+            "text": "The investigator is solely responsible for establishing global firewall settings and conducting penetration testing across all sponsor-provided systems."
+          },
+          {
+            "optionId": "f4c4d064-75f9-46b5-9165-c6e1fb0e3407",
+            "text": "Data backups and disaster recovery procedures must be performed continuously in real-time without the need for periodic testing."
+          }
+        ],
+        "selectedOptionId": "3978eaea-4141-4500-8f31-35492d2d69ba",
+        "correctOptionId": "3978eaea-4141-4500-8f31-35492d2d69ba",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section 4.3.3(b) states that the responsible party should ensure that security controls are implemented and maintained for computerised systems, including user management and ongoing measures to prevent, detect, and/or mitigate security breaches.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "4.3.3",
+          "heading": "Data Governance - Computerised Systems - Security"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "cb3149b8-35a2-43fb-a82d-ab20341cf49b",
+        "stem": "How does ICH E6(R3) explicitly address the use of electronic systems, data governance, and digital health technologies (DHTs)?",
+        "options": [
+          {
+            "optionId": "a7830686-7836-403b-a226-21141a6ba775",
+            "text": "All electronic data must be manually transcribed into physical paper CRFs prior to regulatory submission"
+          },
+          {
+            "optionId": "2fde2d24-a675-4af2-b103-e23b53758139",
+            "text": "Computerized systems must be fit for purpose, validated based on risk, and maintain data integrity across their lifecycle"
+          },
+          {
+            "optionId": "fb940414-b8a0-462b-b9f7-11557a50320e",
+            "text": "DHTs are prohibited unless verified by a third-party academic auditor"
+          },
+          {
+            "optionId": "c4189367-7a04-4a4f-944c-7fcc1e278b3f",
+            "text": "Digital systems only require validation if they are directly managed by trial site investigators"
+          }
+        ],
+        "selectedOptionId": "2fde2d24-a675-4af2-b103-e23b53758139",
+        "correctOptionId": "2fde2d24-a675-4af2-b103-e23b53758139",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) provides detailed guidance on computerized systems and data governance, emphasizing a risk-proportionate approach to validation, user access controls, and maintaining the ALCOA+ principles across the data lifecycle.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "4.3.4",
+          "heading": "Data Governance - Computerised Systems - Validation"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "8c3a0829-4ad6-4338-b65d-20a216902496",
+        "stem": "How does ICH E6(R3) incorporate proportionality into clinical trial management and monitoring?",
+        "options": [
+          {
+            "optionId": "1d8ac8b4-0aa6-40da-86da-684267de10e5",
+            "text": "Trial processes, monitoring strategies, and documentation should be tailored to the risks inherent to the trial design and intervention"
+          },
+          {
+            "optionId": "669ef624-0509-4b20-aa43-6d63d5123903",
+            "text": "High-risk trials require less monitoring if digital tools are deployed"
+          },
+          {
+            "optionId": "68442c22-4435-44d6-bdca-aebffe0c984f",
+            "text": "Proportionality applies only to budget allocation, not oversight or monitoring"
+          },
+          {
+            "optionId": "adfc6243-fbe7-4a52-9f59-034c1a52bd14",
+            "text": "Monitoring activities must be identical across all clinical trials regardless of study risk"
+          }
+        ],
+        "selectedOptionId": "1d8ac8b4-0aa6-40da-86da-684267de10e5",
+        "correctOptionId": "1d8ac8b4-0aa6-40da-86da-684267de10e5",
+        "isCorrect": true,
+        "explanation": "Proportionality is a core theme in E6(R3), advocating that trial oversight and risk management measures should be proportionate to the risks to participant safety and data reliability.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.7",
+          "heading": "Principle 7 - Proportionality of Trial Processes"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "999b75a9-89c0-4a47-8ff6-62e65c91da29",
+        "stem": "During a clinical trial inspection at a study site, monitors identify several instances where trial participants received modified dosing schedules that were not permitted by the protocol, and these deviations were neither documented nor reviewed by the principal investigator. According to ICH E6(R3) Section 2.5, what specific action must the investigator take regarding protocol deviations?",
+        "options": [
+          {
+            "optionId": "07bcd503-74d1-4dbb-a762-b17e9198f4b4",
+            "text": "The investigator should immediately report every protocol deviation directly to the regulatory authority before reviewing them or implementing preventative measures."
+          },
+          {
+            "optionId": "1322b300-2aa8-467d-81b8-896a23ed0b29",
+            "text": "The investigator is only required to document deviations identified directly by the study site staff, while sponsor-communicated deviations can be managed exclusively by the monitor."
+          },
+          {
+            "optionId": "6f10add4-d202-412a-9f05-b3a4c243c37f",
+            "text": "The investigator may alter the protocol schedule as long as the changes do not eliminate an immediate hazard, without needing to document the modifications."
+          },
+          {
+            "optionId": "14ef0259-f251-4572-81d2-8cba90d77c19",
+            "text": "The investigator must document all protocol deviations, review them, explain important deviations, and implement appropriate measures to prevent recurrence where applicable."
+          }
+        ],
+        "selectedOptionId": "14ef0259-f251-4572-81d2-8cba90d77c19",
+        "correctOptionId": "14ef0259-f251-4572-81d2-8cba90d77c19",
+        "isCorrect": true,
+        "explanation": "According to ICH E6(R3) Section 2.5.3, the investigator should document all protocol deviations. Furthermore, whether identified by the investigator or communicated by the sponsor, the investigator must review the deviations, and for those deemed important, explain the deviation and implement appropriate measures to prevent recurrence, where applicable.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "2.5",
+          "heading": "Investigator - Compliance with Protocol"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-628110",
+          "title": "Scenario: OBS-FDA-WL-628110 - BIMO inspection identified objectionable"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "1fed6c70-74fe-4dec-8db6-8bc5ba70c2aa",
+        "stem": "During a routine monitoring visit for a clinical trial, a Clinical Research Associate (CRA) identifies that a source document lacks the date in the signature section for an investigator assessment of peripheral neuropathy. The site subsequently documents the missing date upon notification. According to ICH E6(R3) Section II.9, which underlying principle governs the need for robust record management and accurate reporting in this context?",
+        "options": [
+          {
+            "optionId": "723ab782-27e0-40a9-b356-3751e1880a77",
+            "text": "Clinical trials should incorporate efficient and robust processes for managing records to ensure record integrity, traceability, and accurate reporting, interpretation, and verification."
+          },
+          {
+            "optionId": "b83fbcc3-7f92-4541-942f-17335249a2de",
+            "text": "All essential records must be retained exclusively in physical paper format by the sponsor for the lifetime of the investigational product."
+          },
+          {
+            "optionId": "bb2bf967-fe82-4b0c-805f-0293df70c668",
+            "text": "Investigators are personally responsible for archiving all trial data independently of the sponsor without any oversight or record-keeping processes."
+          },
+          {
+            "optionId": "0dd07851-3d1d-4cf9-8210-724deda845aa",
+            "text": "Computerised systems used in clinical trials must undergo mandatory regulatory pre-approval prior to capturing any source document signatures."
+          }
+        ],
+        "selectedOptionId": "723ab782-27e0-40a9-b356-3751e1880a77",
+        "correctOptionId": "723ab782-27e0-40a9-b356-3751e1880a77",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section II.9.4 states that clinical trials should incorporate efficient and robust processes for managing records (including data) to help ensure that record integrity and traceability are maintained and that personal information is protected, thereby allowing the accurate reporting, interpretation and verification of the relevant clinical trial-related information. Ensuring dates and signatures are properly managed supports this requirement.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.9",
+          "heading": "Principle 9 - Reliable Results"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-OBK-CLINICAL-001036",
+          "title": "Scenario: OBS-OBK-CLINICAL-001036 - During the review of the source do"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "ca508871-e7a5-4e79-b085-f449207055f9",
+        "stem": "During a review of a Method Validation Report (Section 8.7) for a clinical trial bioanalytical assay, an error was identified regarding the reported molecular weights of Enzalutamide and Enzalutamide D6. Based on ICH E6(R3) principles regarding reliable trial results and record management, what foundational requirement governs the handling and integrity of such trial-related documentation?",
+        "options": [
+          {
+            "optionId": "3442150d-fc60-42bd-8a5f-b4b5d7042c55",
+            "text": "Essential records must be archived exclusively in physical format by the sponsor to prevent retrospective editing of analytical values."
+          },
+          {
+            "optionId": "912822cb-9589-4ffe-90e3-18fde09887f3",
+            "text": "All analytical testing reports must be re-validated by an independent external laboratory before any trial data can be entered into the electronic data capture system."
+          },
+          {
+            "optionId": "2dbe7490-164e-4da7-91cc-09ba9ec6f8ec",
+            "text": "Computerised systems used in clinical trials must undergo mandatory regulatory pre-approval prior to the correction of any typographical report errors."
+          },
+          {
+            "optionId": "60d04600-5cb5-416e-8c7a-fb009c98effe",
+            "text": "Clinical trials should incorporate efficient and robust processes for managing records to help ensure that record integrity and traceability are maintained, allowing accurate reporting and verification."
+          }
+        ],
+        "selectedOptionId": "60d04600-5cb5-416e-8c7a-fb009c98effe",
+        "correctOptionId": "60d04600-5cb5-416e-8c7a-fb009c98effe",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section II.9 (Principle 9.4) establishes that clinical trials must incorporate efficient and robust processes for managing records (including data) to ensure record integrity and traceability are maintained. This directly addresses the need to maintain accurate reporting and verification of trial-related information when discrepancies or errors in records are identified.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.9",
+          "heading": "Principle 9 - Reliable Results"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-OBK-BIOANALYTICAL-000064",
+          "title": "Scenario: OBS-OBK-BIOANALYTICAL-000064 - In the Method Validation Repo"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "7b91bed3-9ff4-4250-9cd5-44828c5fdc46",
+        "stem": "During a clinical trial, a discrepancy is discovered between the protocol requirements and the data fields configured in a computerized clinical data system used to capture laboratory assessments. According to ICH E6(R3) Section 4.3.4, which of the following best describes the fundamental requirement regarding the validation status and approach for this computerised system?",
+        "options": [
+          {
+            "optionId": "3b764f5f-3620-4979-8bc9-af28e607be42",
+            "text": "The sponsor is exempt from validating computerized systems if the data collection tool is provided by a third-party vendor with standard commercial certification."
+          },
+          {
+            "optionId": "b1cf888a-e64d-43fb-856d-5f18554bf81f",
+            "text": "Validation only needs to demonstrate that the system is operational, and does not require alignment with established completeness, accuracy, and reliability requirements."
+          },
+          {
+            "optionId": "f3c244a3-2a41-4d41-940f-0241ed0cdb12",
+            "text": "The approach to validation should be based on a risk assessment that considers the intended use of the system, the importance of the data, and its potential to affect participant well-being and trial result reliability."
+          },
+          {
+            "optionId": "4812d2e9-560e-43d7-bf8d-4c5e90f9f9b8",
+            "text": "Validation must be performed exclusively after the database is locked to ensure that no further protocol deviations or CRF configuration errors can occur."
+          }
+        ],
+        "selectedOptionId": "f3c244a3-2a41-4d41-940f-0241ed0cdb12",
+        "correctOptionId": "f3c244a3-2a41-4d41-940f-0241ed0cdb12",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section 4.3.4(a) mandates that the approach to validation of computerised systems must be based on a risk assessment considering intended use, the importance of the data/records, and the potential impact on participant rights, safety, and well-being as well as trial result reliability.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "4.3.4",
+          "heading": "Data Governance - Computerised Systems - Validation"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-OBK-CLINICAL-000922",
+          "title": "Scenario: OBS-OBK-CLINICAL-000922 - During the review of CRF Version 0"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "4e139b5d-f300-4ca6-8764-a4c97b6abbc9",
+        "stem": "A principal investigator is preparing to initiate a clinical in-vivo bioequivalence study. Based on ICH E6(R3) Section 2.8, what specific requirement must the investigator fulfill prior to consenting and enrolling participants into the trial?",
+        "options": [
+          {
+            "optionId": "402dcd96-4cc2-4c26-8489-15f4ff4764e7",
+            "text": "The investigator should verify that the trial protocol has been submitted to the regulatory authority for review prior to obtaining consent."
+          },
+          {
+            "optionId": "b72848d2-bdb4-4615-a5fc-02547a23b3d3",
+            "text": "The investigator should ensure that all consent information is as clear and concise as possible, avoiding unnecessary volume and complexity."
+          },
+          {
+            "optionId": "3ed3596c-95f6-4821-8a5a-7bfa2fab2adc",
+            "text": "The investigator should obtain the sponsor's final written authorization before administering any electronic informed consent tools."
+          },
+          {
+            "optionId": "b86e95db-0e9b-4a7e-babb-58b006f26053",
+            "text": "The investigator should ensure that the trial participants sign a comprehensive financial disclosure document prior to consenting."
+          }
+        ],
+        "selectedOptionId": "b72848d2-bdb4-4615-a5fc-02547a23b3d3",
+        "correctOptionId": "b72848d2-bdb4-4615-a5fc-02547a23b3d3",
+        "isCorrect": true,
+        "explanation": "According to ICH E6(R3) Section 2.8.1(b), the informed consent information should be as clear and concise as possible, use simple language, and avoid unnecessary volume and complexity to ensure participants or their legally acceptable representatives can make an informed decision.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "2.8",
+          "heading": "Investigator - Informed Consent of Trial Participants"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-724911",
+          "title": "Scenario: OBS-FDA-WL-724911 - Failure to obtain legally effective info"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "ce841fdc-6fee-4721-b2ea-c1eefabc7924",
+        "stem": "In a recent trial audit, it was discovered that patient recruitment and enrollment had been initiated prior to obtaining necessary Ethics Committee and regulatory approvals, violating established mitigation procedures. According to ICH E6(R3) Section II.1, what fundamental principle governs the ethical conduct and initiation of clinical trials in relation to participant protection?",
+        "options": [
+          {
+            "optionId": "58eda754-2e25-401f-b689-cd545dac2eab",
+            "text": "Participant recruitment may commence prior to Ethics Committee approval provided that urgent medical intervention is required for trial participants."
+          },
+          {
+            "optionId": "099df0cc-a18d-4fbe-906e-e702598838ea",
+            "text": "Clinical trials should be designed and conducted in ways that ensure the rights, safety, and well-being of participants, which are the most important considerations and should prevail over interests of science and society."
+          },
+          {
+            "optionId": "e4498e70-e1c9-48c7-b8ed-5fea632ffaed",
+            "text": "The anticipated benefits to society always outweigh foreseeable risks to individual participants during early-phase recruitment."
+          },
+          {
+            "optionId": "c0907c3f-7f69-441f-820b-02a6d273b47e",
+            "text": "Trial initiation procedures are solely a matter of institutional preference and do not require alignment with ethical principles originating from the Declaration of Helsinki."
+          }
+        ],
+        "selectedOptionId": "099df0cc-a18d-4fbe-906e-e702598838ea",
+        "correctOptionId": "099df0cc-a18d-4fbe-906e-e702598838ea",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section II.1, Principle 1, and Section 1.1 establish that clinical trials must be designed and conducted to ensure the rights, safety, and well-being of participants, and that these considerations are paramount, prevailing over interests of science and society. Commencing recruitment without prior approvals compromises these foundational protections.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.1",
+          "heading": "Principle 1 - Rights, Safety and Well-Being"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-OBK-AUDIT-000491",
+          "title": "Scenario: OBS-OBK-AUDIT-000491 - As per System Level Risk & Completion"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "fdd19f79-1ce2-459f-8cd0-26f353a0b5c6",
+        "stem": "In a clinical trial utilizing an electronic vendor platform for eCOA data capture, a sponsor professional is reviewing trial records and vendor logs. The professional discovers that a third-party vendor recently deleted electronic data and associated audit trails for multiple subjects. According to ICH E6(R3) Section II.1 (Principle 1), which foundational consideration must govern the sponsor's immediate and ongoing prioritization regarding participant data and trial conduct?",
+        "options": [
+          {
+            "optionId": "52398495-c8ad-4fef-adbe-d81603ec0cb5",
+            "text": "The scientific and commercial interests of the sponsor and society should prevail to ensure the trial maintains statistical power for primary endpoints."
+          },
+          {
+            "optionId": "8cceb053-11dc-44d0-9939-5a812d40a30a",
+            "text": "Vendor data management cost-efficiency and timelines take precedence over safety reviews when electronic systems experience unexpected disruptions."
+          },
+          {
+            "optionId": "c0f90f8e-6ca5-45f0-9d39-45a49287b449",
+            "text": "Participant safety need only be reviewed if a regulatory authority issues a formal inspection finding or warning letter."
+          },
+          {
+            "optionId": "22a7b531-c105-4371-a357-b9226030e9a2",
+            "text": "The rights, safety, and well-being of the participants are the most important considerations and should prevail over interests of science and society."
+          }
+        ],
+        "selectedOptionId": "22a7b531-c105-4371-a357-b9226030e9a2",
+        "correctOptionId": "22a7b531-c105-4371-a357-b9226030e9a2",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section II.1, Principle 1 (specifically Section 1.1) mandates that the rights, safety, and well-being of clinical trial participants are the most important considerations and should prevail over all interests of science and society.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.1",
+          "heading": "Principle 1 - Rights, Safety and Well-Being"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-696833",
+          "title": "Scenario: OBS-FDA-WL-696833 - A third-party vendor deleted electronic "
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "d254fa2d-448b-40e6-8808-f553ffb46798",
+        "stem": "During a quality review of a clinical trial facility utilizing a UV-Vis computer system for generating electronic test data, a Quality Assurance Professional notes that the system lacks appropriate controls for electronic-test-data integrity, such as defined audit trails and user-access levels. According to ICH E6(R3) Section 4.3.4, what foundational principle governs the validation and control of such computerized systems throughout their life cycle?",
+        "options": [
+          {
+            "optionId": "be6b02c8-56ca-473d-b908-8f786752a055",
+            "text": "System software updates can be implemented immediately without prior validation as long as an audit trail is retroactively enabled within 30 days of data collection."
+          },
+          {
+            "optionId": "a07e652c-3412-4dfa-839f-abfa43c45182",
+            "text": "Validation is only required if the computerized system is used across multiple international sites, otherwise basic vendor declarations of conformity are sufficient."
+          },
+          {
+            "optionId": "757e2993-87cb-42fd-ab11-d2aa55c2299b",
+            "text": "The approach to validation must be based on a risk assessment considering the intended use, the importance of the data, and the potential impact on participant safety and trial result reliability."
+          },
+          {
+            "optionId": "fd07d6c8-04cb-4604-b5f4-8b4d432a7cf9",
+            "text": "User-access levels and security features are strictly the responsibility of the software vendor and do not require evaluation during the clinical trial validation lifecycle."
+          }
+        ],
+        "selectedOptionId": "757e2993-87cb-42fd-ab11-d2aa55c2299b",
+        "correctOptionId": "757e2993-87cb-42fd-ab11-d2aa55c2299b",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) Section 4.3.4(a) mandates that the validation approach for computerized systems must be grounded in a risk assessment evaluating intended use, data importance, and the potential effect on participant well-being, rights, safety, and reliability of trial results.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "4.3.4",
+          "heading": "Data Governance - Computerised Systems - Validation"
+        },
+        "caseApplicationReference": {
+          "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-684644",
+          "title": "Scenario: OBS-FDA-WL-684644 - UV-Vis computer system lacked appropriat"
+        },
+        "questionGenerationType": "CASE_APPLICATION"
+      },
+      {
+        "attemptQuestionId": "7f9fa07a-e4cb-41b3-af13-abc7154a325b",
+        "stem": "What requirement does ICH E6(R3) establish for trial participant communication and transparency?",
+        "options": [
+          {
+            "optionId": "1e5df403-07f0-4f89-8add-acfe4fb4bf68",
+            "text": "Participants cannot be informed of new safety findings until the final study report is published"
+          },
+          {
+            "optionId": "c840c1be-6ffa-47c4-ae00-961a83d6e82a",
+            "text": "Participant communications must use technical regulatory jargon to ensure legal exactness"
+          },
+          {
+            "optionId": "96855b58-c34b-4c86-bc89-8434e26c522f",
+            "text": "Participants should be provided clear, understandable communication regarding trial commitments, risks, and updates"
+          },
+          {
+            "optionId": "d20c3635-1393-488b-9eef-5b15952e40fb",
+            "text": "Communications are strictly restricted to written letters delivered via regular mail"
+          }
+        ],
+        "selectedOptionId": "96855b58-c34b-4c86-bc89-8434e26c522f",
+        "correctOptionId": "96855b58-c34b-4c86-bc89-8434e26c522f",
+        "isCorrect": true,
+        "explanation": "ICH E6(R3) emphasizes participant-centric principles, requiring plain language and timely communication regarding significant trial updates or risk profile changes.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "2.8",
+          "heading": "Investigator - Informed Consent of Trial Participants"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "68cb7c8d-6388-4a7f-8db7-1cb22bb3f5f3",
+        "stem": "According to ICH E6(R3) Section I (Guideline Structure), which of the following statements correctly describes how the guideline's principles are intended to be applied across clinical trials?",
+        "options": [
+          {
+            "optionId": "c21b404b-a44c-403c-8d43-399ef3fb93ef",
+            "text": "The principles require identical implementation methodologies across all trials to ensure regulatory uniformity across different clinical settings."
+          },
+          {
+            "optionId": "2905f5fe-d874-4631-ad60-0a78b964848b",
+            "text": "The principles must be applied uniformly without adaptation, with flexibility restricted strictly to trial operational timelines."
+          },
+          {
+            "optionId": "af791299-c3a4-406b-a286-a23f41f941ef",
+            "text": "The principles apply exclusively to traditional, site-based trial designs until specific annexes are formally issued for novel technologies."
+          },
+          {
+            "optionId": "9367258b-5dcc-4a56-9761-4ba9888d5af8",
+            "text": "The principles may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial."
+          }
+        ],
+        "selectedOptionId": "9367258b-5dcc-4a56-9761-4ba9888d5af8",
+        "correctOptionId": "9367258b-5dcc-4a56-9761-4ba9888d5af8",
+        "isCorrect": true,
+        "explanation": "According to Section I (Guideline Structure) of ICH E6(R3), the principles are intended to apply across clinical trial types and settings and to remain relevant as technological and methodological advances occur. Furthermore, the guideline states that the principles 'may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial.'",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "I.Guideline-Structure",
+          "heading": "Guideline Structure"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      },
+      {
+        "attemptQuestionId": "446f2921-3fc2-49a1-be2e-1aae6e256551",
+        "stem": "In ICH E6(R3), what requirement exists for clinical trial data transfers and system integrations?",
+        "options": [
+          {
+            "optionId": "0e907d5e-8b17-4474-9ba5-024ff2452c08",
+            "text": "Automated data transfers eliminate the requirement for user authorization controls"
+          },
+          {
+            "optionId": "c5d55c91-60da-4252-8155-46ac330fbf83",
+            "text": "All cross-border data transfers are strictly forbidden under GCP rules"
+          },
+          {
+            "optionId": "c5375781-e4dd-4a14-8ab2-334a3084eb1f",
+            "text": "Data transfers between system platforms do not require audit trails if conducted via API"
+          },
+          {
+            "optionId": "e86296c8-d4c6-46ae-bf78-0bde86e7a2e8",
+            "text": "System processes and data transfers must preserve data integrity, security, and traceability from source to final database"
+          }
+        ],
+        "selectedOptionId": "e86296c8-d4c6-46ae-bf78-0bde86e7a2e8",
+        "correctOptionId": "e86296c8-d4c6-46ae-bf78-0bde86e7a2e8",
+        "isCorrect": true,
+        "explanation": "E6(R3) stresses the necessity of robust data governance, ensuring secure, accurate, and fully auditable data transfers between systems across the digital ecosystem.",
+        "ichE6R3Reference": {
+          "sectionIdentifier": "II.9",
+          "heading": "Principle 9 - Reliable Results"
+        },
+        "caseApplicationReference": null,
+        "questionGenerationType": "DIRECT_GCP"
+      }
+    ]
+  },
+  "certificate": {
+    "certificateId": "14fe592c-e0c2-4830-bab0-2fddd74ed81d",
+    "certificateNumber": "GCP-2026-NZW8MX3L",
+    "verificationCode": "pOLHrM1QvjtYlXc6oa6sRvoEH7j69QMw",
+    "verificationUrl": "http://localhost:3000/verify/certificate/pOLHrM1QvjtYlXc6oa6sRvoEH7j69QMw",
+    "issuedAt": "2026-09-27T00:00:00.000Z",
+    "expiresAt": "2027-09-27T00:00:00.000Z",
+    "status": "ACTIVE"
+  },
+  "certificateValidityMonths": 12,
+  "publicVerification": {
+    "valid": true,
+    "certificateNumber": "GCP-2026-NZW8MX3L",
+    "learnerName": "Gate29 PilotLearner",
+    "programName": "ICH GCP E6(R3) Pilot Certification",
+    "levelName": "Pilot Certification Level",
+    "issuedAt": "2026-09-27T00:00:00.000Z",
+    "expiresAt": "2027-09-27T00:00:00.000Z",
+    "status": "ACTIVE"
+  },
+  "steps": [
+    {
+      "step": "validate-blueprint-v2",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "valid": true,
+        "errors": [],
+        "warnings": [],
+        "checks": [
+          {
+            "name": "blueprint_exists",
+            "passed": true
+          },
+          {
+            "name": "question_count_positive",
+            "passed": true,
+            "detail": "20"
+          },
+          {
+            "name": "pass_percentage_valid",
+            "passed": true,
+            "detail": "80"
+          },
+          {
+            "name": "total_marks_positive",
+            "passed": true,
+            "detail": "20"
+          },
+          {
+            "name": "duration_minutes_valid",
+            "passed": true,
+            "detail": "60"
+          },
+          {
+            "name": "max_attempts_positive",
+            "passed": true,
+            "detail": "5"
+          },
+          {
+            "name": "rules_have_dimensions",
+            "passed": true
+          },
+          {
+            "name": "exact_count_not_contradictory",
+            "passed": true
+          },
+          {
+            "name": "minimum_not_greater_than_maximum",
+            "passed": true
+          },
+          {
+            "name": "exact_count_sum_within_total",
+            "passed": true,
+            "detail": "20/20"
+          },
+          {
+            "name": "exclusive_group_sums_within_total",
+            "passed": true
+          },
+          {
+            "name": "question_types_valid",
+            "passed": true
+          },
+          {
+            "name": "difficulty_values_valid",
+            "passed": true
+          },
+          {
+            "name": "domains_exist",
+            "passed": true
+          },
+          {
+            "name": "professional_roles_exist",
+            "passed": true
+          },
+          {
+            "name": "levels_exist",
+            "passed": true
+          },
+          {
+            "name": "learning_objectives_exist",
+            "passed": true
+          },
+          {
+            "name": "normative_sections_exist",
+            "passed": true
+          },
+          {
+            "name": "normative_sections_are_ich_authoritative",
+            "passed": true
+          },
+          {
+            "name": "no_duplicate_rules",
+            "passed": true
+          },
+          {
+            "name": "no_duplicate_normative_section_requirements",
+            "passed": true
+          },
+          {
+            "name": "sufficient_overall_pool",
+            "passed": true,
+            "detail": "27/20"
+          },
+          {
+            "name": "mandatory_rules_have_sufficient_pool",
+            "passed": true
+          },
+          {
+            "name": "blueprint_feasible",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "step": "learner-register",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "message": "A verification code has been sent to your email."
+      }
+    },
+    {
+      "step": "learner-verify-email",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "emailVerificationToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMzdjMjkwNy1iNjE2LTQ0OTgtYjYwMy0wMGMyZWY1Mjg5MzIiLCJwdXJwb3NlIjoiZW1haWxfdmVyaWZpZWQiLCJpYXQiOjE3OTA1MTYxNDIsImV4cCI6MTc5MDUxNjc0Mn0.ayrsLqQslY8TDFYNBnV88rOP6WCyNVIK1r8zZilS9eU",
+        "expiresInSeconds": 600
+      }
+    },
+    {
+      "step": "learner-set-password",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "message": "Password set successfully. You can now log in."
+      }
+    },
+    {
+      "step": "learner-login",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMzdjMjkwNy1iNjE2LTQ0OTgtYjYwMy0wMGMyZWY1Mjg5MzIiLCJyb2xlcyI6WyJMRUFSTkVSIl0sInB1cnBvc2UiOiJhY2Nlc3MiLCJpYXQiOjE3OTA1MTYxNDIsImV4cCI6MTc5MDUxNzA0Mn0.D_BRvyCt-1Gtvc3qqxY1v7ll3F-WWYTgUzZNyNSdsh0",
+        "tokenType": "Bearer",
+        "expiresInSeconds": 900
+      }
+    },
+    {
+      "step": "learner-update-profile",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "id": "a5ad55f3-0eaf-428e-9c55-067861211581",
+        "firstName": "Gate29",
+        "lastName": "PilotLearner",
+        "professionalDesignation": null,
+        "organization": "Gate 29 Pilot Cohort",
+        "country": "United States",
+        "professionalRole": {
+          "id": "0f1981ac-a1b0-462b-a532-9a0050e7c92c",
+          "code": "CLINICAL_OPERATIONS",
+          "name": "Clinical Operations Professional"
+        },
+        "yearsOfExperience": 3,
+        "preferredLevel": null,
+        "isComplete": true,
+        "updatedAt": "2026-09-27T13:35:42.456Z"
+      }
+    },
+    {
+      "step": "learner-enroll",
+      "httpStatus": 201,
+      "ok": true,
+      "body": {
+        "id": "629235ce-bc83-49e7-8c3f-5b037af65edd",
+        "status": "ACTIVE",
+        "cycleNumber": 1,
+        "program": {
+          "id": "0844a436-098a-42d7-ac6d-98bdee65c234",
+          "slug": "ich-gcp-e6r3-pilot",
+          "title": "ICH GCP E6(R3) Pilot Certification"
+        },
+        "level": {
+          "id": "d94f0dee-6ab6-434a-87d2-38e8f00357fe",
+          "code": "PILOT",
+          "name": "Pilot Certification Level"
+        },
+        "enrolledAt": "2026-09-27T13:35:42.507Z",
+        "startedAt": null,
+        "completedAt": null,
+        "lastActivityAt": "2026-09-27T13:35:42.507Z",
+        "currentModuleId": null,
+        "currentLessonId": null,
+        "progress": {
+          "overallProgressPercent": 0,
+          "completedModules": 0,
+          "totalModules": 1,
+          "trainingState": "TRAINING_IN_PROGRESS",
+          "examEligible": false
+        }
+      }
+    },
+    {
+      "step": "exam-blocked-before-any-training",
+      "httpStatus": 409,
+      "ok": true,
+      "body": {
+        "type": "about:blank",
+        "title": "Complete all required training before starting this exam.",
+        "status": 409,
+        "detail": "Complete all required training before starting this exam.",
+        "instance": "/api/learner/exams/d9f85d23-bc8a-4f40-817a-c715e7ec9114/start",
+        "requestId": "f3b93e3f-6698-477b-817c-752b2db4930c",
+        "code": "TRAINING_NOT_COMPLETE"
+      }
+    },
+    {
+      "step": "learner-complete-lesson",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "lessonId": "d2540e2a-d3ba-4e6a-9837-0e9cbd705195",
+        "moduleId": "e89af262-7bfd-4f07-85cf-5887cf5055cd",
+        "moduleCompleted": true,
+        "progress": {
+          "overallProgressPercent": 100,
+          "completedModules": 1,
+          "totalModules": 1,
+          "trainingState": "EXAM_ELIGIBLE",
+          "examEligible": true
+        }
+      }
+    },
+    {
+      "step": "exam-still-blocked-ich-reading-incomplete",
+      "httpStatus": 409,
+      "ok": true,
+      "body": {
+        "type": "about:blank",
+        "title": "Complete reading the ICH E6(R3) guideline before starting this exam.",
+        "status": 409,
+        "detail": "Complete reading the ICH E6(R3) guideline before starting this exam.",
+        "instance": "/api/learner/exams/d9f85d23-bc8a-4f40-817a-c715e7ec9114/start",
+        "requestId": "bb670fd3-352f-4fe4-a754-eaf25939da04",
+        "code": "TRAINING_NOT_COMPLETE"
+      }
+    },
+    {
+      "step": "learner-start-attempt-1",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "5e52f095-2b08-4b85-a20f-7d5742b5e45c",
+        "examId": "d9f85d23-bc8a-4f40-817a-c715e7ec9114",
+        "examVersionId": "b720050c-efc6-4c44-a71b-1fc3f0dcf4e4",
+        "status": "IN_PROGRESS",
+        "attemptNumber": 1,
+        "questionCount": 20,
+        "startedAt": "2026-09-27T13:36:41.153Z",
+        "expiresAt": "2026-09-27T14:36:41.150Z",
+        "submittedAt": null
+      }
+    },
+    {
+      "step": "learner-submit-attempt-1",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "5e52f095-2b08-4b85-a20f-7d5742b5e45c",
+        "status": "SUBMITTED",
+        "submittedAt": "2026-09-27T13:36:41.294Z",
+        "totalQuestions": 20,
+        "answeredQuestions": 20,
+        "unansweredQuestions": 0
+      }
+    },
+    {
+      "step": "learner-result-attempt-1",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "5e52f095-2b08-4b85-a20f-7d5742b5e45c",
+        "status": "FAILED",
+        "resultStatus": "FINALIZED",
+        "rawScore": 5,
+        "totalMarks": 20,
+        "percentage": 25,
+        "passPercentage": 80,
+        "evaluatedAt": "2026-09-27T13:36:41.382Z",
+        "totalQuestions": 20,
+        "answeredQuestions": 20,
+        "unansweredQuestions": 0
+      }
+    },
+    {
+      "step": "exam-blocked-after-fail-retraining-required",
+      "httpStatus": 409,
+      "ok": true,
+      "body": {
+        "type": "about:blank",
+        "title": "Complete reading the ICH E6(R3) guideline before starting this exam.",
+        "status": 409,
+        "detail": "Complete reading the ICH E6(R3) guideline before starting this exam.",
+        "instance": "/api/learner/exams/d9f85d23-bc8a-4f40-817a-c715e7ec9114/start",
+        "requestId": "7f8cd1be-0e30-49af-a695-4828b2c8ab06",
+        "code": "TRAINING_NOT_COMPLETE"
+      }
+    },
+    {
+      "step": "learner-start-attempt-2",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+        "examId": "d9f85d23-bc8a-4f40-817a-c715e7ec9114",
+        "examVersionId": "b720050c-efc6-4c44-a71b-1fc3f0dcf4e4",
+        "status": "IN_PROGRESS",
+        "attemptNumber": 2,
+        "questionCount": 20,
+        "startedAt": "2026-09-27T13:37:39.411Z",
+        "expiresAt": "2026-09-27T14:37:39.409Z",
+        "submittedAt": null
+      }
+    },
+    {
+      "step": "learner-submit-attempt-2",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+        "status": "SUBMITTED",
+        "submittedAt": "2026-09-27T13:37:39.487Z",
+        "totalQuestions": 20,
+        "answeredQuestions": 20,
+        "unansweredQuestions": 0
+      }
+    },
+    {
+      "step": "learner-result-attempt-2",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+        "status": "PASSED",
+        "resultStatus": "FINALIZED",
+        "rawScore": 20,
+        "totalMarks": 20,
+        "percentage": 100,
+        "passPercentage": 80,
+        "evaluatedAt": "2026-09-27T13:37:39.563Z",
+        "totalQuestions": 20,
+        "answeredQuestions": 20,
+        "unansweredQuestions": 0
+      }
+    },
+    {
+      "step": "learner-review-attempt-2",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "attemptId": "81e78ee3-fd9e-408f-8c21-6c087c0d0048",
+        "status": "PASSED",
+        "questions": [
+          {
+            "attemptQuestionId": "93675886-0720-448f-891e-ba45ee95e4d7",
+            "stem": "Under ICH E6(R3), what fundamental concept forms the foundation of Quality by Design (QbD) in clinical trials?",
+            "options": [
+              {
+                "optionId": "5f3d1854-878b-4244-a48f-3abfbdfebd22",
+                "text": "Replacing human investigator oversight with automated digital monitoring"
+              },
+              {
+                "optionId": "f322a683-eb75-4343-97f1-f42236afa9f2",
+                "text": "Identifying Critical to Quality (CtQ) factors early to support design and risk management"
+              },
+              {
+                "optionId": "b2446b3c-0f13-49b2-8750-df1ca4bd2cfd",
+                "text": "Standardizing protocol amendments across all international jurisdictions"
+              },
+              {
+                "optionId": "fa23fa8b-1068-4752-8265-fb1f7d59195e",
+                "text": "Performing 100% source data verification (SDV) for all trial participants"
+              }
+            ],
+            "selectedOptionId": "f322a683-eb75-4343-97f1-f42236afa9f2",
+            "correctOptionId": "f322a683-eb75-4343-97f1-f42236afa9f2",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) emphasizes Quality by Design (QbD) principles where trials are designed to incorporate parameters critical to participant safety and data reliability (Critical to Quality factors) from the outset.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.7",
+              "heading": "Principle 7 - Proportionality of Trial Processes"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "3bda468c-9102-45ac-b42e-1ec0303673ff",
+            "stem": "Which of the following best describes the investigator’s responsibility regarding Informed Consent in ICH E6(R3)?",
+            "options": [
+              {
+                "optionId": "7fc0e498-401e-49b3-b8cb-ebf9b6fab60c",
+                "text": "Consent is a continuous process, and electronic consent (eConsent) must ensure understanding and compliance with ethical standards"
+              },
+              {
+                "optionId": "ff454606-5f6a-445c-a5a5-daf13d5f369a",
+                "text": "Consent documentation is only audited if an adverse event occurs"
+              },
+              {
+                "optionId": "66421a06-ed1e-49ca-a54f-c19a4542479c",
+                "text": "Consent can be waived at the investigator's discretion for operational convenience"
+              },
+              {
+                "optionId": "1770297c-404c-4182-a09e-65e45e8d31bd",
+                "text": "Consent must always be documented using physical pen-and-paper forms"
+              }
+            ],
+            "selectedOptionId": "7fc0e498-401e-49b3-b8cb-ebf9b6fab60c",
+            "correctOptionId": "7fc0e498-401e-49b3-b8cb-ebf9b6fab60c",
+            "isCorrect": true,
+            "explanation": "E6(R3) recognizes modern consent modalities (e.g., eConsent) while reiterating that informed consent is an ongoing dialogue requiring adequate information, comprehension, and voluntary agreement.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "2.8",
+              "heading": "Investigator - Informed Consent of Trial Participants"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "531d42ee-1401-478d-9e2b-8a6b59463771",
+            "stem": "In the context of ICH E6(R3) data governance, what does the 'ALCOA+' framework require for trial records?",
+            "options": [
+              {
+                "optionId": "9496a460-8665-40cf-b17b-cb11ba7a82c9",
+                "text": "Authenticated, Logged, Corrected, Optimized, Analytical — plus Secure"
+              },
+              {
+                "optionId": "320e4449-84df-4641-a6b6-fa9dd676e828",
+                "text": "Attributable, Legible, Contemporaneous, Original, Accurate — plus Complete, Consistent, Enduring, and Available"
+              },
+              {
+                "optionId": "1da07ed3-c5c8-480e-b57e-3f4798ad8b25",
+                "text": "Approved, Licensed, Official, Audited, Archived — plus Synchronized"
+              },
+              {
+                "optionId": "912c8e51-dfd7-4c33-9293-1a09c3c09bcd",
+                "text": "Automated, Linked, Certified, Organized, Accessible — plus Encrypted and Digitized"
+              }
+            ],
+            "selectedOptionId": "320e4449-84df-4641-a6b6-fa9dd676e828",
+            "correctOptionId": "320e4449-84df-4641-a6b6-fa9dd676e828",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) reinforces ALCOA+ principles as the standard for ensuring data integrity across both paper-based and electronic trial records throughout the data lifecycle.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.9",
+              "heading": "Principle 9 - Reliable Results"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "0d151a4c-d863-49ff-b751-ccec695761df",
+            "stem": "In E6(R3), what guidance is provided regarding clinical trial software user access management?",
+            "options": [
+              {
+                "optionId": "acbaeb41-df2b-4c3e-bea0-473080fdecdf",
+                "text": "System passwords must be updated only upon regulatory request"
+              },
+              {
+                "optionId": "80d041b2-9b2c-4089-baeb-c56bc61ed1ca",
+                "text": "User access does not need to be revoked when study personnel depart the site"
+              },
+              {
+                "optionId": "81a429ff-e7d9-40d1-96fd-7b2b6c496c27",
+                "text": "Generic shared accounts are encouraged to streamline data entry at trial sites"
+              },
+              {
+                "optionId": "2fa95093-a02b-43bb-bf56-68fc7197496b",
+                "text": "Access rights must be role-based, authorized, individual, and auditable across all computerized systems"
+              }
+            ],
+            "selectedOptionId": "2fa95093-a02b-43bb-bf56-68fc7197496b",
+            "correctOptionId": "2fa95093-a02b-43bb-bf56-68fc7197496b",
+            "isCorrect": true,
+            "explanation": "Data integrity rules in E6(R3) demand unique user identities, role-based access permissions, and secure authentication to maintain accountability.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "4.3.3",
+              "heading": "Data Governance - Computerised Systems - Security"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "1b670338-e13f-4d81-a508-b41c6d98ea75",
+            "stem": "An academic sponsor is planning an interventional clinical trial of an investigational product that is not intended to support a marketing authorisation application. According to ICH E6(R3) (Section I: Guideline Scope), which statement correctly describes the applicability of the guideline to this trial?",
+            "options": [
+              {
+                "optionId": "7b871f9f-c4ca-4394-a9cc-17b4a2cbf9d4",
+                "text": "The guideline prohibits applying GCP principles to trials that will not be submitted to regulatory authorities."
+              },
+              {
+                "optionId": "96aa6e5d-1f4d-4cfe-a1b6-35f7dc678229",
+                "text": "The guideline applies exclusively to commercially sponsored trials and excludes all academic or investigator-initiated trials."
+              },
+              {
+                "optionId": "fed81b14-9412-40ad-9071-c19a77d685fb",
+                "text": "The entire guideline is universally mandatory for all interventional trials regardless of local regulatory requirements."
+              },
+              {
+                "optionId": "02622b2b-f4b8-4de4-9b0d-01a367991299",
+                "text": "The Principles of GCP in the guideline may also be applicable to such trials in accordance with local requirements."
+              }
+            ],
+            "selectedOptionId": "02622b2b-f4b8-4de4-9b0d-01a367991299",
+            "correctOptionId": "02622b2b-f4b8-4de4-9b0d-01a367991299",
+            "isCorrect": true,
+            "explanation": "According to ICH E6(R3) Section I (Guideline Scope), the guideline applies to interventional clinical trials of investigational products intended to be submitted to regulatory authorities. However, it specifically notes that the Principles of GCP in the guideline may also be applicable to other interventional clinical trials of investigational products that are not intended to support marketing authorisation applications, in accordance with local requirements.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "I.Guideline-Scope",
+              "heading": "Guideline Scope"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "9354e8df-e457-4112-a145-a393f3a6eab3",
+            "stem": "Under ICH E6(R3), what key element must sponsors include in the protocol regarding Critical to Quality (CtQ) factors?",
+            "options": [
+              {
+                "optionId": "ec3eef73-7afb-4316-9c5f-86351327864f",
+                "text": "Identification of CtQ factors and the operational strategies designed to protect them"
+              },
+              {
+                "optionId": "9d55eba8-e828-4f34-a877-531336f6bea2",
+                "text": "Detailed resume signatures of all sub-investigators"
+              },
+              {
+                "optionId": "b95abd5a-485a-4517-88d6-64b4fb27ffe3",
+                "text": "Financial guarantees for clinical trial publication rights"
+              },
+              {
+                "optionId": "b2116bc5-b0fd-4c6d-b389-d79d38fdeb11",
+                "text": "A mandatory requirement for 100% source document audit at every site visit"
+              }
+            ],
+            "selectedOptionId": "ec3eef73-7afb-4316-9c5f-86351327864f",
+            "correctOptionId": "ec3eef73-7afb-4316-9c5f-86351327864f",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) mandates that protocol design clearly articulates CtQ factors and outlines proportionate strategies to mitigate risks to those key operational and scientific areas.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.7",
+              "heading": "Principle 7 - Proportionality of Trial Processes"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "64dfded1-0251-433f-b2d9-eac9bd0d0fe6",
+            "stem": "According to ICH E6(R3) Section 4.3.3, which of the following practices must be implemented regarding the security of computerised systems and trial data?",
+            "options": [
+              {
+                "optionId": "6db660f5-f418-4c7d-b7d4-d076617bede4",
+                "text": "Security controls and user authentication requirements only need to be managed initially when the computerised system is first deployed."
+              },
+              {
+                "optionId": "3978eaea-4141-4500-8f31-35492d2d69ba",
+                "text": "The responsible party must ensure security controls, including user management and ongoing measures to prevent, detect, and/or mitigate security breaches, are implemented and maintained."
+              },
+              {
+                "optionId": "a7f22a5e-7c33-4668-844b-04bd7ff01084",
+                "text": "The investigator is solely responsible for establishing global firewall settings and conducting penetration testing across all sponsor-provided systems."
+              },
+              {
+                "optionId": "f4c4d064-75f9-46b5-9165-c6e1fb0e3407",
+                "text": "Data backups and disaster recovery procedures must be performed continuously in real-time without the need for periodic testing."
+              }
+            ],
+            "selectedOptionId": "3978eaea-4141-4500-8f31-35492d2d69ba",
+            "correctOptionId": "3978eaea-4141-4500-8f31-35492d2d69ba",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section 4.3.3(b) states that the responsible party should ensure that security controls are implemented and maintained for computerised systems, including user management and ongoing measures to prevent, detect, and/or mitigate security breaches.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "4.3.3",
+              "heading": "Data Governance - Computerised Systems - Security"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "cb3149b8-35a2-43fb-a82d-ab20341cf49b",
+            "stem": "How does ICH E6(R3) explicitly address the use of electronic systems, data governance, and digital health technologies (DHTs)?",
+            "options": [
+              {
+                "optionId": "a7830686-7836-403b-a226-21141a6ba775",
+                "text": "All electronic data must be manually transcribed into physical paper CRFs prior to regulatory submission"
+              },
+              {
+                "optionId": "2fde2d24-a675-4af2-b103-e23b53758139",
+                "text": "Computerized systems must be fit for purpose, validated based on risk, and maintain data integrity across their lifecycle"
+              },
+              {
+                "optionId": "fb940414-b8a0-462b-b9f7-11557a50320e",
+                "text": "DHTs are prohibited unless verified by a third-party academic auditor"
+              },
+              {
+                "optionId": "c4189367-7a04-4a4f-944c-7fcc1e278b3f",
+                "text": "Digital systems only require validation if they are directly managed by trial site investigators"
+              }
+            ],
+            "selectedOptionId": "2fde2d24-a675-4af2-b103-e23b53758139",
+            "correctOptionId": "2fde2d24-a675-4af2-b103-e23b53758139",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) provides detailed guidance on computerized systems and data governance, emphasizing a risk-proportionate approach to validation, user access controls, and maintaining the ALCOA+ principles across the data lifecycle.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "4.3.4",
+              "heading": "Data Governance - Computerised Systems - Validation"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "8c3a0829-4ad6-4338-b65d-20a216902496",
+            "stem": "How does ICH E6(R3) incorporate proportionality into clinical trial management and monitoring?",
+            "options": [
+              {
+                "optionId": "1d8ac8b4-0aa6-40da-86da-684267de10e5",
+                "text": "Trial processes, monitoring strategies, and documentation should be tailored to the risks inherent to the trial design and intervention"
+              },
+              {
+                "optionId": "669ef624-0509-4b20-aa43-6d63d5123903",
+                "text": "High-risk trials require less monitoring if digital tools are deployed"
+              },
+              {
+                "optionId": "68442c22-4435-44d6-bdca-aebffe0c984f",
+                "text": "Proportionality applies only to budget allocation, not oversight or monitoring"
+              },
+              {
+                "optionId": "adfc6243-fbe7-4a52-9f59-034c1a52bd14",
+                "text": "Monitoring activities must be identical across all clinical trials regardless of study risk"
+              }
+            ],
+            "selectedOptionId": "1d8ac8b4-0aa6-40da-86da-684267de10e5",
+            "correctOptionId": "1d8ac8b4-0aa6-40da-86da-684267de10e5",
+            "isCorrect": true,
+            "explanation": "Proportionality is a core theme in E6(R3), advocating that trial oversight and risk management measures should be proportionate to the risks to participant safety and data reliability.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.7",
+              "heading": "Principle 7 - Proportionality of Trial Processes"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "999b75a9-89c0-4a47-8ff6-62e65c91da29",
+            "stem": "During a clinical trial inspection at a study site, monitors identify several instances where trial participants received modified dosing schedules that were not permitted by the protocol, and these deviations were neither documented nor reviewed by the principal investigator. According to ICH E6(R3) Section 2.5, what specific action must the investigator take regarding protocol deviations?",
+            "options": [
+              {
+                "optionId": "07bcd503-74d1-4dbb-a762-b17e9198f4b4",
+                "text": "The investigator should immediately report every protocol deviation directly to the regulatory authority before reviewing them or implementing preventative measures."
+              },
+              {
+                "optionId": "1322b300-2aa8-467d-81b8-896a23ed0b29",
+                "text": "The investigator is only required to document deviations identified directly by the study site staff, while sponsor-communicated deviations can be managed exclusively by the monitor."
+              },
+              {
+                "optionId": "6f10add4-d202-412a-9f05-b3a4c243c37f",
+                "text": "The investigator may alter the protocol schedule as long as the changes do not eliminate an immediate hazard, without needing to document the modifications."
+              },
+              {
+                "optionId": "14ef0259-f251-4572-81d2-8cba90d77c19",
+                "text": "The investigator must document all protocol deviations, review them, explain important deviations, and implement appropriate measures to prevent recurrence where applicable."
+              }
+            ],
+            "selectedOptionId": "14ef0259-f251-4572-81d2-8cba90d77c19",
+            "correctOptionId": "14ef0259-f251-4572-81d2-8cba90d77c19",
+            "isCorrect": true,
+            "explanation": "According to ICH E6(R3) Section 2.5.3, the investigator should document all protocol deviations. Furthermore, whether identified by the investigator or communicated by the sponsor, the investigator must review the deviations, and for those deemed important, explain the deviation and implement appropriate measures to prevent recurrence, where applicable.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "2.5",
+              "heading": "Investigator - Compliance with Protocol"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-628110",
+              "title": "Scenario: OBS-FDA-WL-628110 - BIMO inspection identified objectionable"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "1fed6c70-74fe-4dec-8db6-8bc5ba70c2aa",
+            "stem": "During a routine monitoring visit for a clinical trial, a Clinical Research Associate (CRA) identifies that a source document lacks the date in the signature section for an investigator assessment of peripheral neuropathy. The site subsequently documents the missing date upon notification. According to ICH E6(R3) Section II.9, which underlying principle governs the need for robust record management and accurate reporting in this context?",
+            "options": [
+              {
+                "optionId": "723ab782-27e0-40a9-b356-3751e1880a77",
+                "text": "Clinical trials should incorporate efficient and robust processes for managing records to ensure record integrity, traceability, and accurate reporting, interpretation, and verification."
+              },
+              {
+                "optionId": "b83fbcc3-7f92-4541-942f-17335249a2de",
+                "text": "All essential records must be retained exclusively in physical paper format by the sponsor for the lifetime of the investigational product."
+              },
+              {
+                "optionId": "bb2bf967-fe82-4b0c-805f-0293df70c668",
+                "text": "Investigators are personally responsible for archiving all trial data independently of the sponsor without any oversight or record-keeping processes."
+              },
+              {
+                "optionId": "0dd07851-3d1d-4cf9-8210-724deda845aa",
+                "text": "Computerised systems used in clinical trials must undergo mandatory regulatory pre-approval prior to capturing any source document signatures."
+              }
+            ],
+            "selectedOptionId": "723ab782-27e0-40a9-b356-3751e1880a77",
+            "correctOptionId": "723ab782-27e0-40a9-b356-3751e1880a77",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section II.9.4 states that clinical trials should incorporate efficient and robust processes for managing records (including data) to help ensure that record integrity and traceability are maintained and that personal information is protected, thereby allowing the accurate reporting, interpretation and verification of the relevant clinical trial-related information. Ensuring dates and signatures are properly managed supports this requirement.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.9",
+              "heading": "Principle 9 - Reliable Results"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-OBK-CLINICAL-001036",
+              "title": "Scenario: OBS-OBK-CLINICAL-001036 - During the review of the source do"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "ca508871-e7a5-4e79-b085-f449207055f9",
+            "stem": "During a review of a Method Validation Report (Section 8.7) for a clinical trial bioanalytical assay, an error was identified regarding the reported molecular weights of Enzalutamide and Enzalutamide D6. Based on ICH E6(R3) principles regarding reliable trial results and record management, what foundational requirement governs the handling and integrity of such trial-related documentation?",
+            "options": [
+              {
+                "optionId": "3442150d-fc60-42bd-8a5f-b4b5d7042c55",
+                "text": "Essential records must be archived exclusively in physical format by the sponsor to prevent retrospective editing of analytical values."
+              },
+              {
+                "optionId": "912822cb-9589-4ffe-90e3-18fde09887f3",
+                "text": "All analytical testing reports must be re-validated by an independent external laboratory before any trial data can be entered into the electronic data capture system."
+              },
+              {
+                "optionId": "2dbe7490-164e-4da7-91cc-09ba9ec6f8ec",
+                "text": "Computerised systems used in clinical trials must undergo mandatory regulatory pre-approval prior to the correction of any typographical report errors."
+              },
+              {
+                "optionId": "60d04600-5cb5-416e-8c7a-fb009c98effe",
+                "text": "Clinical trials should incorporate efficient and robust processes for managing records to help ensure that record integrity and traceability are maintained, allowing accurate reporting and verification."
+              }
+            ],
+            "selectedOptionId": "60d04600-5cb5-416e-8c7a-fb009c98effe",
+            "correctOptionId": "60d04600-5cb5-416e-8c7a-fb009c98effe",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section II.9 (Principle 9.4) establishes that clinical trials must incorporate efficient and robust processes for managing records (including data) to ensure record integrity and traceability are maintained. This directly addresses the need to maintain accurate reporting and verification of trial-related information when discrepancies or errors in records are identified.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.9",
+              "heading": "Principle 9 - Reliable Results"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-OBK-BIOANALYTICAL-000064",
+              "title": "Scenario: OBS-OBK-BIOANALYTICAL-000064 - In the Method Validation Repo"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "7b91bed3-9ff4-4250-9cd5-44828c5fdc46",
+            "stem": "During a clinical trial, a discrepancy is discovered between the protocol requirements and the data fields configured in a computerized clinical data system used to capture laboratory assessments. According to ICH E6(R3) Section 4.3.4, which of the following best describes the fundamental requirement regarding the validation status and approach for this computerised system?",
+            "options": [
+              {
+                "optionId": "3b764f5f-3620-4979-8bc9-af28e607be42",
+                "text": "The sponsor is exempt from validating computerized systems if the data collection tool is provided by a third-party vendor with standard commercial certification."
+              },
+              {
+                "optionId": "b1cf888a-e64d-43fb-856d-5f18554bf81f",
+                "text": "Validation only needs to demonstrate that the system is operational, and does not require alignment with established completeness, accuracy, and reliability requirements."
+              },
+              {
+                "optionId": "f3c244a3-2a41-4d41-940f-0241ed0cdb12",
+                "text": "The approach to validation should be based on a risk assessment that considers the intended use of the system, the importance of the data, and its potential to affect participant well-being and trial result reliability."
+              },
+              {
+                "optionId": "4812d2e9-560e-43d7-bf8d-4c5e90f9f9b8",
+                "text": "Validation must be performed exclusively after the database is locked to ensure that no further protocol deviations or CRF configuration errors can occur."
+              }
+            ],
+            "selectedOptionId": "f3c244a3-2a41-4d41-940f-0241ed0cdb12",
+            "correctOptionId": "f3c244a3-2a41-4d41-940f-0241ed0cdb12",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section 4.3.4(a) mandates that the approach to validation of computerised systems must be based on a risk assessment considering intended use, the importance of the data/records, and the potential impact on participant rights, safety, and well-being as well as trial result reliability.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "4.3.4",
+              "heading": "Data Governance - Computerised Systems - Validation"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-OBK-CLINICAL-000922",
+              "title": "Scenario: OBS-OBK-CLINICAL-000922 - During the review of CRF Version 0"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "4e139b5d-f300-4ca6-8764-a4c97b6abbc9",
+            "stem": "A principal investigator is preparing to initiate a clinical in-vivo bioequivalence study. Based on ICH E6(R3) Section 2.8, what specific requirement must the investigator fulfill prior to consenting and enrolling participants into the trial?",
+            "options": [
+              {
+                "optionId": "402dcd96-4cc2-4c26-8489-15f4ff4764e7",
+                "text": "The investigator should verify that the trial protocol has been submitted to the regulatory authority for review prior to obtaining consent."
+              },
+              {
+                "optionId": "b72848d2-bdb4-4615-a5fc-02547a23b3d3",
+                "text": "The investigator should ensure that all consent information is as clear and concise as possible, avoiding unnecessary volume and complexity."
+              },
+              {
+                "optionId": "3ed3596c-95f6-4821-8a5a-7bfa2fab2adc",
+                "text": "The investigator should obtain the sponsor's final written authorization before administering any electronic informed consent tools."
+              },
+              {
+                "optionId": "b86e95db-0e9b-4a7e-babb-58b006f26053",
+                "text": "The investigator should ensure that the trial participants sign a comprehensive financial disclosure document prior to consenting."
+              }
+            ],
+            "selectedOptionId": "b72848d2-bdb4-4615-a5fc-02547a23b3d3",
+            "correctOptionId": "b72848d2-bdb4-4615-a5fc-02547a23b3d3",
+            "isCorrect": true,
+            "explanation": "According to ICH E6(R3) Section 2.8.1(b), the informed consent information should be as clear and concise as possible, use simple language, and avoid unnecessary volume and complexity to ensure participants or their legally acceptable representatives can make an informed decision.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "2.8",
+              "heading": "Investigator - Informed Consent of Trial Participants"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-724911",
+              "title": "Scenario: OBS-FDA-WL-724911 - Failure to obtain legally effective info"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "ce841fdc-6fee-4721-b2ea-c1eefabc7924",
+            "stem": "In a recent trial audit, it was discovered that patient recruitment and enrollment had been initiated prior to obtaining necessary Ethics Committee and regulatory approvals, violating established mitigation procedures. According to ICH E6(R3) Section II.1, what fundamental principle governs the ethical conduct and initiation of clinical trials in relation to participant protection?",
+            "options": [
+              {
+                "optionId": "58eda754-2e25-401f-b689-cd545dac2eab",
+                "text": "Participant recruitment may commence prior to Ethics Committee approval provided that urgent medical intervention is required for trial participants."
+              },
+              {
+                "optionId": "099df0cc-a18d-4fbe-906e-e702598838ea",
+                "text": "Clinical trials should be designed and conducted in ways that ensure the rights, safety, and well-being of participants, which are the most important considerations and should prevail over interests of science and society."
+              },
+              {
+                "optionId": "e4498e70-e1c9-48c7-b8ed-5fea632ffaed",
+                "text": "The anticipated benefits to society always outweigh foreseeable risks to individual participants during early-phase recruitment."
+              },
+              {
+                "optionId": "c0907c3f-7f69-441f-820b-02a6d273b47e",
+                "text": "Trial initiation procedures are solely a matter of institutional preference and do not require alignment with ethical principles originating from the Declaration of Helsinki."
+              }
+            ],
+            "selectedOptionId": "099df0cc-a18d-4fbe-906e-e702598838ea",
+            "correctOptionId": "099df0cc-a18d-4fbe-906e-e702598838ea",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section II.1, Principle 1, and Section 1.1 establish that clinical trials must be designed and conducted to ensure the rights, safety, and well-being of participants, and that these considerations are paramount, prevailing over interests of science and society. Commencing recruitment without prior approvals compromises these foundational protections.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.1",
+              "heading": "Principle 1 - Rights, Safety and Well-Being"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-OBK-AUDIT-000491",
+              "title": "Scenario: OBS-OBK-AUDIT-000491 - As per System Level Risk & Completion"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "fdd19f79-1ce2-459f-8cd0-26f353a0b5c6",
+            "stem": "In a clinical trial utilizing an electronic vendor platform for eCOA data capture, a sponsor professional is reviewing trial records and vendor logs. The professional discovers that a third-party vendor recently deleted electronic data and associated audit trails for multiple subjects. According to ICH E6(R3) Section II.1 (Principle 1), which foundational consideration must govern the sponsor's immediate and ongoing prioritization regarding participant data and trial conduct?",
+            "options": [
+              {
+                "optionId": "52398495-c8ad-4fef-adbe-d81603ec0cb5",
+                "text": "The scientific and commercial interests of the sponsor and society should prevail to ensure the trial maintains statistical power for primary endpoints."
+              },
+              {
+                "optionId": "8cceb053-11dc-44d0-9939-5a812d40a30a",
+                "text": "Vendor data management cost-efficiency and timelines take precedence over safety reviews when electronic systems experience unexpected disruptions."
+              },
+              {
+                "optionId": "c0f90f8e-6ca5-45f0-9d39-45a49287b449",
+                "text": "Participant safety need only be reviewed if a regulatory authority issues a formal inspection finding or warning letter."
+              },
+              {
+                "optionId": "22a7b531-c105-4371-a357-b9226030e9a2",
+                "text": "The rights, safety, and well-being of the participants are the most important considerations and should prevail over interests of science and society."
+              }
+            ],
+            "selectedOptionId": "22a7b531-c105-4371-a357-b9226030e9a2",
+            "correctOptionId": "22a7b531-c105-4371-a357-b9226030e9a2",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section II.1, Principle 1 (specifically Section 1.1) mandates that the rights, safety, and well-being of clinical trial participants are the most important considerations and should prevail over all interests of science and society.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.1",
+              "heading": "Principle 1 - Rights, Safety and Well-Being"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-696833",
+              "title": "Scenario: OBS-FDA-WL-696833 - A third-party vendor deleted electronic "
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "d254fa2d-448b-40e6-8808-f553ffb46798",
+            "stem": "During a quality review of a clinical trial facility utilizing a UV-Vis computer system for generating electronic test data, a Quality Assurance Professional notes that the system lacks appropriate controls for electronic-test-data integrity, such as defined audit trails and user-access levels. According to ICH E6(R3) Section 4.3.4, what foundational principle governs the validation and control of such computerized systems throughout their life cycle?",
+            "options": [
+              {
+                "optionId": "be6b02c8-56ca-473d-b908-8f786752a055",
+                "text": "System software updates can be implemented immediately without prior validation as long as an audit trail is retroactively enabled within 30 days of data collection."
+              },
+              {
+                "optionId": "a07e652c-3412-4dfa-839f-abfa43c45182",
+                "text": "Validation is only required if the computerized system is used across multiple international sites, otherwise basic vendor declarations of conformity are sufficient."
+              },
+              {
+                "optionId": "757e2993-87cb-42fd-ab11-d2aa55c2299b",
+                "text": "The approach to validation must be based on a risk assessment considering the intended use, the importance of the data, and the potential impact on participant safety and trial result reliability."
+              },
+              {
+                "optionId": "fd07d6c8-04cb-4604-b5f4-8b4d432a7cf9",
+                "text": "User-access levels and security features are strictly the responsibility of the software vendor and do not require evaluation during the clinical trial validation lifecycle."
+              }
+            ],
+            "selectedOptionId": "757e2993-87cb-42fd-ab11-d2aa55c2299b",
+            "correctOptionId": "757e2993-87cb-42fd-ab11-d2aa55c2299b",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) Section 4.3.4(a) mandates that the validation approach for computerized systems must be grounded in a risk assessment evaluating intended use, data importance, and the potential effect on participant well-being, rights, safety, and reliability of trial results.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "4.3.4",
+              "heading": "Data Governance - Computerised Systems - Validation"
+            },
+            "caseApplicationReference": {
+              "caseCode": "CS-SPEC-GATE16-OBS-FDA-WL-684644",
+              "title": "Scenario: OBS-FDA-WL-684644 - UV-Vis computer system lacked appropriat"
+            },
+            "questionGenerationType": "CASE_APPLICATION"
+          },
+          {
+            "attemptQuestionId": "7f9fa07a-e4cb-41b3-af13-abc7154a325b",
+            "stem": "What requirement does ICH E6(R3) establish for trial participant communication and transparency?",
+            "options": [
+              {
+                "optionId": "1e5df403-07f0-4f89-8add-acfe4fb4bf68",
+                "text": "Participants cannot be informed of new safety findings until the final study report is published"
+              },
+              {
+                "optionId": "c840c1be-6ffa-47c4-ae00-961a83d6e82a",
+                "text": "Participant communications must use technical regulatory jargon to ensure legal exactness"
+              },
+              {
+                "optionId": "96855b58-c34b-4c86-bc89-8434e26c522f",
+                "text": "Participants should be provided clear, understandable communication regarding trial commitments, risks, and updates"
+              },
+              {
+                "optionId": "d20c3635-1393-488b-9eef-5b15952e40fb",
+                "text": "Communications are strictly restricted to written letters delivered via regular mail"
+              }
+            ],
+            "selectedOptionId": "96855b58-c34b-4c86-bc89-8434e26c522f",
+            "correctOptionId": "96855b58-c34b-4c86-bc89-8434e26c522f",
+            "isCorrect": true,
+            "explanation": "ICH E6(R3) emphasizes participant-centric principles, requiring plain language and timely communication regarding significant trial updates or risk profile changes.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "2.8",
+              "heading": "Investigator - Informed Consent of Trial Participants"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "68cb7c8d-6388-4a7f-8db7-1cb22bb3f5f3",
+            "stem": "According to ICH E6(R3) Section I (Guideline Structure), which of the following statements correctly describes how the guideline's principles are intended to be applied across clinical trials?",
+            "options": [
+              {
+                "optionId": "c21b404b-a44c-403c-8d43-399ef3fb93ef",
+                "text": "The principles require identical implementation methodologies across all trials to ensure regulatory uniformity across different clinical settings."
+              },
+              {
+                "optionId": "2905f5fe-d874-4631-ad60-0a78b964848b",
+                "text": "The principles must be applied uniformly without adaptation, with flexibility restricted strictly to trial operational timelines."
+              },
+              {
+                "optionId": "af791299-c3a4-406b-a286-a23f41f941ef",
+                "text": "The principles apply exclusively to traditional, site-based trial designs until specific annexes are formally issued for novel technologies."
+              },
+              {
+                "optionId": "9367258b-5dcc-4a56-9761-4ba9888d5af8",
+                "text": "The principles may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial."
+              }
+            ],
+            "selectedOptionId": "9367258b-5dcc-4a56-9761-4ba9888d5af8",
+            "correctOptionId": "9367258b-5dcc-4a56-9761-4ba9888d5af8",
+            "isCorrect": true,
+            "explanation": "According to Section I (Guideline Structure) of ICH E6(R3), the principles are intended to apply across clinical trial types and settings and to remain relevant as technological and methodological advances occur. Furthermore, the guideline states that the principles 'may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial.'",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "I.Guideline-Structure",
+              "heading": "Guideline Structure"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          },
+          {
+            "attemptQuestionId": "446f2921-3fc2-49a1-be2e-1aae6e256551",
+            "stem": "In ICH E6(R3), what requirement exists for clinical trial data transfers and system integrations?",
+            "options": [
+              {
+                "optionId": "0e907d5e-8b17-4474-9ba5-024ff2452c08",
+                "text": "Automated data transfers eliminate the requirement for user authorization controls"
+              },
+              {
+                "optionId": "c5d55c91-60da-4252-8155-46ac330fbf83",
+                "text": "All cross-border data transfers are strictly forbidden under GCP rules"
+              },
+              {
+                "optionId": "c5375781-e4dd-4a14-8ab2-334a3084eb1f",
+                "text": "Data transfers between system platforms do not require audit trails if conducted via API"
+              },
+              {
+                "optionId": "e86296c8-d4c6-46ae-bf78-0bde86e7a2e8",
+                "text": "System processes and data transfers must preserve data integrity, security, and traceability from source to final database"
+              }
+            ],
+            "selectedOptionId": "e86296c8-d4c6-46ae-bf78-0bde86e7a2e8",
+            "correctOptionId": "e86296c8-d4c6-46ae-bf78-0bde86e7a2e8",
+            "isCorrect": true,
+            "explanation": "E6(R3) stresses the necessity of robust data governance, ensuring secure, accurate, and fully auditable data transfers between systems across the digital ecosystem.",
+            "ichE6R3Reference": {
+              "sectionIdentifier": "II.9",
+              "heading": "Principle 9 - Reliable Results"
+            },
+            "caseApplicationReference": null,
+            "questionGenerationType": "DIRECT_GCP"
+          }
+        ]
+      }
+    },
+    {
+      "step": "review-blocked-during-active-attempt",
+      "httpStatus": 409,
+      "ok": true,
+      "body": {
+        "type": "about:blank",
+        "title": "This exam attempt has not been finalized yet, so it cannot be reviewed.",
+        "status": 409,
+        "detail": "This exam attempt has not been finalized yet, so it cannot be reviewed.",
+        "instance": "/api/learner/exams/attempts/2406a206-5b4d-4325-8b05-20c96f10cd00/review",
+        "requestId": "142f1fd3-afff-478f-9367-ae29dcb7ee7b",
+        "code": "EXAM_NOT_SUBMITTED"
+      }
+    },
+    {
+      "step": "learner-issue-certificate",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "certificateId": "14fe592c-e0c2-4830-bab0-2fddd74ed81d",
+        "certificateNumber": "GCP-2026-NZW8MX3L",
+        "verificationCode": "pOLHrM1QvjtYlXc6oa6sRvoEH7j69QMw",
+        "verificationUrl": "http://localhost:3000/verify/certificate/pOLHrM1QvjtYlXc6oa6sRvoEH7j69QMw",
+        "issuedAt": "2026-09-27T00:00:00.000Z",
+        "expiresAt": "2027-09-27T00:00:00.000Z",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "step": "public-verify-certificate",
+      "httpStatus": 200,
+      "ok": true,
+      "body": {
+        "valid": true,
+        "certificateNumber": "GCP-2026-NZW8MX3L",
+        "learnerName": "Gate29 PilotLearner",
+        "programName": "ICH GCP E6(R3) Pilot Certification",
+        "levelName": "Pilot Certification Level",
+        "issuedAt": "2026-09-27T00:00:00.000Z",
+        "expiresAt": "2027-09-27T00:00:00.000Z",
+        "status": "ACTIVE"
+      }
+    }
+  ]
+}

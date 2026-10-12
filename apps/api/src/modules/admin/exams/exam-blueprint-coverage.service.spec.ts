@@ -80,9 +80,100 @@ describe('ExamBlueprintCoverageService', () => {
         eligiblePool: 50,
         shortfall: 0,
         sufficient: true,
+        normativeSection: null,
       },
     ]);
     expect(result.questionCountShortfall).toBe(0);
+  });
+
+  describe('normative section coverage (Gate 25 §8/§11)', () => {
+    function ruleWithSection(overrides: Record<string, unknown> = {}) {
+      return {
+        id: 'rule-sec',
+        questionType: null,
+        difficulty: null,
+        domainId: null,
+        professionalRoleId: null,
+        levelId: null,
+        learningObjectiveId: null,
+        caseStudyRequired: null,
+        sourceRequired: null,
+        normativeSourceSectionId: 'sec-1',
+        normativeSourceSection: { sectionIdentifier: '2.5', heading: 'Essential Records' },
+        minimumCount: 3,
+        maximumCount: null,
+        exactCount: null,
+        isActive: true,
+        ...overrides,
+      };
+    }
+
+    it('reports SUFFICIENT when the eligible pool meets the section requirement', async () => {
+      examVersionFindUnique.mockResolvedValue({
+        id: 'ev-1',
+        levelId: 'level-1',
+        questionCount: 20,
+        blueprint: { rules: [ruleWithSection()] },
+      });
+      countEligible.mockResolvedValue(5);
+      const service = await createService();
+
+      const result = await service.analyze('ev-1');
+
+      expect(result.rules[0]?.normativeSection).toEqual({
+        normativeSourceSectionId: 'sec-1',
+        sectionCode: '2.5',
+        sectionTitle: 'Essential Records',
+        status: 'SUFFICIENT',
+      });
+    });
+
+    it('reports SHORTFALL when some but not enough eligible questions exist for the section', async () => {
+      examVersionFindUnique.mockResolvedValue({
+        id: 'ev-1',
+        levelId: 'level-1',
+        questionCount: 20,
+        blueprint: { rules: [ruleWithSection()] },
+      });
+      countEligible.mockResolvedValue(1);
+      const service = await createService();
+
+      const result = await service.analyze('ev-1');
+
+      expect(result.rules[0]?.normativeSection?.status).toBe('SHORTFALL');
+    });
+
+    it('reports NO_ELIGIBLE_QUESTIONS (never "section is defective") when the pool is entirely empty and the requirement is unmet', async () => {
+      examVersionFindUnique.mockResolvedValue({
+        id: 'ev-1',
+        levelId: 'level-1',
+        questionCount: 20,
+        blueprint: { rules: [ruleWithSection()] },
+      });
+      countEligible.mockResolvedValue(0);
+      const service = await createService();
+
+      const result = await service.analyze('ev-1');
+
+      expect(result.rules[0]?.normativeSection?.status).toBe('NO_ELIGIBLE_QUESTIONS');
+    });
+
+    it('reports SUFFICIENT for a zero-requirement section rule even with an empty pool - never NO_ELIGIBLE_QUESTIONS for a trivially-met requirement', async () => {
+      examVersionFindUnique.mockResolvedValue({
+        id: 'ev-1',
+        levelId: 'level-1',
+        questionCount: 20,
+        blueprint: {
+          rules: [ruleWithSection({ minimumCount: null, maximumCount: null, exactCount: null })],
+        },
+      });
+      countEligible.mockResolvedValue(0);
+      const service = await createService();
+
+      const result = await service.analyze('ev-1');
+
+      expect(result.rules[0]?.normativeSection?.status).toBe('SUFFICIENT');
+    });
   });
 
   it('reports infeasible when a rule cannot meet its minimum count', async () => {

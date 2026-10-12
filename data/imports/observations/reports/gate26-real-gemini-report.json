@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-09-27T07:45:12.063Z",
+  "skipped": false,
+  "reason": null,
+  "items": [
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "normativeSourceSectionRef": "I.Guideline-Scope - Guideline Scope",
+      "generationStatus": "SUCCEEDED",
+      "latencyMs": 13464,
+      "generationId": "23a357fc-046a-4abb-9560-fa5439fa21fa",
+      "candidateId": "fe5ddd1b-9a96-44fb-aa03-eef8f872e134",
+      "candidateStatus": "READY_FOR_REVIEW"
+    },
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "normativeSourceSectionRef": "I.Guideline-Structure - Guideline Structure",
+      "generationStatus": "SUCCEEDED",
+      "latencyMs": 4453,
+      "generationId": "b6b0113c-3c8f-4212-bc36-16f666784d94",
+      "candidateId": "2cf3ce39-3d12-4e36-b836-073c6ad570ba",
+      "candidateStatus": "READY_FOR_REVIEW"
+    },
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "normativeSourceSectionRef": "II - Principles of ICH GCP",
+      "generationStatus": "FAILED",
+      "errorCode": "PROVIDER_UNAVAILABLE",
+      "errorMessage": "Gemini request failed (503): This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "normativeSourceSectionRef": "OBS-FDA-WL-679066 (FDA Warning Letter) -> 2.5 Compliance with Protocol",
+      "scenarioCaseStudyVersionId": "c23e4236-cd64-4cb9-bc4a-d70336eed1b0",
+      "generationStatus": "FAILED",
+      "errorCode": "PROVIDER_UNAVAILABLE",
+      "errorMessage": "Gemini request failed (429): You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "normativeSourceSectionRef": "OBS-OBK-AUDIT-000039 (Audit) -> 4.3.4 Computerised Systems Validation",
+      "scenarioCaseStudyVersionId": "538022d1-bb1f-414a-a9ae-0eac454cac2a",
+      "generationStatus": "FAILED",
+      "errorCode": "PROVIDER_UNAVAILABLE",
+      "errorMessage": "Gemini request failed (429): You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "normativeSourceSectionRef": "OBS-OBK-BIOANALYTICAL-000064 (Bioanalytical) -> 4.3.3 Computerised Systems Security",
+      "scenarioCaseStudyVersionId": "d3f42915-1c0a-4dc6-8f69-d8f97184d8ad",
+      "generationStatus": "FAILED",
+      "errorCode": "PROVIDER_UNAVAILABLE",
+      "errorMessage": "Gemini request failed (429): You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis."
+    }
+  ],
+  "aggregate": {
+    "directGcp": {
+      "attempted": 3,
+      "successful": 2,
+      "validationFailed": 0,
+      "failed": 1
+    },
+    "caseApplication": {
+      "attempted": 3,
+      "successful": 0,
+      "validationFailed": 0,
+      "failed": 3
+    },
+    "total": {
+      "attempted": 6,
+      "successful": 2,
+      "validationFailed": 0,
+      "failed": 4
+    }
+  }
+}

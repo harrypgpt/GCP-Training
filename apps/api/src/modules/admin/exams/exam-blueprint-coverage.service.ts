@@ -5,6 +5,8 @@ import { loadLatestExamVersion } from './exam-common';
 import { describeRule, ruleToEligibilityFilter } from './exam-blueprint-rule.util';
 import { ExamQuestionEligibilityService } from './exam-question-eligibility.service';
 
+export type NormativeSectionCoverageStatus = 'SUFFICIENT' | 'SHORTFALL' | 'NO_ELIGIBLE_QUESTIONS';
+
 export interface RuleCoverage {
   ruleId: string;
   description: string;
@@ -19,6 +21,16 @@ export interface RuleCoverage {
    * already covers the requirement. */
   shortfall: number;
   sufficient: boolean;
+  /** Gate 25 §8/§11: present only when this rule requires an ICH E6(R3)
+   * normative section. `selected` (how many were actually allocated to a
+   * real attempt) is deliberately not reported here - this is a pre-attempt
+   * diagnostic and no attempt exists yet at this point; see docs/gate25-*.md §7. */
+  normativeSection: {
+    normativeSourceSectionId: string;
+    sectionCode: string;
+    sectionTitle: string | null;
+    status: NormativeSectionCoverageStatus;
+  } | null;
 }
 
 export interface BlueprintCoverageResult {
@@ -54,7 +66,17 @@ export class ExamBlueprintCoverageService {
   async analyze(examVersionId: string): Promise<BlueprintCoverageResult> {
     const version = await this.prisma.examVersion.findUnique({
       where: { id: examVersionId },
-      include: { blueprint: { include: { rules: true } } },
+      include: {
+        blueprint: {
+          include: {
+            rules: {
+              include: {
+                normativeSourceSection: { select: { sectionIdentifier: true, heading: true } },
+              },
+            },
+          },
+        },
+      },
     });
     if (!version) {
       throw new NotFoundException('Exam version not found');
@@ -69,6 +91,7 @@ export class ExamBlueprintCoverageService {
         ruleToEligibilityFilter(rule, version.levelId),
       );
       const required = rule.exactCount ?? rule.minimumCount ?? 0;
+      const sufficient = eligiblePool >= required;
       rules.push({
         ruleId: rule.id,
         description: describeRule(rule),
@@ -78,7 +101,24 @@ export class ExamBlueprintCoverageService {
         required,
         eligiblePool,
         shortfall: Math.max(0, required - eligiblePool),
-        sufficient: eligiblePool >= required,
+        sufficient,
+        normativeSection:
+          rule.normativeSourceSectionId && rule.normativeSourceSection
+            ? {
+                normativeSourceSectionId: rule.normativeSourceSectionId,
+                sectionCode: rule.normativeSourceSection.sectionIdentifier,
+                sectionTitle: rule.normativeSourceSection.heading,
+                // Gate 25 §34: a zero pool is only ever "defective" in the
+                // diagnostic sense when the requirement is not already
+                // trivially met (e.g. required=0) - never inferred as a
+                // quality judgment on the section itself.
+                status: sufficient
+                  ? 'SUFFICIENT'
+                  : eligiblePool === 0
+                    ? 'NO_ELIGIBLE_QUESTIONS'
+                    : 'SHORTFALL',
+              }
+            : null,
       });
     }
 

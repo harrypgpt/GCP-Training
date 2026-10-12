@@ -131,4 +131,35 @@ describe('Question bank readiness report page', () => {
     expect(screen.getByText('Identify GCP obligations')).toBeInTheDocument();
     expect(screen.getByText('Generation gaps')).toBeInTheDocument();
   });
+
+  it('shows a real section-level shortfall (Gate 25) as a distinct badge from a section with no requirement defined', async () => {
+    useAuth.mockReturnValue({
+      status: 'authenticated',
+      user: { id: 'u1', email: 'a@x.test', roles: ['ADMIN'] },
+    });
+    const summary = sampleSummary() as { ichSectionCoverage: unknown[] };
+    summary.ichSectionCoverage = [
+      {
+        sourceSectionId: 'sec-1',
+        sectionIdentifier: '2.5',
+        heading: 'Quality management',
+        eligibleQuestionCount: 2,
+        requirement: 'NO_REQUIREMENT_DEFINED',
+      },
+      {
+        sourceSectionId: 'sec-2',
+        sectionIdentifier: '2.8',
+        heading: 'Responsibilities',
+        eligibleQuestionCount: 1,
+        requirement: { required: 3, available: 1, shortfall: 2 },
+      },
+    ];
+    getQuestionBankReadiness.mockResolvedValue(summary);
+
+    render(<QuestionBankReadinessPage />);
+
+    await waitFor(() => expect(screen.getByText(/2\.8/)).toBeInTheDocument());
+    expect(screen.getAllByText(/No requirement defined/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Short by 2/)).toBeInTheDocument();
+  });
 });

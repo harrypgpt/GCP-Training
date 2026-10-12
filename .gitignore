@@ -27,6 +27,12 @@ test-results/
 # Prisma
 apps/api/prisma/*.db
 
+# Real observation import source/normalized data (Gate 12) - proprietary
+# CRO/regulatory extracts, never committed to version control. Reports
+# (aggregate counts/distributions only) remain tracked.
+data/imports/observations/raw/
+data/imports/observations/normalized/
+
 # Logs
 *.log
 npm-debug.log*

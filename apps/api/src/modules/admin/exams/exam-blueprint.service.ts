@@ -9,6 +9,10 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { loadLatestExamVersion } from './exam-common';
 import { type BlueprintRuleDto } from './dto/blueprint-rule.dto';
 import { type UpsertBlueprintDto } from './dto/upsert-blueprint.dto';
+import {
+  assertNormativeSectionIsIchAuthoritative,
+  findIchE6R3SourceVersions,
+} from './ich-e6r3-authority.util';
 
 /** Gate 22 §24: the sum of exactCount/minimumCount required-question
  * counts across a blueprint's active rules must never exceed this -
@@ -31,6 +35,9 @@ export interface BlueprintRuleView {
   learningObjective: { id: string; description: string } | null;
   caseStudyRequired: boolean | null;
   sourceRequired: boolean | null;
+  normativeSourceSectionId: string | null;
+  normativeSourceSection: { id: string; sectionIdentifier: string; heading: string | null } | null;
+  questionGenerationType: string | null;
   minimumCount: number | null;
   maximumCount: number | null;
   exactCount: number | null;
@@ -52,6 +59,7 @@ const RULE_INCLUDE = {
   professionalRole: { select: { id: true, name: true } },
   level: { select: { id: true, name: true } },
   learningObjective: { select: { id: true, description: true } },
+  normativeSourceSection: { select: { id: true, sectionIdentifier: true, heading: true } },
 } satisfies Prisma.ExamBlueprintRuleInclude;
 
 const BLUEPRINT_INCLUDE = {
@@ -59,6 +67,12 @@ const BLUEPRINT_INCLUDE = {
 } satisfies Prisma.ExamBlueprintInclude;
 
 type BlueprintWithRules = Prisma.ExamBlueprintGetPayload<{ include: typeof BLUEPRINT_INCLUDE }>;
+
+export interface IchE6R3SectionOption {
+  id: string;
+  sectionIdentifier: string;
+  heading: string | null;
+}
 
 @Injectable()
 export class ExamBlueprintService {
@@ -79,6 +93,36 @@ export class ExamBlueprintService {
     return this.toDetail(blueprint);
   }
 
+  /** Gate 25 §17: the only sections an admin may pick as a rule's normative
+   * requirement - published, authoritative, ICH E6(R3) sections only. No
+   * new section inventory: this reads the existing `SourceSection` table,
+   * scoped by the same `findIchE6R3SourceVersions` identification Gate 24
+   * uses, filtered to versions that are actually `PUBLISHED` and
+   * `AUTHORITATIVE_REGULATORY`. */
+  async listIchE6R3Sections(): Promise<IchE6R3SectionOption[]> {
+    const candidateVersions = await findIchE6R3SourceVersions(this.prisma);
+    if (candidateVersions.length === 0) {
+      return [];
+    }
+    const authoritativeVersions = await this.prisma.sourceVersion.findMany({
+      where: {
+        id: { in: candidateVersions.map((v) => v.id) },
+        reviewStatus: 'PUBLISHED',
+        authority: 'AUTHORITATIVE_REGULATORY',
+      },
+      select: { id: true },
+    });
+    if (authoritativeVersions.length === 0) {
+      return [];
+    }
+    const sections = await this.prisma.sourceSection.findMany({
+      where: { sourceVersionId: { in: authoritativeVersions.map((v) => v.id) } },
+      orderBy: { sequence: 'asc' },
+      select: { id: true, sectionIdentifier: true, heading: true },
+    });
+    return sections;
+  }
+
   async create(examId: string, dto: UpsertBlueprintDto, actorId: string): Promise<BlueprintDetail> {
     const { latest } = await loadLatestExamVersion(this.prisma, examId);
     this.assertEditable(latest.status);
@@ -95,6 +139,7 @@ export class ExamBlueprintService {
     }
 
     this.assertVolumeLimits(dto.rules);
+    this.assertNoDuplicateNormativeSections(dto.rules);
     await this.assertRuleReferencesExist(dto.rules);
 
     const created = await this.prisma.examBlueprint.create({
@@ -112,7 +157,11 @@ export class ExamBlueprintService {
       entity: 'exam',
       entityId: examId,
       actorId,
-      metadata: { versionId: latest.id, ruleCount: dto.rules.length },
+      metadata: {
+        versionId: latest.id,
+        ruleCount: dto.rules.length,
+        normativeSectionRequirements: this.normativeSectionAuditEntries(dto.rules),
+      },
     });
 
     return this.toDetail(created);
@@ -134,6 +183,7 @@ export class ExamBlueprintService {
     }
 
     this.assertVolumeLimits(dto.rules);
+    this.assertNoDuplicateNormativeSections(dto.rules);
     await this.assertRuleReferencesExist(dto.rules);
 
     await this.prisma.$transaction(async (tx) => {
@@ -154,7 +204,11 @@ export class ExamBlueprintService {
       entity: 'exam',
       entityId: examId,
       actorId,
-      metadata: { versionId: latest.id, ruleCount: dto.rules.length },
+      metadata: {
+        versionId: latest.id,
+        ruleCount: dto.rules.length,
+        normativeSectionRequirements: this.normativeSectionAuditEntries(dto.rules),
+      },
     });
 
     return this.get(examId);
@@ -184,6 +238,12 @@ export class ExamBlueprintService {
         : {}),
       ...(r.caseStudyRequired !== undefined ? { caseStudyRequired: r.caseStudyRequired } : {}),
       ...(r.sourceRequired !== undefined ? { sourceRequired: r.sourceRequired } : {}),
+      ...(r.normativeSourceSectionId !== undefined
+        ? { normativeSourceSectionId: r.normativeSourceSectionId }
+        : {}),
+      ...(r.questionGenerationType !== undefined
+        ? { questionGenerationType: r.questionGenerationType }
+        : {}),
       ...(r.minimumCount !== undefined ? { minimumCount: r.minimumCount } : {}),
       ...(r.maximumCount !== undefined ? { maximumCount: r.maximumCount } : {}),
       ...(r.exactCount !== undefined ? { exactCount: r.exactCount } : {}),
@@ -204,6 +264,27 @@ export class ExamBlueprintService {
     }
   }
 
+  /** Gate 25 §12: reject duplicate normative-section requirements within
+   * the same submitted rule set - never silently merged or summed. */
+  private assertNoDuplicateNormativeSections(rules: BlueprintRuleDto[]): void {
+    const sectionIds = rules.map((r) => r.normativeSourceSectionId).filter((v): v is string => !!v);
+    const duplicates = sectionIds.filter((id, i) => sectionIds.indexOf(id) !== i);
+    if (duplicates.length > 0) {
+      throw new AppException(
+        HttpStatus.BAD_REQUEST,
+        ExamErrorCode.DUPLICATE_NORMATIVE_SECTION_REQUIREMENT,
+        'More than one rule in this blueprint requires the same ICH E6(R3) normative section - use a single rule per section instead.',
+      );
+    }
+  }
+
+  /** Gate 25 §20: which sections this rule set requires, for the audit
+   * trail - never a second audit framework, just richer metadata on the
+   * existing EXAM_BLUEPRINT_CREATED/UPDATED events. */
+  private normativeSectionAuditEntries(rules: BlueprintRuleDto[]): string[] {
+    return rules.map((r) => r.normativeSourceSectionId).filter((v): v is string => !!v);
+  }
+
   private async assertRuleReferencesExist(rules: BlueprintRuleDto[]): Promise<void> {
     const domainIds = [...new Set(rules.map((r) => r.domainId).filter((v): v is string => !!v))];
     const roleIds = [
@@ -213,6 +294,15 @@ export class ExamBlueprintService {
     const objectiveIds = [
       ...new Set(rules.map((r) => r.learningObjectiveId).filter((v): v is string => !!v)),
     ];
+    const normativeSectionIds = [
+      ...new Set(rules.map((r) => r.normativeSourceSectionId).filter((v): v is string => !!v)),
+    ];
+
+    // Gate 25 §5: each referenced section must resolve to the registered,
+    // published, authoritative ICH E6(R3) source - never an arbitrary UUID.
+    await Promise.all(
+      normativeSectionIds.map((id) => assertNormativeSectionIsIchAuthoritative(this.prisma, id)),
+    );
 
     const [domains, roles, levels, objectives] = await Promise.all([
       domainIds.length
@@ -273,6 +363,9 @@ export class ExamBlueprintService {
         learningObjective: r.learningObjective,
         caseStudyRequired: r.caseStudyRequired,
         sourceRequired: r.sourceRequired,
+        normativeSourceSectionId: r.normativeSourceSectionId,
+        normativeSourceSection: r.normativeSourceSection,
+        questionGenerationType: r.questionGenerationType,
         minimumCount: r.minimumCount,
         maximumCount: r.maximumCount,
         exactCount: r.exactCount,

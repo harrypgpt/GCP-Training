@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-09-27T09:24:08.023Z",
+  "items": [
+    {
+      "questionGenerationType": "DIRECT_GCP",
+      "ref": "II - Principles of ICH GCP",
+      "generationStatus": "FAILED",
+      "errorMessage": "Gemini request failed (503): This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "ref": "OBS-FDA-WL-652067 -> 2.5 Compliance with Protocol",
+      "generationStatus": "FAILED",
+      "errorMessage": "Gemini request failed (503): This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "ref": "OBS-OBK-AUDIT-000268 -> II.9 Reliable Results",
+      "generationStatus": "FAILED",
+      "errorMessage": "Gemini request failed (429): You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis."
+    },
+    {
+      "questionGenerationType": "CASE_APPLICATION",
+      "ref": "OBS-FDA-WL-724911 -> II.7 Proportionality of Trial Processes",
+      "generationStatus": "FAILED",
+      "errorMessage": "Gemini request failed (429): You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis."
+    }
+  ]
+}

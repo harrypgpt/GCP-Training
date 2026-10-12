@@ -765,8 +765,9 @@ model User {
   certificates        Certificate[] @relation("CertificateHolder")
   revokedCertificates Certificate[] @relation("CertificateRevokedBy")
 
-  learnerProfile LearnerProfile?
-  enrollments    Enrollment[]
+  learnerProfile        LearnerProfile?
+  enrollments           Enrollment[]
+  sourceReadingProgress SourceReadingProgress[]
 
   @@index([status])
   @@index([createdAt])
@@ -1357,6 +1358,7 @@ model SourceVersion {
   /// Gate 18: AiQuestionCandidates whose normative GCP grounding is this
   /// SourceVersion (always ICH E6(R3) in practice).
   normativeForQuestionCandidates AiQuestionCandidate[]
+  readingProgress                SourceReadingProgress[]
 
   @@unique([sourceId, versionNumber])
   @@index([sourceId])
@@ -1430,6 +1432,9 @@ model SourceSection {
   /// Gate 18: AiQuestionCandidates whose normative GCP grounding cites this
   /// exact SourceSection.
   normativeForQuestionCandidates AiQuestionCandidate[]
+  /// Gate 25: ExamBlueprintRules requiring a minimum number of questions
+  /// grounded in this exact section.
+  examBlueprintRules             ExamBlueprintRule[]
 
   @@unique([sourceVersionId, sectionIdentifier])
   @@index([sourceVersionId, sequence])
@@ -2720,14 +2725,29 @@ model ExamBlueprintRule {
   id          String @id @default(uuid()) @db.Uuid
   blueprintId String @map("blueprint_id") @db.Uuid
 
-  questionType        QuestionType?    @map("question_type")
-  difficulty          DifficultyLevel?
-  domainId            String?          @map("domain_id") @db.Uuid
-  professionalRoleId  String?          @map("professional_role_id") @db.Uuid
-  levelId             String?          @map("level_id") @db.Uuid
-  learningObjectiveId String?          @map("learning_objective_id") @db.Uuid
-  caseStudyRequired   Boolean?         @map("case_study_required")
-  sourceRequired      Boolean?         @map("source_required")
+  questionType             QuestionType?           @map("question_type")
+  difficulty               DifficultyLevel?
+  domainId                 String?                 @map("domain_id") @db.Uuid
+  professionalRoleId       String?                 @map("professional_role_id") @db.Uuid
+  levelId                  String?                 @map("level_id") @db.Uuid
+  learningObjectiveId      String?                 @map("learning_objective_id") @db.Uuid
+  caseStudyRequired        Boolean?                @map("case_study_required")
+  sourceRequired           Boolean?                @map("source_required")
+  /// Gate 25: at most one ICH E6(R3) normative section per rule - never an
+  /// array (§6, "one rule, one normative section"). Must resolve to a
+  /// section of the registered, PUBLISHED, AUTHORITATIVE_REGULATORY ICH
+  /// E6(R3) SourceVersion - enforced in application code
+  /// (`ich-e6r3-authority.util.ts`), not by this FK alone. `onDelete:
+  /// Restrict` deliberately differs from every other FK to `SourceSection`
+  /// (which use `SetNull`) - losing this reference would silently corrupt
+  /// a blueprint's stated requirement rather than merely losing a citation.
+  normativeSourceSectionId String?                 @map("normative_source_section_id") @db.Uuid
+  /// Gate 29: constrains a rule to only DIRECT_GCP or only CASE_APPLICATION
+  /// questions - lets a blueprint express an explicit composition (e.g. 12
+  /// DIRECT_GCP + 8 CASE_APPLICATION) without a second eligibility system;
+  /// matched the same way every other dimension is, in
+  /// `ruleMatchesCandidate`.
+  questionGenerationType   QuestionGenerationType? @map("question_generation_type")
 
   minimumCount Int?    @map("minimum_count")
   maximumCount Int?    @map("maximum_count")
@@ -2740,13 +2760,15 @@ model ExamBlueprintRule {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  blueprint         ExamBlueprint      @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
-  domain            GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  professionalRole  ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
-  level             TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
-  learningObjective LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  blueprint              ExamBlueprint      @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
+  domain                 GcpDomain?         @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  professionalRole       ProfessionalRole?  @relation(fields: [professionalRoleId], references: [id], onDelete: SetNull)
+  level                  TrainingLevel?     @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  learningObjective      LearningObjective? @relation(fields: [learningObjectiveId], references: [id], onDelete: SetNull)
+  normativeSourceSection SourceSection?     @relation(fields: [normativeSourceSectionId], references: [id], onDelete: Restrict)
 
   @@index([blueprintId])
+  @@index([normativeSourceSectionId])
   @@index([isActive])
   @@map("exam_blueprint_rules")
 }
@@ -2953,6 +2975,46 @@ enum ProgressStatus {
   COMPLETED
 
   @@map("progress_status")
+}
+
+/// Gate 29: a learner's reading progress through one normative SourceVersion
+/// (currently: the registered ICH E6(R3) guideline). Deliberately separate
+/// from `ModuleProgress`/`LessonProgress` (Module/Lesson training content is
+/// authored, curated platform content; a `SourceVersion` is the registered
+/// normative document itself, read directly - no Module/Lesson wraps it).
+/// RETRAINING_REQUIRED is entered only by a failed exam attempt (never by
+/// this model itself) and cleared only by the learner reaching the end of
+/// the document again - see `LearnerExamAttemptService`/`SourceReadingProgressService`.
+enum ReadingCompletionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  RETRAINING_REQUIRED
+
+  @@map("reading_completion_status")
+}
+
+model SourceReadingProgress {
+  id                  String                  @id @default(uuid()) @db.Uuid
+  userId              String                  @map("user_id") @db.Uuid
+  sourceVersionId     String                  @map("source_version_id") @db.Uuid
+  status              ReadingCompletionStatus @default(NOT_STARTED)
+  /// The furthest `SourceSection.sequence` value the learner has reached, in
+  /// document order - the deterministic basis for "reached the end" and for
+  /// the resume-from-last-position / progress-percentage UI. Never a
+  /// self-reported percentage or a client-supplied value.
+  lastViewedSequence  Int                     @default(0) @map("last_viewed_sequence")
+  trainingStartedAt   DateTime?               @map("training_started_at") @db.Timestamptz(6)
+  trainingCompletedAt DateTime?               @map("training_completed_at") @db.Timestamptz(6)
+  createdAt           DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceVersion SourceVersion @relation(fields: [sourceVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sourceVersionId])
+  @@index([sourceVersionId])
+  @@map("source_reading_progress")
 }
 
 /// The learner-editable profile, separate from `User` (identity/auth) so a

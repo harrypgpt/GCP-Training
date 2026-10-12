@@ -1,6 +1,11 @@
 'use client';
 
-import { ALL_DIFFICULTY_LEVELS, ALL_QUESTION_TYPES, type BlueprintRuleRequest } from '@gcp/shared';
+import {
+  ALL_DIFFICULTY_LEVELS,
+  ALL_QUESTION_TYPES,
+  type BlueprintRuleRequest,
+  type IchE6R3SectionOption,
+} from '@gcp/shared';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState, type JSX } from 'react';
@@ -26,10 +31,12 @@ function emptyRule(): RuleRow {
 
 function RuleEditor({
   rule,
+  sections,
   onChange,
   onRemove,
 }: {
   rule: RuleRow;
+  sections: IchE6R3SectionOption[];
   onChange: (patch: Partial<BlueprintRuleRequest>) => void;
   onRemove: () => void;
 }): JSX.Element {
@@ -104,6 +111,19 @@ function RuleEditor({
             return res.items.map((l) => ({ id: l.id, label: `${l.code} — ${l.name}` }));
           }}
         />
+        <select
+          className={inputClass}
+          value={rule.normativeSourceSectionId ?? ''}
+          onChange={(e) => onChange({ normativeSourceSectionId: e.target.value || undefined })}
+          aria-label="Normative ICH E6(R3) section"
+        >
+          <option value="">No ICH E6(R3) section requirement</option>
+          {sections.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.sectionIdentifier} — {s.heading ?? s.sectionIdentifier}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4">
@@ -190,6 +210,7 @@ function RuleEditor({
 function BlueprintView({ examId }: { examId: string }): JSX.Element {
   const [notes, setNotes] = useState('');
   const [rules, setRules] = useState<RuleRow[]>([]);
+  const [sections, setSections] = useState<IchE6R3SectionOption[]>([]);
   const [exists, setExists] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -220,6 +241,9 @@ function BlueprintView({ examId }: { examId: string }): JSX.Element {
           ...(r.professionalRoleId ? { professionalRoleId: r.professionalRoleId } : {}),
           ...(r.levelId ? { levelId: r.levelId } : {}),
           ...(r.learningObjectiveId ? { learningObjectiveId: r.learningObjectiveId } : {}),
+          ...(r.normativeSourceSectionId
+            ? { normativeSourceSectionId: r.normativeSourceSectionId }
+            : {}),
           ...(r.caseStudyRequired !== null ? { caseStudyRequired: r.caseStudyRequired } : {}),
           ...(r.sourceRequired !== null ? { sourceRequired: r.sourceRequired } : {}),
           ...(r.minimumCount !== null ? { minimumCount: r.minimumCount } : {}),
@@ -242,6 +266,13 @@ function BlueprintView({ examId }: { examId: string }): JSX.Element {
   useEffect(() => {
     load().catch(() => undefined);
   }, [load]);
+
+  useEffect(() => {
+    examsApi
+      .listIchE6R3Sections()
+      .then(setSections)
+      .catch(() => undefined);
+  }, []);
 
   function addRule(): void {
     setRules((r) => [...r, emptyRule()]);
@@ -330,6 +361,7 @@ function BlueprintView({ examId }: { examId: string }): JSX.Element {
           <RuleEditor
             key={rule.key}
             rule={rule}
+            sections={sections}
             onChange={(patch) => updateRule(rule.key, patch)}
             onRemove={() => removeRule(rule.key)}
           />
@@ -430,6 +462,7 @@ function BlueprintView({ examId }: { examId: string }): JSX.Element {
               <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="py-2">Rule</th>
+                  <th className="py-2">ICH E6(R3) section</th>
                   <th className="py-2">Required</th>
                   <th className="py-2">Eligible pool</th>
                   <th className="py-2">Shortfall</th>
@@ -440,6 +473,28 @@ function BlueprintView({ examId }: { examId: string }): JSX.Element {
                 {coverage.rules.map((r) => (
                   <tr key={r.ruleId} className="border-b border-border last:border-0">
                     <td className="py-2 text-muted-foreground">{r.description}</td>
+                    <td className="py-2">
+                      {r.normativeSection ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">
+                            {r.normativeSection.sectionCode}
+                          </span>
+                          <Badge
+                            tone={
+                              r.normativeSection.status === 'SUFFICIENT'
+                                ? 'success'
+                                : r.normativeSection.status === 'SHORTFALL'
+                                  ? 'warning'
+                                  : 'danger'
+                            }
+                          >
+                            {r.normativeSection.status.replaceAll('_', ' ')}
+                          </Badge>
+                        </div>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="py-2">{r.required}</td>
                     <td className="py-2">{r.eligiblePool}</td>
                     <td className="py-2">{r.shortfall}</td>

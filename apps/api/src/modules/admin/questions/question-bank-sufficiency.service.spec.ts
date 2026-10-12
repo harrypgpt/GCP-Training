@@ -223,8 +223,8 @@ describe('QuestionBankSufficiencyService (Gate 24)', () => {
     });
   });
 
-  describe('ICH section coverage (Gate 24 §7/§9)', () => {
-    it('always reports NO_REQUIREMENT_DEFINED per section, since no blueprint dimension expresses a section-level requirement', async () => {
+  describe('ICH section coverage (Gate 24 §7/§9, real requirements added in Gate 25)', () => {
+    it('reports NO_REQUIREMENT_DEFINED for a section with no active blueprint rule referencing it', async () => {
       sourceSectionFindMany.mockResolvedValue([
         { id: 'sec-1', sectionIdentifier: '2.5', heading: 'Quality management' },
       ]);
@@ -236,6 +236,36 @@ describe('QuestionBankSufficiencyService (Gate 24)', () => {
           requirement: 'NO_REQUIREMENT_DEFINED',
         }),
       ]);
+    });
+
+    it('computes a real required/available/shortfall for a section with an active blueprint rule (Gate 25)', async () => {
+      getReadinessSummary.mockResolvedValue({ ...EMPTY_BASE_SUMMARY, totalQuestions: 5 });
+      sourceSectionFindMany.mockResolvedValue([
+        { id: 'sec-1', sectionIdentifier: '2.5', heading: 'Essential Records' },
+      ]);
+      examBlueprintRuleFindMany.mockResolvedValue([
+        { normativeSourceSectionId: 'sec-1', minimumCount: 3, exactCount: null },
+      ]);
+      listEligibleIds.mockResolvedValue(['qv-1']);
+      questionVersionFindMany.mockResolvedValue([
+        {
+          learningObjective: null,
+          questionGenerationType: 'DIRECT_GCP',
+          sourceSectionRefId: 'sec-1',
+          caseStudyLinks: [],
+          aiCandidate: null,
+        },
+      ]);
+      const service = await createService();
+      const result = await service.getSummary();
+      expect(result.ichSectionCoverage).toEqual([
+        expect.objectContaining({
+          sourceSectionId: 'sec-1',
+          requirement: { required: 3, available: 1, shortfall: 2 },
+        }),
+      ]);
+      // A real section shortfall now drives INSUFFICIENT, same as an LO gap.
+      expect(result.overallStatus).toBe('INSUFFICIENT');
     });
 
     it('reports no sections at all when ICH authority is not registered, rather than guessing a source', async () => {

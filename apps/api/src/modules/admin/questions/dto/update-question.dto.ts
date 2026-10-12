@@ -12,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { DifficultyLevel, QuestionType } from '@prisma/client';
+import { DifficultyLevel, QuestionGenerationType, QuestionType } from '@prisma/client';
 
 import { QuestionOptionInputDto } from './question-option.dto';
 
@@ -81,6 +81,19 @@ export class UpdateQuestionDto {
   @IsString()
   @MaxLength(500)
   sourceSection?: string;
+
+  /// Gate 25: the exact ICH E6(R3) `SourceSection` this question is
+  /// grounded in - mirrors `CreateQuestionDto`, which already exposes this;
+  /// omitted here it previously meant this field was silently dropped on
+  /// any version bump rather than preserved (fixed alongside this field).
+  @IsOptional()
+  @IsUUID()
+  sourceSectionRefId?: string;
+
+  /// Mirrors `CreateQuestionDto` - see `sourceSectionRefId` above.
+  @IsOptional()
+  @IsEnum(QuestionGenerationType)
+  questionGenerationType?: QuestionGenerationType;
 
   @IsOptional()
   @IsArray()

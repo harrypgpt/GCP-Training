@@ -11,6 +11,7 @@ import {
   ruleToEligibilityFilter,
 } from './exam-blueprint-rule.util';
 import { ExamQuestionEligibilityService } from './exam-question-eligibility.service';
+import { ICH_DOCUMENT_IDENTIFIER } from './ich-e6r3-authority.util';
 
 export interface ValidationCheck {
   name: string;
@@ -170,6 +171,21 @@ export class ExamBlueprintValidationService {
       );
     }
 
+    // 17b. No two active rules require the same ICH E6(R3) normative
+    // section (Gate 25 §12) - independent of item 17 above, since two
+    // rules referencing the same section could otherwise differ in every
+    // other dimension and still not be caught by `ruleSignature`.
+    const sectionIds = activeRules
+      .map((r) => r.normativeSourceSectionId)
+      .filter((id): id is string => id !== null);
+    const duplicateSectionIds = sectionIds.filter((id, i) => sectionIds.indexOf(id) !== i);
+    check('no_duplicate_normative_section_requirements', duplicateSectionIds.length === 0);
+    if (duplicateSectionIds.length > 0) {
+      errors.push(
+        `${new Set(duplicateSectionIds).size} ICH E6(R3) section(s) are required by more than one active rule.`,
+      );
+    }
+
     // 18. Blueprint has enough eligible published questions overall.
     const eligiblePoolSize = await this.eligibility.countEligible({ levelId: version.levelId });
     const poolSufficient = eligiblePoolSize >= version.questionCount;
@@ -228,6 +244,7 @@ export class ExamBlueprintValidationService {
       professionalRoleId: string | null;
       levelId: string | null;
       learningObjectiveId: string | null;
+      normativeSourceSectionId: string | null;
     }[],
     check: (name: string, passed: boolean, detail?: string) => void,
     errors: string[],
@@ -294,6 +311,44 @@ export class ExamBlueprintValidationService {
     check('learning_objectives_exist', foundObjectives.length === objectiveIds.length);
     if (foundObjectives.length !== objectiveIds.length) {
       errors.push('One or more rules reference a learning objective that no longer exists.');
+    }
+
+    // Gate 25 §13/§5: every referenced normative section must exist and
+    // belong to the registered, PUBLISHED, AUTHORITATIVE_REGULATORY ICH
+    // E6(R3) source - re-validated here (not just at rule-creation time) in
+    // case the section/source's state changed since the rule was created.
+    const sectionIds = [
+      ...new Set(rules.map((r) => r.normativeSourceSectionId).filter((v): v is string => !!v)),
+    ];
+    const foundSections = sectionIds.length
+      ? await this.prisma.sourceSection.findMany({
+          where: { id: { in: sectionIds } },
+          select: {
+            id: true,
+            sourceVersion: {
+              select: { documentIdentifier: true, reviewStatus: true, authority: true },
+            },
+          },
+        })
+      : [];
+    check('normative_sections_exist', foundSections.length === sectionIds.length);
+    if (foundSections.length !== sectionIds.length) {
+      errors.push('One or more rules reference an ICH E6(R3) section that no longer exists.');
+    }
+    const authoritativeSections = foundSections.filter(
+      (s) =>
+        s.sourceVersion.documentIdentifier === ICH_DOCUMENT_IDENTIFIER &&
+        s.sourceVersion.reviewStatus === 'PUBLISHED' &&
+        s.sourceVersion.authority === 'AUTHORITATIVE_REGULATORY',
+    );
+    check(
+      'normative_sections_are_ich_authoritative',
+      authoritativeSections.length === foundSections.length,
+    );
+    if (authoritativeSections.length !== foundSections.length) {
+      errors.push(
+        'One or more rules reference a section that is no longer part of the registered, published, authoritative ICH E6(R3) source.',
+      );
     }
   }
 }

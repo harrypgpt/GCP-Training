@@ -395,6 +395,12 @@ export class QuestionsService {
       observationId: dto.observationId ?? latest.observationId,
       sourceId: dto.sourceId ?? latest.sourceId,
       sourceSection: dto.sourceSection ?? latest.sourceSection,
+      // Previously omitted from this object entirely, which meant a version
+      // bump (any update while the latest version is not DRAFT) silently
+      // dropped both, breaking ICH E6(R3) provenance and AI
+      // generation-type classification on every subsequent version.
+      sourceSectionRefId: dto.sourceSectionRefId ?? latest.sourceSectionRefId,
+      questionGenerationType: dto.questionGenerationType ?? latest.questionGenerationType,
     };
 
     const isDraft = latest.reviewStatus === ContentStatus.DRAFT;

@@ -5,6 +5,7 @@ import {
   EXAM_ROUTES,
   examDetailSchema,
   examListItemSchema,
+  ichE6R3SectionOptionSchema,
   paginatedSchema,
   type BlueprintCoverageResult,
   type BlueprintDetail,
@@ -13,9 +14,11 @@ import {
   type ExamDetail,
   type ExamListItem,
   type ExamVersionTransitionRequest,
+  type IchE6R3SectionOption,
   type UpdateExamRequest,
   type UpsertBlueprintRequest,
 } from '@gcp/shared';
+import { z } from 'zod';
 
 import { authenticatedJson } from './auth/authenticated-fetch';
 
@@ -105,5 +108,9 @@ export const examsApi = {
 
   coverage(id: string): Promise<BlueprintCoverageResult> {
     return authenticatedJson(EXAM_ROUTES.coverage(id), blueprintCoverageResultSchema);
+  },
+
+  listIchE6R3Sections(): Promise<IchE6R3SectionOption[]> {
+    return authenticatedJson(EXAM_ROUTES.ichE6R3Sections, z.array(ichE6R3SectionOptionSchema));
   },
 };

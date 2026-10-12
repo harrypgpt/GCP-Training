@@ -6,6 +6,7 @@ import { ExamAttemptStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../../../common/audit/audit.service';
 import { AppException } from '../../../common/exceptions/app-exception';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { IchE6R3ReadingService } from '../training/ich-e6r3-reading.service';
 import { attemptNotFound } from './learner-exam-attempt.service';
 
 export interface ExamResultFinalized {
@@ -29,6 +30,36 @@ export interface ExamResultPending {
 }
 
 export type ExamResultView = ExamResultFinalized | ExamResultPending;
+
+export interface ExamReviewOptionView {
+  optionId: string;
+  text: string;
+}
+
+export interface ExamReviewQuestionView {
+  attemptQuestionId: string;
+  stem: string;
+  options: ExamReviewOptionView[];
+  selectedOptionId: string | null;
+  correctOptionId: string;
+  isCorrect: boolean;
+  explanation: string | null;
+  /** Gate 29 §19: the ICH E6(R3) reference where this question is directly
+   * grounded - present for DIRECT_GCP questions, and for CASE_APPLICATION
+   * questions that also cite a normative section. */
+  ichE6R3Reference: { sectionIdentifier: string; heading: string | null } | null;
+  /** Gate 29 §19/§27: the case-study evidence a CASE_APPLICATION question
+   * applies - explicitly labelled as case application, never presented as
+   * itself being the normative requirement. */
+  caseApplicationReference: { caseCode: string; title: string } | null;
+  questionGenerationType: string | null;
+}
+
+export interface ExamReviewView {
+  attemptId: string;
+  status: 'PASSED' | 'FAILED';
+  questions: ExamReviewQuestionView[];
+}
 
 const ATTEMPT_WITH_VERSION = {
   examVersion: {
@@ -91,6 +122,7 @@ export class LearnerExamScoringService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly ichReading: IchE6R3ReadingService,
   ) {}
 
   async getOrEvaluateResult(userId: string, attemptId: string): Promise<ExamResultView> {
@@ -297,6 +329,15 @@ export class LearnerExamScoringService {
       },
     });
 
+    // Gate 29 §20: a failed attempt locks the next one behind a genuine
+    // re-read of the ICH E6(R3) guideline - never an immediate retake. This
+    // platform has exactly one certification exam tied to one normative
+    // document, so every FAILED result requires retraining; a future
+    // multi-exam platform would need to scope this per exam.
+    if (evaluation.status === 'FAILED') {
+      await this.ichReading.requireRetraining(userId);
+    }
+
     return {
       attemptId,
       status: evaluation.status,
@@ -309,6 +350,79 @@ export class LearnerExamScoringService {
       totalQuestions: evaluation.totalQuestions,
       answeredQuestions: evaluation.answeredQuestions,
       unansweredQuestions: evaluation.totalQuestions - evaluation.answeredQuestions,
+    };
+  }
+
+  /**
+   * Gate 29 §19: per-question answer review - learner's own selection vs.
+   * the correct option, explanation/rationale, and provenance labelled
+   * explicitly as ICH E6(R3) requirement vs. case application. Available
+   * ONLY once the attempt is finalized (PASSED/FAILED) - reuses the exact
+   * same ownership/status guard as {@link getOrEvaluateResult}, so this can
+   * never leak an answer key during an active attempt.
+   */
+  async getReview(userId: string, attemptId: string): Promise<ExamReviewView> {
+    const attempt = await this.prisma.examAttempt.findFirst({ where: { id: attemptId, userId } });
+    if (!attempt) {
+      throw attemptNotFound();
+    }
+    if (
+      attempt.status !== ExamAttemptStatus.PASSED &&
+      attempt.status !== ExamAttemptStatus.FAILED
+    ) {
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ExamAttemptErrorCode.EXAM_NOT_SUBMITTED,
+        'This exam attempt has not been finalized yet, so it cannot be reviewed.',
+      );
+    }
+
+    const attemptQuestions = await this.prisma.examAttemptQuestion.findMany({
+      where: { attemptId },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        questionVersion: {
+          select: {
+            stem: true,
+            explanation: true,
+            questionGenerationType: true,
+            sourceSectionRef: { select: { sectionIdentifier: true, heading: true } },
+            caseStudyLinks: { include: { caseStudy: { select: { caseCode: true, title: true } } } },
+          },
+        },
+        optionOrder: {
+          orderBy: { presentationOrder: 'asc' },
+          include: { questionOption: { select: { id: true, content: true, isCorrect: true } } },
+        },
+      },
+    });
+
+    return {
+      attemptId,
+      status: attempt.status === ExamAttemptStatus.PASSED ? 'PASSED' : 'FAILED',
+      questions: attemptQuestions.map((q) => {
+        const correctOption = q.optionOrder.find((o) => o.questionOption.isCorrect);
+        const caseStudyLink = q.questionVersion.caseStudyLinks[0];
+        return {
+          attemptQuestionId: q.id,
+          stem: q.questionVersion.stem,
+          options: q.optionOrder.map((o) => ({
+            optionId: o.questionOption.id,
+            text: o.questionOption.content,
+          })),
+          selectedOptionId: q.selectedOptionId,
+          // Guaranteed present - `ExamQuestionEligibilityService` never
+          // admits a question version without exactly one correct option.
+          correctOptionId: correctOption!.questionOption.id,
+          isCorrect: q.isCorrect ?? false,
+          explanation: q.questionVersion.explanation,
+          ichE6R3Reference: q.questionVersion.sourceSectionRef,
+          caseApplicationReference: caseStudyLink
+            ? { caseCode: caseStudyLink.caseStudy.caseCode, title: caseStudyLink.caseStudy.title }
+            : null,
+          questionGenerationType: q.questionVersion.questionGenerationType,
+        };
+      }),
     };
   }
 

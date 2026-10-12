@@ -1,0 +1,389 @@
+{
+  "generatedAt": "2026-09-27T07:45:12.089Z",
+  "generatedFromRunReport": "gate26-real-gemini-report.json",
+  "candidateCount": 2,
+  "candidates": [
+    {
+      "candidateId": "fe5ddd1b-9a96-44fb-aa03-eef8f872e134",
+      "status": "READY_FOR_REVIEW",
+      "questionGenerationType": "DIRECT_GCP",
+      "stem": "An academic sponsor is planning an interventional clinical trial of an investigational product that is not intended to support a marketing authorisation application. According to ICH E6(R3) (Section I: Guideline Scope), which statement correctly describes the applicability of the guideline to this trial?",
+      "options": [
+        {
+          "label": "A",
+          "content": "The guideline applies exclusively to commercially sponsored trials and excludes all academic or investigator-initiated trials.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "content": "The Principles of GCP in the guideline may also be applicable to such trials in accordance with local requirements.",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "content": "The entire guideline is universally mandatory for all interventional trials regardless of local regulatory requirements.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "content": "The guideline prohibits applying GCP principles to trials that will not be submitted to regulatory authorities.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "According to ICH E6(R3) Section I (Guideline Scope), the guideline applies to interventional clinical trials of investigational products intended to be submitted to regulatory authorities. However, it specifically notes that the Principles of GCP in the guideline may also be applicable to other interventional clinical trials of investigational products that are not intended to support marketing authorisation applications, in accordance with local requirements.",
+      "rationale": "ICH E6(R3) Section I clearly delineates the core scope (interventional trials intended for submission to regulatory authorities) while accommodating broader national or regional use of the GCP Principles for other interventional trials according to local requirements.",
+      "ichSource": {
+        "normativeSource": "ICH_E6_R3",
+        "sectionIdentifier": "I.Guideline-Scope",
+        "sectionHeading": "Guideline Scope"
+      },
+      "caseStudySource": null,
+      "scenarioSourceType": "NONE",
+      "validationResult": {
+        "valid": true,
+        "checks": [
+          {
+            "name": "stem_present",
+            "passed": true
+          },
+          {
+            "name": "question_type_valid",
+            "detail": "REGULATORY_INTERPRETATION",
+            "passed": true
+          },
+          {
+            "name": "difficulty_valid",
+            "detail": "MEDIUM",
+            "passed": true
+          },
+          {
+            "name": "sufficient_options",
+            "detail": "4",
+            "passed": true
+          },
+          {
+            "name": "options_non_empty",
+            "passed": true
+          },
+          {
+            "name": "option_ids_unique",
+            "passed": true
+          },
+          {
+            "name": "correct_option_exists",
+            "detail": "B",
+            "passed": true
+          },
+          {
+            "name": "explanation_present",
+            "passed": true
+          },
+          {
+            "name": "rationale_present_where_required",
+            "detail": "REGULATORY_INTERPRETATION",
+            "passed": true
+          },
+          {
+            "name": "has_grounding_or_flagged",
+            "passed": true
+          },
+          {
+            "name": "regulatory_requires_source",
+            "passed": true
+          },
+          {
+            "name": "structurally_well_formed",
+            "passed": true
+          },
+          {
+            "name": "no_duplicate_option_text",
+            "passed": true
+          },
+          {
+            "name": "no_answer_leakage_in_stem",
+            "passed": true
+          },
+          {
+            "name": "no_unsupported_citation",
+            "passed": true
+          },
+          {
+            "name": "no_invented_evidence_reference",
+            "detail": "",
+            "passed": true
+          },
+          {
+            "name": "provenance_recorded",
+            "passed": true
+          },
+          {
+            "name": "question_generation_type_valid",
+            "detail": "DIRECT_GCP",
+            "passed": true
+          },
+          {
+            "name": "normative_source_is_ich_e6_r3",
+            "detail": "ICH_E6_R3",
+            "passed": true
+          },
+          {
+            "name": "normative_source_version_present",
+            "passed": true
+          },
+          {
+            "name": "normative_source_version_published",
+            "detail": "PUBLISHED",
+            "passed": true
+          },
+          {
+            "name": "normative_source_section_present",
+            "passed": true
+          },
+          {
+            "name": "direct_gcp_has_no_scenario_source",
+            "passed": true
+          },
+          {
+            "name": "learning_objective_decision_explicit",
+            "detail": "NO_MATCH",
+            "passed": true
+          }
+        ],
+        "errors": [],
+        "warnings": [],
+        "governance": {
+          "valid": true,
+          "checks": [
+            {
+              "name": "question_generation_type_valid",
+              "detail": "DIRECT_GCP",
+              "passed": true
+            },
+            {
+              "name": "normative_source_is_ich_e6_r3",
+              "detail": "ICH_E6_R3",
+              "passed": true
+            },
+            {
+              "name": "normative_source_version_present",
+              "passed": true
+            },
+            {
+              "name": "normative_source_version_published",
+              "detail": "PUBLISHED",
+              "passed": true
+            },
+            {
+              "name": "normative_source_section_present",
+              "passed": true
+            },
+            {
+              "name": "direct_gcp_has_no_scenario_source",
+              "passed": true
+            },
+            {
+              "name": "learning_objective_decision_explicit",
+              "detail": "NO_MATCH",
+              "passed": true
+            }
+          ],
+          "errors": [],
+          "warnings": []
+        }
+      },
+      "reviewerInstructions": "Independently decide ACCEPT or REJECT via the existing quality-review workflow (POST /api/admin/ai/question-candidates/:id/quality-review). This package is evidence only - no automatic decision has been made."
+    },
+    {
+      "candidateId": "2cf3ce39-3d12-4e36-b836-073c6ad570ba",
+      "status": "READY_FOR_REVIEW",
+      "questionGenerationType": "DIRECT_GCP",
+      "stem": "According to ICH E6(R3) Section I (Guideline Structure), which of the following statements correctly describes how the guideline's principles are intended to be applied across clinical trials?",
+      "options": [
+        {
+          "label": "A",
+          "content": "The principles require identical implementation methodologies across all trials to ensure regulatory uniformity across different clinical settings.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "content": "The principles may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial.",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "content": "The principles apply exclusively to traditional, site-based trial designs until specific annexes are formally issued for novel technologies.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "content": "The principles must be applied uniformly without adaptation, with flexibility restricted strictly to trial operational timelines.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "According to Section I (Guideline Structure) of ICH E6(R3), the principles are intended to apply across clinical trial types and settings and to remain relevant as technological and methodological advances occur. Furthermore, the guideline states that the principles 'may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial.'",
+      "rationale": "Option B is correct because Section I explicitly states that the principles 'may be satisfied using differing approaches and should be applied to fit the intended purpose of the clinical trial.' Options A, C, and D are incorrect because they misrepresent the adaptability and scope of the principles, incorrectly claiming identical implementation, restricted applicability, or prohibition of flexible approaches.",
+      "ichSource": {
+        "normativeSource": "ICH_E6_R3",
+        "sectionIdentifier": "I.Guideline-Structure",
+        "sectionHeading": "Guideline Structure"
+      },
+      "caseStudySource": null,
+      "scenarioSourceType": "NONE",
+      "validationResult": {
+        "valid": true,
+        "checks": [
+          {
+            "name": "stem_present",
+            "passed": true
+          },
+          {
+            "name": "question_type_valid",
+            "detail": "REGULATORY_INTERPRETATION",
+            "passed": true
+          },
+          {
+            "name": "difficulty_valid",
+            "detail": "MEDIUM",
+            "passed": true
+          },
+          {
+            "name": "sufficient_options",
+            "detail": "4",
+            "passed": true
+          },
+          {
+            "name": "options_non_empty",
+            "passed": true
+          },
+          {
+            "name": "option_ids_unique",
+            "passed": true
+          },
+          {
+            "name": "correct_option_exists",
+            "detail": "B",
+            "passed": true
+          },
+          {
+            "name": "explanation_present",
+            "passed": true
+          },
+          {
+            "name": "rationale_present_where_required",
+            "detail": "REGULATORY_INTERPRETATION",
+            "passed": true
+          },
+          {
+            "name": "has_grounding_or_flagged",
+            "passed": true
+          },
+          {
+            "name": "regulatory_requires_source",
+            "passed": true
+          },
+          {
+            "name": "structurally_well_formed",
+            "passed": true
+          },
+          {
+            "name": "no_duplicate_option_text",
+            "passed": true
+          },
+          {
+            "name": "no_answer_leakage_in_stem",
+            "passed": true
+          },
+          {
+            "name": "no_unsupported_citation",
+            "passed": true
+          },
+          {
+            "name": "no_invented_evidence_reference",
+            "detail": "ICH E6(R3) Section I.Guideline-Structure",
+            "passed": false
+          },
+          {
+            "name": "provenance_recorded",
+            "passed": true
+          },
+          {
+            "name": "question_generation_type_valid",
+            "detail": "DIRECT_GCP",
+            "passed": true
+          },
+          {
+            "name": "normative_source_is_ich_e6_r3",
+            "detail": "ICH_E6_R3",
+            "passed": true
+          },
+          {
+            "name": "normative_source_version_present",
+            "passed": true
+          },
+          {
+            "name": "normative_source_version_published",
+            "detail": "PUBLISHED",
+            "passed": true
+          },
+          {
+            "name": "normative_source_section_present",
+            "passed": true
+          },
+          {
+            "name": "direct_gcp_has_no_scenario_source",
+            "passed": true
+          },
+          {
+            "name": "learning_objective_decision_explicit",
+            "detail": "NO_MATCH",
+            "passed": true
+          }
+        ],
+        "errors": [],
+        "warnings": [
+          "None of the claimed evidence references match the supplied grounding content."
+        ],
+        "governance": {
+          "valid": true,
+          "checks": [
+            {
+              "name": "question_generation_type_valid",
+              "detail": "DIRECT_GCP",
+              "passed": true
+            },
+            {
+              "name": "normative_source_is_ich_e6_r3",
+              "detail": "ICH_E6_R3",
+              "passed": true
+            },
+            {
+              "name": "normative_source_version_present",
+              "passed": true
+            },
+            {
+              "name": "normative_source_version_published",
+              "detail": "PUBLISHED",
+              "passed": true
+            },
+            {
+              "name": "normative_source_section_present",
+              "passed": true
+            },
+            {
+              "name": "direct_gcp_has_no_scenario_source",
+              "passed": true
+            },
+            {
+              "name": "learning_objective_decision_explicit",
+              "detail": "NO_MATCH",
+              "passed": true
+            }
+          ],
+          "errors": [],
+          "warnings": []
+        }
+      },
+      "reviewerInstructions": "Independently decide ACCEPT or REJECT via the existing quality-review workflow (POST /api/admin/ai/question-candidates/:id/quality-review). This package is evidence only - no automatic decision has been made."
+    }
+  ]
+}

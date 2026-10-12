@@ -1,17 +1,25 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ExamBlueprintPage from './page';
 
-const { useAuth, getBlueprint, createBlueprint, replaceBlueprint, validateBlueprint, coverage } =
-  vi.hoisted(() => ({
-    useAuth: vi.fn(),
-    getBlueprint: vi.fn(),
-    createBlueprint: vi.fn(),
-    replaceBlueprint: vi.fn(),
-    validateBlueprint: vi.fn(),
-    coverage: vi.fn(),
-  }));
+const {
+  useAuth,
+  getBlueprint,
+  createBlueprint,
+  replaceBlueprint,
+  validateBlueprint,
+  coverage,
+  listIchE6R3Sections,
+} = vi.hoisted(() => ({
+  useAuth: vi.fn(),
+  getBlueprint: vi.fn(),
+  createBlueprint: vi.fn(),
+  replaceBlueprint: vi.fn(),
+  validateBlueprint: vi.fn(),
+  coverage: vi.fn(),
+  listIchE6R3Sections: vi.fn(),
+}));
 
 vi.mock('@/lib/auth/auth-context', () => ({ useAuth }));
 vi.mock('next/navigation', () => ({
@@ -27,11 +35,22 @@ vi.mock('@/lib/admin-api', () => ({
   },
 }));
 vi.mock('@/lib/exams-api', () => ({
-  examsApi: { getBlueprint, createBlueprint, replaceBlueprint, validateBlueprint, coverage },
+  examsApi: {
+    getBlueprint,
+    createBlueprint,
+    replaceBlueprint,
+    validateBlueprint,
+    coverage,
+    listIchE6R3Sections,
+  },
 }));
 
 afterEach(() => {
   vi.clearAllMocks();
+});
+
+beforeEach(() => {
+  listIchE6R3Sections.mockResolvedValue([]);
 });
 
 describe('Exam blueprint page', () => {
@@ -147,6 +166,7 @@ describe('Exam blueprint page', () => {
           eligiblePool: 1,
           shortfall: 49,
           sufficient: false,
+          normativeSection: null,
         },
       ],
       feasible: false,
@@ -167,5 +187,92 @@ describe('Exam blueprint page', () => {
     expect(screen.getByText('Invalid')).toBeInTheDocument();
     expect(screen.getByText('Not feasible')).toBeInTheDocument();
     expect(screen.getByText('type=CASE_STUDY')).toBeInTheDocument();
+  });
+
+  it('renders the ICH E6(R3) section selector using the registered SourceSection values, and shows section coverage status', async () => {
+    useAuth.mockReturnValue({
+      status: 'authenticated',
+      user: { id: 'u1', email: 'admin@example.test', roles: ['ADMIN'] },
+    });
+    listIchE6R3Sections.mockResolvedValue([
+      { id: 'sec-1', sectionIdentifier: '1', heading: 'Principles' },
+      { id: 'sec-2', sectionIdentifier: '2.5', heading: 'Essential Records' },
+    ]);
+    getBlueprint.mockResolvedValue({
+      id: 'bp-1',
+      examVersionId: 'ev-1',
+      notes: null,
+      rules: [
+        {
+          id: 'rule-1',
+          questionType: null,
+          difficulty: null,
+          domainId: null,
+          domain: null,
+          professionalRoleId: null,
+          professionalRole: null,
+          levelId: null,
+          level: null,
+          learningObjectiveId: null,
+          learningObjective: null,
+          caseStudyRequired: null,
+          sourceRequired: null,
+          normativeSourceSectionId: 'sec-2',
+          normativeSourceSection: {
+            id: 'sec-2',
+            sectionIdentifier: '2.5',
+            heading: 'Essential Records',
+          },
+          minimumCount: 3,
+          maximumCount: null,
+          exactCount: null,
+          priority: 0,
+          isActive: true,
+        },
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    validateBlueprint.mockResolvedValue({ valid: true, errors: [], warnings: [], checks: [] });
+    coverage.mockResolvedValue({
+      examVersionId: 'ev-1',
+      questionCountRequired: 20,
+      eligiblePoolSize: 5,
+      questionCountShortfall: 0,
+      rules: [
+        {
+          ruleId: 'rule-1',
+          description: 'ichSection=sec-2',
+          minimumCount: 3,
+          maximumCount: null,
+          exactCount: null,
+          required: 3,
+          eligiblePool: 1,
+          shortfall: 2,
+          sufficient: false,
+          normativeSection: {
+            normativeSourceSectionId: 'sec-2',
+            sectionCode: '2.5',
+            sectionTitle: 'Essential Records',
+            status: 'SHORTFALL',
+          },
+        },
+      ],
+      feasible: false,
+    });
+
+    render(<ExamBlueprintPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/2\.5 — Essential Records/)).toBeInTheDocument();
+    });
+    // The selector shows every registered section, using its real code/heading.
+    expect(screen.getByText(/1 — Principles/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /validate & check coverage/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('SHORTFALL')).toBeInTheDocument();
+    });
   });
 });

@@ -1,0 +1,184 @@
+{
+  "gate": "GATE_27",
+  "status": "COMPLETE",
+  "decision": "NOT_PILOT_READY",
+  "questionBankReadiness": {
+    "totalQuestions": 18,
+    "draftQuestions": 0,
+    "publishedQuestions": 18,
+    "rejectedCandidatesThisGate": 9,
+    "directGcpQuestions": 4,
+    "caseApplicationQuestions": 12,
+    "unclassifiedQuestions": 2,
+    "questionsByIchSection": {
+      "4.3.3": 3,
+      "4.3.4": 2,
+      "II.1": 3,
+      "II.9": 3,
+      "II.7": 1,
+      "2.5": 1,
+      "2.8": 1,
+      "I.Guideline-Scope": 1,
+      "I.Guideline-Structure": 1,
+      "none (legacy UNCLASSIFIED)": 2
+    },
+    "questionsWithLearningObjective": 13,
+    "questionsMissingLearningObjective": 5,
+    "questionsByDifficulty": { "MEDIUM": 18 },
+    "duplicateFlagsTotal": 0,
+    "duplicateFlagsUnresolved": 0,
+    "questionsMissingProvenance": 2,
+    "questionsMissingLO": 5,
+    "questionsFailingGovernance": 0,
+    "questionsEligibleForExamUse": 16,
+    "minimumRequired": 20,
+    "shortfall": 2,
+    "questionBankSubDecision": "NOT_PILOT_READY",
+    "note": "16 questions carry Gate 25 structured ICH E6(R3) section provenance; of those, 13 additionally carry a mapped Learning Objective (the full DIRECT_GCP/CASE_APPLICATION provenance chain required by this gate). 2 legacy pre-Gate-22 UNCLASSIFIED questions have neither. No LO was invented for any question - this is a disclosed, pre-existing content-completeness gap, not fabricated."
+  },
+  "questionBankActivation": {
+    "acceptedCandidates": 2,
+    "rejectedCandidates": 9,
+    "promotedCandidates": 11,
+    "preAcceptedUnconvertedPromoted": 9,
+    "publishedFromThisGate": 11,
+    "prePublishedReused": 7,
+    "reportFile": "data/imports/observations/reports/gate27-question-bank-activation-report.json"
+  },
+  "geminiSupplementalAttempt": {
+    "attempted": 4,
+    "succeeded": 0,
+    "failureReasons": ["503 high demand (1)", "429 quota exceeded (3)"],
+    "quotaStatus": "QUOTA_VERIFICATION_REQUIRES_EXTERNAL_PROVIDER_ACCOUNT_ACTION",
+    "bypassAttempted": false,
+    "reportFile": "data/imports/observations/reports/gate27-supplemental-gemini-report.json"
+  },
+  "pilotBlueprint": {
+    "examCode": "GCP-PILOT-E6R3-01",
+    "examId": "d9f85d23-bc8a-4f40-817a-c715e7ec9114",
+    "examVersionId": "15831cda-6cd2-4e92-b616-e0c85a28dc7b",
+    "blueprintRuleCount": 9,
+    "questionCount": 13,
+    "passPercentage": 70,
+    "eligiblePoolAtActivation": 16,
+    "validationResult": "valid: true",
+    "usesExistingServices": [
+      "ExamBlueprintService",
+      "ExamBlueprintValidationService",
+      "ExamBlueprintCoverageService",
+      "ExamQuestionEligibilityService"
+    ],
+    "secondArchitectureCreated": false
+  },
+  "endToEndPilotTransaction": {
+    "performed": true,
+    "method": "real HTTP over an ephemeral NestJS server, real signed JWTs, no direct DB status writes, no seeding of questions directly into the exam",
+    "chain": [
+      "published Question (real, governed)",
+      "TrainingProgram/Level/Module/Lesson (real, PUBLISHED)",
+      "ExamBlueprint + 9 ExamBlueprintRules (real, ICH E6(R3)-section-scoped)",
+      "Exam + ExamVersion (real, ACTIVATE-validated)",
+      "real learner: register -> verify-email (real OTP from console mail transport) -> set-password -> login",
+      "real enrollment -> real lesson completion -> examEligible=true",
+      "real ExamAttempt (start -> get questions -> submit answers -> result)",
+      "real Certificate (issue -> list -> get -> public verify)"
+    ],
+    "examResult": {
+      "status": "PASSED",
+      "percentage": 100,
+      "passPercentage": 70,
+      "totalQuestions": 13
+    },
+    "certificateIssued": true,
+    "certificatePubliclyVerified": true,
+    "answerKeyExposedToLearner": false,
+    "reportFile": "data/imports/observations/reports/gate27-pilot-blueprint-e2e-report.json"
+  },
+  "realDefectFoundAndFixed": {
+    "location": "apps/api/src/modules/admin/questions/questions.service.ts (QuestionsService.update), apps/api/src/modules/admin/questions/dto/update-question.dto.ts",
+    "description": "Updating any field on a question whose latest version was not DRAFT created a new version that silently dropped sourceSectionRefId and questionGenerationType, because QuestionsService.update's internal 'fields' object never included either - discovered when the first pilot-blueprint activation reported 0 eligible questions for every rule after 16 real questions were re-targeted to the pilot level.",
+    "fix": "Added sourceSectionRefId/questionGenerationType to UpdateQuestionDto (mirroring CreateQuestionDto, which already exposed both) and to the fields object using the same dto-falls-back-to-latest pattern already used for every other field.",
+    "regressionTested": true,
+    "residualDataArtifact": "The defect's first, uncaught run left 12 superseded (non-current) QuestionVersion rows with the dropped fields still null. These rows are never selected by any product logic (only the current version matters for exam eligibility/scoring), but one pre-existing regression test (case-study-generation-real-data.e2e-spec.ts) checks every historically case-study-linked version and failed on them.",
+    "residualArtifactResolution": "Repaired via a direct, targeted Prisma correction of the 2 known-correct scalar columns on those 12 specific non-current rows (no review-status/content/governance state touched), explicitly approved by the user after Claude Code's auto-mode classifier blocked the first attempt as a direct shared-resource write. Re-ran the affected test and the full e2e suite afterward - both fully green."
+  },
+  "secretScan": {
+    "geminiKeyFoundOutsideEnvFile": false,
+    "envFileGitIgnored": true,
+    "gitHistoryClean": true,
+    "keyRotationRequired": false
+  },
+  "dataIntegrity": {
+    "before": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "trainingInterpretations": 50,
+      "caseStudySpecifications": 50,
+      "caseStudyVersions": 50,
+      "aiGenerationRuns": 93,
+      "aiQuestionCandidates": 30,
+      "aiCandidateQualityReviews": 17,
+      "questions": 7,
+      "questionVersions": 7,
+      "examBlueprints": 0,
+      "examBlueprintRules": 0,
+      "exams": 0,
+      "examAttempts": 0,
+      "certificates": 0
+    },
+    "after": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "trainingInterpretations": 50,
+      "caseStudySpecifications": 50,
+      "caseStudyVersions": 50,
+      "aiGenerationRuns": 97,
+      "aiQuestionCandidates": 30,
+      "aiCandidateQualityReviews": 28,
+      "questions": 18,
+      "questionVersions": 50,
+      "examBlueprints": 1,
+      "examBlueprintRules": 9,
+      "exams": 1,
+      "examAttempts": 1,
+      "certificates": 1
+    },
+    "protectedCategoriesUnchanged": true,
+    "destructiveSqlUsed": false,
+    "migrationsCreatedThisGate": 0,
+    "directDbWritesOutsideGovernedEndpoints": "1 user-approved, minimal-scope repair of 12 non-current QuestionVersion rows' sourceSectionRefId/questionGenerationType columns (bug remediation, not a governance/status change)"
+  },
+  "regression": {
+    "formatCheck": "PASS",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "unitTests": "683/683 PASS",
+    "build": "PASS",
+    "e2eTests": "406/406 PASS",
+    "classification": "1 real product defect found and fixed this gate (see realDefectFoundAndFixed); all other pre-existing failures observed transiently during individual runs were expected negative-path test assertions (simulated provider errors, intentionally invalid fixtures), not regressions"
+  },
+  "finalCriteria": {
+    "minimumTwentyPublishedQuestions": "FAIL (18/20)",
+    "everyPublishedQuestionHasValidIchProvenance": "FAIL (13/18 have complete DIRECT_GCP/CASE_APPLICATION provenance including a mapped LO; 5/18 do not)",
+    "zeroUnresolvedDuplicates": "PASS",
+    "everyQuestionIndependentlyHumanApproved": "PASS",
+    "reusedExistingBlueprintExamServices": "PASS",
+    "noSecondArchitectureCreated": "PASS",
+    "blueprintFailsClosedOnInsufficientPool": "PASS",
+    "realEndToEndHttpTransactionProven": "PASS",
+    "noAnswerKeyExposedToLearner": "PASS",
+    "geminiQuotaHonestlyReported": "PASS",
+    "secretScanClean": "PASS",
+    "dataIntegrityAccountedForNoDestructiveSql": "PASS",
+    "fullRegressionGreen": "PASS",
+    "noMassGenerationOrMassPublishing": "PASS",
+    "noGovernanceBypassOfStatusDecisions": "PASS",
+    "singleFailingCriterionForcesNotPilotReady": true
+  },
+  "blockingActions": [
+    "Publish 2 more genuinely governed, human-approved questions with complete ICH E6(R3) provenance (SourceSection + Learning Objective) to reach the 20-question minimum - blocked externally by Gemini quota exhaustion, not by any code or process defect.",
+    "Map a Learning Objective for the 3 real DIRECT_GCP questions that currently have a valid SourceSection but no LO (GCP-Q-001181, GCP-Q-002349, GCP-Q-002350), or exclude them from the pilot-eligible pool and re-validate the blueprint against the remaining 13.",
+    "Resolve the Gemini quota exhaustion with the API provider account (QUOTA_VERIFICATION_REQUIRES_EXTERNAL_PROVIDER_ACCOUNT_ACTION) before attempting further real-AI generation."
+  ],
+  "closingStatement": "NOT_PILOT_READY. Engineering gates are not yet closed - two concrete, non-speculative blocking actions remain (question-bank count and LO-mapping completeness), both bounded and externally/content-caused rather than architectural. Everything else this gate set out to prove - the real blueprint/exam/attempt/scoring/certificate chain, governance discipline, security, and regression - is genuinely proven and green."
+}

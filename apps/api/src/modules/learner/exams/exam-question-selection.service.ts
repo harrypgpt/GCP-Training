@@ -16,6 +16,11 @@ export interface QuestionSelectionResult {
   /** Active QuestionOption IDs per QuestionVersion, in final presentation
    * order (already shuffled independently per question). */
   optionOrderByVersionId: Map<string, string[]>;
+  /** Gate 29 §15: QuestionVersion IDs in this selection the same learner has
+   * already seen in a prior attempt against this exam version - empty
+   * whenever the unseen-eligible pool alone was sufficient. Recorded for
+   * audit/diagnostic visibility, never hidden. */
+  reusedQuestionIds: string[];
 }
 
 /** Thrown when the blueprint cannot be satisfied by the current eligible
@@ -43,7 +48,7 @@ export class ExamQuestionSelectionService {
     private readonly eligibility: ExamQuestionEligibilityService,
   ) {}
 
-  async select(examVersionId: string): Promise<QuestionSelectionResult> {
+  async select(examVersionId: string, userId: string): Promise<QuestionSelectionResult> {
     const version = await this.prisma.examVersion.findUnique({
       where: { id: examVersionId },
       include: { blueprint: { include: { rules: true } } },
@@ -64,6 +69,8 @@ export class ExamQuestionSelectionService {
         learningObjectiveId: r.learningObjectiveId,
         caseStudyRequired: r.caseStudyRequired,
         sourceRequired: r.sourceRequired,
+        normativeSourceSectionId: r.normativeSourceSectionId,
+        questionGenerationType: r.questionGenerationType,
         minimumCount: r.minimumCount,
         maximumCount: r.maximumCount,
         exactCount: r.exactCount,
@@ -80,12 +87,38 @@ export class ExamQuestionSelectionService {
       learningObjectiveId: c.learningObjectiveId,
       hasCaseStudy: c.hasCaseStudy,
       hasSource: c.hasSource,
+      sourceSectionRefId: c.sourceSectionRefId,
+      questionGenerationType: c.questionGenerationType,
     }));
 
-    const outcome = selectQuestions(pool, activeRules, version.questionCount);
+    // Gate 29 §15: prefer questions this learner has never been presented
+    // with before, across their own past attempts of this exact exam
+    // version - but never fabricate an infinite pool. Try the unseen subset
+    // first; only fall back to the full (unseen + previously-seen) pool if
+    // the unseen subset alone cannot satisfy the blueprint.
+    const seenQuestionVersionIds = new Set(
+      (
+        await this.prisma.examAttemptQuestion.findMany({
+          where: { attempt: { userId, examVersionId } },
+          select: { questionVersionId: true },
+        })
+      ).map((q) => q.questionVersionId),
+    );
+    const unseenPool = pool.filter((c) => !seenQuestionVersionIds.has(c.id));
+
+    let outcome = selectQuestions(unseenPool, activeRules, version.questionCount);
+    let usedFallbackPool = false;
+    if (!outcome.success) {
+      outcome = selectQuestions(pool, activeRules, version.questionCount);
+      usedFallbackPool = true;
+    }
     if (!outcome.success) {
       throw new BlueprintSelectionError(outcome);
     }
+
+    const reusedQuestionIds = usedFallbackPool
+      ? outcome.questionVersionIds.filter((id) => seenQuestionVersionIds.has(id))
+      : [];
 
     const optionIdsByVersion = new Map(eligible.map((c) => [c.id, c.optionIds]));
     const orderedQuestionVersionIds = secureShuffle(outcome.questionVersionIds);
@@ -95,6 +128,6 @@ export class ExamQuestionSelectionService {
       optionOrderByVersionId.set(versionId, secureShuffle(optionIds));
     }
 
-    return { orderedQuestionVersionIds, optionOrderByVersionId };
+    return { orderedQuestionVersionIds, optionOrderByVersionId, reusedQuestionIds };
   }
 }

@@ -36,7 +36,16 @@
     "gate20:duplicate-check": "ts-node scripts/gate20-duplicate-check.ts",
     "gate21:real-tranche-review": "ts-node scripts/run-gate21-real-tranche-review.ts",
     "gate22:real-promotion": "ts-node scripts/run-gate22-real-promotion.ts",
-    "gate24:real-data-verification": "ts-node scripts/run-gate24-real-data-verification.ts"
+    "gate24:real-data-verification": "ts-node scripts/run-gate24-real-data-verification.ts",
+    "gate25:real-data-verification": "ts-node scripts/run-gate25-real-data-verification.ts",
+    "gate26:real-gemini-pilot": "ts-node scripts/run-gate26-real-gemini-pilot.ts",
+    "gate26:readiness-baseline": "ts-node scripts/run-gate26-readiness-baseline.ts",
+    "gate27:activate-question-bank": "ts-node scripts/run-gate27-question-bank-activation.ts",
+    "gate27:pilot-blueprint-e2e": "ts-node scripts/run-gate27-pilot-blueprint-e2e.ts",
+    "gate27:pilot-blueprint-e2e-resume": "ts-node scripts/run-gate27-pilot-blueprint-e2e-resume.ts",
+    "gate28:mcq-ingestion": "ts-node scripts/run-gate28-mcq-ingestion.ts",
+    "gate29:register-complete-ich-e6r3": "ts-node scripts/run-gate29-ich-e6r3-complete-registration.ts",
+    "gate29:exam-config-and-e2e": "ts-node scripts/run-gate29-exam-config-and-e2e.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

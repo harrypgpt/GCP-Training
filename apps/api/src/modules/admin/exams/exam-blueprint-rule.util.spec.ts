@@ -17,6 +17,8 @@ function baseRule(overrides: Partial<RuleDimensions> = {}): RuleDimensions {
     learningObjectiveId: null,
     caseStudyRequired: null,
     sourceRequired: null,
+    normativeSourceSectionId: null,
+    questionGenerationType: null,
     ...overrides,
   };
 }

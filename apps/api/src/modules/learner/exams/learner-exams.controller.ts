@@ -116,4 +116,17 @@ export class LearnerExamsController {
   ): ReturnType<LearnerExamScoringService['getOrEvaluateResult']> {
     return this.scoring.getOrEvaluateResult(user.id, attemptId);
   }
+
+  /**
+   * Gate 29 §19: per-question answer review, available only once the
+   * attempt is finalized (the service itself enforces this - a 409 for
+   * anything still in progress, exactly like `getResult` above).
+   */
+  @Get('attempts/:attemptId/review')
+  getReview(
+    @Param('attemptId', ParseUUIDPipe) attemptId: string,
+    @CurrentUser() user: RequestUser,
+  ): ReturnType<LearnerExamScoringService['getReview']> {
+    return this.scoring.getReview(user.id, attemptId);
+  }
 }

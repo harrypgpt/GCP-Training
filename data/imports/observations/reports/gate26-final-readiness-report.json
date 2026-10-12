@@ -1,0 +1,182 @@
+{
+  "gate": "GATE_26",
+  "status": "COMPLETE",
+  "decision": "READY_WITH_DEFINED_PRE_PILOT_ACTIONS",
+  "ichAuthority": {
+    "status": "SINGLE_AUTHORITATIVE_SOURCE",
+    "sources": 1,
+    "sourceVersions": 1,
+    "sourceSections": 11,
+    "publishedSourceSections": 11,
+    "duplicateRegistrationFound": false
+  },
+  "trainingBoundary": {
+    "normativeSource": "ICH_E6_R3",
+    "enumHasOnlyOneNormativeValue": true,
+    "fda483CanBecomeNormative": false,
+    "fdaWarningLetterCanBecomeNormative": false,
+    "expertObservationCanBecomeNormative": false,
+    "auditFinding": "READY"
+  },
+  "caseStudyBoundary": {
+    "role": "SCENARIO_EVIDENCE_ONLY",
+    "eligibleCaseStudiesForExternalAi": 14,
+    "groundingFailsClosedOnIneligibleContent": true,
+    "auditFinding": "READY"
+  },
+  "aiProvider": {
+    "providersImplemented": ["mock", "openai", "gemini"],
+    "providerHasDatabaseAccess": false,
+    "geminiErrorHandling": {
+      "timeout": "TYPED_TRANSIENT",
+      "http429": "TYPED_TRANSIENT",
+      "http5xx": "TYPED_TRANSIENT",
+      "safetyRefusal": "TYPED_NON_TRANSIENT",
+      "malformedJson": "HANDLED_ONE_LAYER_UP",
+      "emptyResponse": "NOT_EXPLICITLY_TYPED_MINOR_GAP"
+    },
+    "retry": { "maxRetries": 2, "backoff": "NONE", "onlyRetriesTransient": true },
+    "volumeGuard": "PER_SCRIPT_ONLY_NOT_PRODUCT_WIDE",
+    "auditFinding": "PARTIALLY_READY"
+  },
+  "questionBank": {
+    "totalQuestions": 7,
+    "publishedQuestions": 0,
+    "draftQuestions": 7,
+    "directGcpQuestions": 2,
+    "caseApplicationQuestions": 3,
+    "unclassifiedQuestions": 2,
+    "totalCandidates": 30,
+    "acceptedCandidates": 16,
+    "readyForReviewCandidates": 11,
+    "validationFailedCandidates": 2,
+    "rejectedCandidates": 1,
+    "qualityReviewsRecorded": 17,
+    "duplicateFlagsUnresolved": 0,
+    "questionsGeneratedByThisGate": 0,
+    "auditFinding": "PARTIALLY_READY"
+  },
+  "learningObjectives": {
+    "total": 92,
+    "mapped": 0,
+    "unmapped": 92,
+    "withPublishedQuestion": 0,
+    "note": "0 mapped is the direct consequence of 0 published questions, not a separate LO-mapping defect.",
+    "auditFinding": "PARTIALLY_READY"
+  },
+  "sectionCoverage": {
+    "totalIchSections": 11,
+    "sectionsWithActiveBlueprintRule": 0,
+    "auditFinding": "PARTIALLY_READY"
+  },
+  "blueprintReadiness": {
+    "mechanismProvenByE2e": true,
+    "realBlueprintsConfigured": 0,
+    "auditFinding": "READY"
+  },
+  "examPipeline": {
+    "publishedOnlyEligibilityEnforced": true,
+    "immutableAttemptSnapshots": true,
+    "answerKeysHiddenFromLearner": true,
+    "ownershipChecksPresent": true,
+    "provenanceSurvivesLifecycle": true,
+    "realExamsConfigured": 0,
+    "auditFinding": "READY"
+  },
+  "certificatePipeline": {
+    "requiresRealFinalizedPassedAttempt": true,
+    "aiCandidateCannotIssueCertificate": true,
+    "draftQuestionCannotEnterExam": true,
+    "unpublishedQuestionCannotBeSelected": true,
+    "realCertificatesIssued": 0,
+    "auditFinding": "READY"
+  },
+  "security": {
+    "geminiKeyServerSideOnly": true,
+    "geminiKeyNeverReturnedByApi": true,
+    "geminiKeyNeverLogged": true,
+    "envGitignored": true,
+    "criticalFindingThisGate": "A real Gemini API key was found accidentally pasted into the tracked .gitignore file (working-tree only, never committed - confirmed via git log --all -p). Found and fixed within this gate.",
+    "criticalFindingStatus": "FIXED",
+    "recommendKeyRotation": true,
+    "auditFinding": "READY_AFTER_FIX"
+  },
+  "dataIntegrity": {
+    "before": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "caseStudySpecifications": 50,
+      "caseStudyVersions": 50,
+      "questions": 7,
+      "questionVersions": 7,
+      "exams": 0,
+      "examAttempts": 0,
+      "certificates": 0,
+      "aiGenerationRuns": 81,
+      "aiQuestionCandidates": 28
+    },
+    "after": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "caseStudySpecifications": 50,
+      "caseStudyVersions": 50,
+      "questions": 7,
+      "questionVersions": 7,
+      "exams": 0,
+      "examAttempts": 0,
+      "certificates": 0,
+      "aiGenerationRuns": 93,
+      "aiQuestionCandidates": 30
+    },
+    "protectedCategoriesUnchanged": true,
+    "onlyExpectedCategoriesChanged": true,
+    "auditFinding": "READY"
+  },
+  "testResults": {
+    "formatCheck": "PASS",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "unitTestsApi": { "suites": 52, "tests": 683, "status": "PASS" },
+    "unitTestsWeb": { "suites": 41, "tests": 215, "status": "PASS" },
+    "build": "PASS",
+    "e2e": { "suites": 28, "tests": 406, "status": "PASS" },
+    "prismaMigrateStatus": "UP_TO_DATE_35_MIGRATIONS",
+    "migrationsAddedByThisGate": 0
+  },
+  "realGeminiPilot": {
+    "executed": true,
+    "provider": "gemini",
+    "totalAttempted": 6,
+    "totalSucceeded": 2,
+    "directGcpAttempted": 3,
+    "directGcpSucceeded": 2,
+    "caseApplicationAttempted": 3,
+    "caseApplicationSucceeded": 0,
+    "failureReasons": [
+      "STALE_MODEL_404_SELF_CORRECTED",
+      "PROVIDER_503_HIGH_DEMAND",
+      "PROVIDER_429_QUOTA_EXCEEDED"
+    ],
+    "candidatesAutoReviewed": 0,
+    "candidatesAutoPublished": 0,
+    "candidatesAutoConverted": 0,
+    "humanReviewPackageWritten": "data/imports/observations/reports/gate26-human-review-package.json",
+    "auditFinding": "PARTIALLY_READY"
+  },
+  "limitations": [
+    "Question bank and exam/blueprint content is not yet pilot-ready (0 published questions, 0 configured exams) - an operational gap, not an architecture gap.",
+    "Current Gemini API key quota tier could not sustain this gate's own 6-call validation without hitting a real rate limit.",
+    "No persistent, product-wide volume guard exists on the normal generation API path - only on one-off pilot scripts.",
+    "Gemini provider does not classify an empty model response as its own distinct error type.",
+    "learningObjectives count includes pre-existing, already-disclosed e2e/test-data residue from repeated regression runs across this session."
+  ],
+  "prePilotActions": [
+    "Independently human-review (ACCEPT/REJECT) the 2 new real candidates from this gate's pilot via the existing quality-review workflow.",
+    "Promote at least a handful of ACCEPTED candidates and publish them via the existing content workflow - 0 questions are published today.",
+    "Configure at least one real Exam + ExamBlueprint with ICH-section requirements against the now-published pool.",
+    "Verify/upgrade the Gemini API key's quota or billing tier before relying on it for a real pilot-scale batch.",
+    "Rotate the Gemini API key as a precaution, given the working-tree exposure found and fixed in this gate.",
+    "Select and enroll the small group of real pilot learners."
+  ],
+  "recommendation": "CONTROLLED_REAL_WORLD_PILOT_AFTER_PRE_PILOT_ACTIONS"
+}

@@ -355,9 +355,10 @@ function ReadinessReport(): JSX.Element {
               ICH E6(R3) section coverage ({summary.ichSectionCoverage.length} sections)
             </summary>
             <p className="mt-2 text-xs text-muted-foreground">
-              No blueprint dimension expresses a per-section requirement today, so every section
-              reports NO_REQUIREMENT_DEFINED - this is an honest gap in the requirement model, not a
-              shortcut. Eligible-question counts below are informational only.
+              A section shows a real required/available/shortfall only once an exam blueprint has an
+              active rule requiring it (configured on the exam&apos;s blueprint page). A section
+              with no such rule honestly reports &quot;No requirement defined&quot; rather than an
+              invented number.
             </p>
             {summary.ichSectionCoverage.length > 0 && (
               <ul className="mt-3 space-y-1">
@@ -369,9 +370,20 @@ function ReadinessReport(): JSX.Element {
                     <span className="text-muted-foreground">
                       {section.sectionIdentifier} {section.heading ? `— ${section.heading}` : ''}
                     </span>
-                    <span className="font-medium text-foreground">
-                      {section.eligibleQuestionCount}
-                    </span>
+                    {section.requirement === 'NO_REQUIREMENT_DEFINED' ? (
+                      <span className="text-xs text-muted-foreground">
+                        No requirement defined ({section.eligibleQuestionCount} eligible)
+                      </span>
+                    ) : section.requirement.shortfall > 0 ? (
+                      <Badge tone="danger">
+                        Short by {section.requirement.shortfall} ({section.requirement.available}/
+                        {section.requirement.required})
+                      </Badge>
+                    ) : (
+                      <Badge tone="success">
+                        Sufficient ({section.requirement.available}/{section.requirement.required})
+                      </Badge>
+                    )}
                   </li>
                 ))}
               </ul>

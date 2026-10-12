@@ -497,6 +497,105 @@ export const LEARNER_EXAM_ROUTES = {
     `/api/learner/exams/attempts/${attemptId}/questions`,
   submit: (attemptId: string): string => `/api/learner/exams/attempts/${attemptId}/submit`,
   result: (attemptId: string): string => `/api/learner/exams/attempts/${attemptId}/result`,
+  review: (attemptId: string): string => `/api/learner/exams/attempts/${attemptId}/review`,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Learner exam answer review (Gate 29 §19) - available ONLY once an attempt
+// is finalized (PASSED/FAILED); the backend itself enforces this, never the
+// frontend alone. Unlike the active-exam schemas above, this one
+// deliberately DOES carry `correctOptionId`/`isCorrect`/`explanation` -
+// that is the whole point of a post-submission review.
+// ---------------------------------------------------------------------------
+
+export const examReviewOptionSchema = z.object({
+  optionId: z.string().uuid(),
+  text: z.string(),
+});
+export type ExamReviewOption = z.infer<typeof examReviewOptionSchema>;
+
+export const examReviewQuestionSchema = z.object({
+  attemptQuestionId: z.string().uuid(),
+  stem: z.string(),
+  options: z.array(examReviewOptionSchema),
+  selectedOptionId: z.string().uuid().nullable(),
+  correctOptionId: z.string().uuid(),
+  isCorrect: z.boolean(),
+  explanation: z.string().nullable(),
+  ichE6R3Reference: z
+    .object({ sectionIdentifier: z.string(), heading: z.string().nullable() })
+    .nullable(),
+  caseApplicationReference: z.object({ caseCode: z.string(), title: z.string() }).nullable(),
+  questionGenerationType: z.string().nullable(),
+});
+export type ExamReviewQuestion = z.infer<typeof examReviewQuestionSchema>;
+
+export const examReviewViewSchema = z.object({
+  attemptId: z.string().uuid(),
+  status: z.union([z.literal('PASSED'), z.literal('FAILED')]),
+  questions: z.array(examReviewQuestionSchema),
+});
+export type ExamReviewView = z.infer<typeof examReviewViewSchema>;
+
+// ---------------------------------------------------------------------------
+// Learner ICH E6(R3) document reader (Gate 29 §4/§7) - reads the complete,
+// registered guideline inside the platform only. No field here ever carries
+// a downloadable file, a raw storage URL, or a signed download link (§5).
+// ---------------------------------------------------------------------------
+
+export const readingCompletionStatusSchema = z.enum([
+  'NOT_STARTED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'RETRAINING_REQUIRED',
+]);
+export type ReadingCompletionStatus = z.infer<typeof readingCompletionStatusSchema>;
+
+export const ichE6R3ProgressSchema = z.object({
+  status: readingCompletionStatusSchema,
+  lastViewedSequence: z.number().int(),
+  totalSections: z.number().int(),
+  progressPercent: z.number().int(),
+  trainingStartedAt: z.string().nullable(),
+  trainingCompletedAt: z.string().nullable(),
+});
+export type IchE6R3Progress = z.infer<typeof ichE6R3ProgressSchema>;
+
+export const ichE6R3TocEntrySchema = z.object({
+  sectionIdentifier: z.string(),
+  heading: z.string().nullable(),
+  depth: z.number().int(),
+  sequence: z.number().int(),
+});
+export type IchE6R3TocEntry = z.infer<typeof ichE6R3TocEntrySchema>;
+
+export const ichE6R3OverviewSchema = z.object({
+  sourceVersionId: z.string().uuid(),
+  documentTitle: z.string(),
+  documentVersion: z.string().nullable(),
+  adoptionDate: z.string().nullable(),
+  license: z.string().nullable(),
+  attributionRequired: z.boolean(),
+  tableOfContents: z.array(ichE6R3TocEntrySchema),
+  progress: ichE6R3ProgressSchema,
+});
+export type IchE6R3Overview = z.infer<typeof ichE6R3OverviewSchema>;
+
+export const ichE6R3SectionViewSchema = z.object({
+  sectionIdentifier: z.string(),
+  heading: z.string().nullable(),
+  depth: z.number().int(),
+  sequence: z.number().int(),
+  content: z.string(),
+  isFirst: z.boolean(),
+  isLast: z.boolean(),
+  progress: ichE6R3ProgressSchema,
+});
+export type IchE6R3SectionView = z.infer<typeof ichE6R3SectionViewSchema>;
+
+export const LEARNER_ICH_E6R3_ROUTES = {
+  overview: '/api/learner/training/ich-e6r3',
+  section: (sequence: number): string => `/api/learner/training/ich-e6r3/sections/${sequence}`,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -799,7 +898,13 @@ export const ichSectionCoverageSchema = z.object({
   sectionIdentifier: z.string(),
   heading: z.string().nullable(),
   eligibleQuestionCount: z.number().int(),
-  requirement: z.literal('NO_REQUIREMENT_DEFINED'),
+  /** Gate 24 found no blueprint dimension could ever produce a real
+   * per-section requirement, so this was always `NO_REQUIREMENT_DEFINED`.
+   * Gate 25 added `ExamBlueprintRule.normativeSourceSectionId`, so a
+   * section with an active rule now reports a real required/available/
+   * shortfall; one with none still honestly reports
+   * `NO_REQUIREMENT_DEFINED`. */
+  requirement: learningObjectiveRequirementSchema,
 });
 export type IchSectionCoverage = z.infer<typeof ichSectionCoverageSchema>;
 
@@ -1154,6 +1259,8 @@ export const blueprintRuleRequestSchema = z.object({
   learningObjectiveId: z.string().uuid().optional(),
   caseStudyRequired: z.boolean().optional(),
   sourceRequired: z.boolean().optional(),
+  /** Gate 25 §4/§6: at most one ICH E6(R3) normative section per rule. */
+  normativeSourceSectionId: z.string().uuid().optional(),
   minimumCount: z.number().int().min(0).optional(),
   maximumCount: z.number().int().min(0).optional(),
   exactCount: z.number().int().min(0).optional(),
@@ -1182,6 +1289,14 @@ export const blueprintRuleViewSchema = z.object({
   learningObjective: z.object({ id: z.string().uuid(), description: z.string() }).nullable(),
   caseStudyRequired: z.boolean().nullable(),
   sourceRequired: z.boolean().nullable(),
+  normativeSourceSectionId: z.string().uuid().nullable(),
+  normativeSourceSection: z
+    .object({
+      id: z.string().uuid(),
+      sectionIdentifier: z.string(),
+      heading: z.string().nullable(),
+    })
+    .nullable(),
   minimumCount: z.number().int().nullable(),
   maximumCount: z.number().int().nullable(),
   exactCount: z.number().int().nullable(),
@@ -1214,6 +1329,13 @@ export const blueprintValidationResultSchema = z.object({
 });
 export type BlueprintValidationResult = z.infer<typeof blueprintValidationResultSchema>;
 
+export const normativeSectionCoverageSchema = z.object({
+  normativeSourceSectionId: z.string().uuid(),
+  sectionCode: z.string(),
+  sectionTitle: z.string().nullable(),
+  status: z.enum(['SUFFICIENT', 'SHORTFALL', 'NO_ELIGIBLE_QUESTIONS']),
+});
+
 export const ruleCoverageSchema = z.object({
   ruleId: z.string().uuid(),
   description: z.string(),
@@ -1226,6 +1348,9 @@ export const ruleCoverageSchema = z.object({
   /** Gate 22 §21: `max(0, required - eligiblePool)`. */
   shortfall: z.number().int(),
   sufficient: z.boolean(),
+  /** Gate 25 §8/§11: present only when this rule requires an ICH E6(R3)
+   * normative section. */
+  normativeSection: normativeSectionCoverageSchema.nullable(),
 });
 
 export const blueprintCoverageResultSchema = z.object({
@@ -1239,6 +1364,15 @@ export const blueprintCoverageResultSchema = z.object({
 });
 export type BlueprintCoverageResult = z.infer<typeof blueprintCoverageResultSchema>;
 
+/** Gate 25 §17: admin-facing lookup of the sections a blueprint rule may
+ * reference - published, authoritative, ICH E6(R3) sections only. */
+export const ichE6R3SectionOptionSchema = z.object({
+  id: z.string().uuid(),
+  sectionIdentifier: z.string(),
+  heading: z.string().nullable(),
+});
+export type IchE6R3SectionOption = z.infer<typeof ichE6R3SectionOptionSchema>;
+
 export const EXAM_ROUTES = {
   list: '/api/admin/exams',
   create: '/api/admin/exams',
@@ -1248,6 +1382,7 @@ export const EXAM_ROUTES = {
   blueprint: (id: string): string => `/api/admin/exams/${id}/blueprint`,
   validateBlueprint: (id: string): string => `/api/admin/exams/${id}/blueprint/validate`,
   coverage: (id: string): string => `/api/admin/exams/${id}/blueprint/coverage`,
+  ichE6R3Sections: '/api/admin/exams/ich-e6r3-sections',
 } as const;
 
 // ---------------------------------------------------------------------------

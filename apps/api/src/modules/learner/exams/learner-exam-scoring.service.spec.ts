@@ -4,6 +4,7 @@ import { AuditAction, ExamAttemptErrorCode } from '@gcp/shared';
 
 import { AuditService } from '../../../common/audit/audit.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { IchE6R3ReadingService } from '../training/ich-e6r3-reading.service';
 import { LearnerExamScoringService } from './learner-exam-scoring.service';
 
 /** 2 questions x 5 marks = 10 total marks, 80% pass threshold. */
@@ -37,6 +38,7 @@ describe('LearnerExamScoringService', () => {
   const examAttemptFindFirst = jest.fn();
   const examAttemptQuestionCount = jest.fn();
   const auditRecord = jest.fn();
+  const ichReadingRequireRetraining = jest.fn();
 
   const txExamAttemptFindFirst = jest.fn();
   const txQuestionFindMany = jest.fn();
@@ -64,6 +66,10 @@ describe('LearnerExamScoringService', () => {
           },
         },
         { provide: AuditService, useValue: { record: auditRecord } },
+        {
+          provide: IchE6R3ReadingService,
+          useValue: { requireRetraining: ichReadingRequireRetraining },
+        },
       ],
     }).compile();
     return moduleRef.get(LearnerExamScoringService);

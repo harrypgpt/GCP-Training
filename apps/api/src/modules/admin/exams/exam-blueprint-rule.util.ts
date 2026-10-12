@@ -11,6 +11,13 @@ export interface RuleDimensions {
   learningObjectiveId: string | null;
   caseStudyRequired: boolean | null;
   sourceRequired: boolean | null;
+  /** Gate 25: the single ICH E6(R3) `SourceSection` this rule requires
+   * questions to be grounded in - never an array (§6). */
+  normativeSourceSectionId: string | null;
+  /** Gate 29: restricts a rule to only DIRECT_GCP or only CASE_APPLICATION
+   * questions - the mechanism behind an explicit exam composition (e.g. 12
+   * DIRECT_GCP + 8 CASE_APPLICATION) without a second eligibility system. */
+  questionGenerationType: string | null;
 }
 
 /** Builds the eligible-pool filter a rule implies, defaulting to the exam
@@ -30,6 +37,12 @@ export function ruleToEligibilityFilter(
     ...(rule.learningObjectiveId ? { learningObjectiveId: rule.learningObjectiveId } : {}),
     ...(rule.caseStudyRequired ? { caseStudyRequired: rule.caseStudyRequired } : {}),
     ...(rule.sourceRequired ? { sourceRequired: rule.sourceRequired } : {}),
+    ...(rule.normativeSourceSectionId
+      ? { normativeSourceSectionId: rule.normativeSourceSectionId }
+      : {}),
+    ...(rule.questionGenerationType
+      ? { questionGenerationType: rule.questionGenerationType as 'DIRECT_GCP' | 'CASE_APPLICATION' }
+      : {}),
   };
 }
 
@@ -45,6 +58,9 @@ export function describeRule(rule: RuleDimensions): string {
   if (rule.learningObjectiveId) parts.push(`objective=${rule.learningObjectiveId}`);
   if (rule.caseStudyRequired) parts.push('caseStudyRequired');
   if (rule.sourceRequired) parts.push('sourceRequired');
+  if (rule.normativeSourceSectionId) parts.push(`ichSection=${rule.normativeSourceSectionId}`);
+  if (rule.questionGenerationType)
+    parts.push(`questionGenerationType=${rule.questionGenerationType}`);
   return parts.length > 0 ? parts.join(', ') : '(no dimension constraint)';
 }
 
@@ -59,7 +75,9 @@ export function ruleHasNoDimension(rule: RuleDimensions): boolean {
     !rule.levelId &&
     !rule.learningObjectiveId &&
     !rule.caseStudyRequired &&
-    !rule.sourceRequired
+    !rule.sourceRequired &&
+    !rule.normativeSourceSectionId &&
+    !rule.questionGenerationType
   );
 }
 
@@ -75,6 +93,8 @@ export function ruleSignature(rule: RuleDimensions): string {
     rule.learningObjectiveId ?? '',
     rule.caseStudyRequired ? '1' : '0',
     rule.sourceRequired ? '1' : '0',
+    rule.normativeSourceSectionId ?? '',
+    rule.questionGenerationType ?? '',
   ].join('|');
 }
 
@@ -89,16 +109,25 @@ export function ruleSignature(rule: RuleDimensions): string {
  * validated against their own eligible pool - see item 19).
  */
 export function exclusiveGroupKey(rule: RuleDimensions): string | null {
-  const onlyQuestionType =
-    rule.questionType !== null &&
+  const noOtherDimensions =
     !rule.difficulty &&
     !rule.domainId &&
     !rule.professionalRoleId &&
     !rule.levelId &&
     !rule.learningObjectiveId &&
     !rule.caseStudyRequired &&
-    !rule.sourceRequired;
-  return onlyQuestionType ? `questionType:${rule.questionType}` : null;
+    !rule.sourceRequired &&
+    !rule.normativeSourceSectionId;
+  if (rule.questionType !== null && noOtherDimensions && !rule.questionGenerationType) {
+    return `questionType:${rule.questionType}`;
+  }
+  // Gate 29: DIRECT_GCP and CASE_APPLICATION are just as mutually exclusive
+  // as any two questionType values - a rule whose SOLE dimension is
+  // questionGenerationType belongs to the same kind of exclusive group.
+  if (rule.questionGenerationType !== null && noOtherDimensions && !rule.questionType) {
+    return `questionGenerationType:${rule.questionGenerationType}`;
+  }
+  return null;
 }
 
 /** The dimensions of one eligible candidate question, as needed to check it
@@ -112,6 +141,11 @@ export interface CandidateDimensions {
   learningObjectiveId: string | null;
   hasCaseStudy: boolean;
   hasSource: boolean;
+  /** Gate 25: the candidate's own persisted `sourceSectionRefId` - never
+   * inferred from stem/prompt/keyword text (§9). */
+  sourceSectionRefId: string | null;
+  /** Gate 29: the candidate's own persisted `questionGenerationType`. */
+  questionGenerationType: string | null;
 }
 
 /**
@@ -145,5 +179,17 @@ export function ruleMatchesCandidate(
   }
   if (rule.caseStudyRequired === true && !candidate.hasCaseStudy) return false;
   if (rule.sourceRequired === true && !candidate.hasSource) return false;
+  if (
+    rule.normativeSourceSectionId !== null &&
+    rule.normativeSourceSectionId !== candidate.sourceSectionRefId
+  ) {
+    return false;
+  }
+  if (
+    rule.questionGenerationType !== null &&
+    rule.questionGenerationType !== candidate.questionGenerationType
+  ) {
+    return false;
+  }
   return true;
 }

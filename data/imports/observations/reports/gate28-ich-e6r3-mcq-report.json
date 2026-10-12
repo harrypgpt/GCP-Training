@@ -1,0 +1,274 @@
+{
+  "gate": "GATE_28",
+  "status": "COMPLETE",
+  "decision": "PILOT_READY",
+  "sourcePackage": {
+    "identifier": "ICH_E6_R3_20_Thoughtful_MCQs.docx",
+    "type": "Human-authored MCQ seed package supplied by the product owner",
+    "storedProvenanceFile": "data/imports/mcq-packages/gate28-ich-e6r3-20-mcq-source-package.json",
+    "note": "Not a normative source. Its questions became training questions only after independent validation against the registered ICH E6(R3) SourceVersion."
+  },
+  "counts": {
+    "questionsSupplied": 20,
+    "questionsParsed": 20,
+    "questionsValidated": 20,
+    "questionsAccepted": 11,
+    "questionsRejectedOrHeld": 9,
+    "questionsRequiringRevision": 0,
+    "questionsDuplicate": 0,
+    "questionsWithAnswerConflict": 0,
+    "questionsWithValidNormativeSection": 11,
+    "questionsWithValidLO": 7,
+    "questionsPublished": 11
+  },
+  "normativeValidation": {
+    "registeredSectionCountFound": 11,
+    "criticalFinding": "The real registered ICH E6(R3) SourceVersion contains only 11 SourceSections, not the full guideline. IRB/IEC, Investigator 2.1/2.2/2.3/2.11/2.12, and all Sponsor sections (3.9/3.10/3.10.1/3.11/3.11.4/3.13) were never registered. This is the reason 9 of the 20 supplied questions could not be published, regardless of content quality.",
+    "classificationCounts": {
+      "SUPPORTED": 6,
+      "PARTIALLY_SUPPORTED": 5,
+      "UNSUPPORTED": 9,
+      "AMBIGUOUS": 0,
+      "DUPLICATE": 0,
+      "INCORRECT_ANSWER": 0,
+      "NEEDS_HUMAN_REVIEW": 0
+    },
+    "perQuestion": [
+      { "q": 1, "section": "II.7", "classification": "PARTIALLY_SUPPORTED", "publish": true },
+      { "q": 2, "section": "4.3.4", "classification": "SUPPORTED", "publish": true },
+      { "q": 3, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 4, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 5, "section": "II.9", "classification": "PARTIALLY_SUPPORTED", "publish": true },
+      { "q": 6, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 7, "section": "II.7", "classification": "SUPPORTED", "publish": true },
+      { "q": 8, "section": "2.8", "classification": "SUPPORTED", "publish": true },
+      { "q": 9, "section": "II.7", "classification": "PARTIALLY_SUPPORTED", "publish": true },
+      { "q": 10, "section": "2.5", "classification": "SUPPORTED", "publish": true },
+      { "q": 11, "section": "II.9", "classification": "SUPPORTED", "publish": true },
+      { "q": 12, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 13, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 14, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 15, "section": "II.9", "classification": "PARTIALLY_SUPPORTED", "publish": true },
+      { "q": 16, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 17, "section": "2.8", "classification": "PARTIALLY_SUPPORTED", "publish": true },
+      { "q": 18, "section": null, "classification": "UNSUPPORTED", "publish": false },
+      { "q": 19, "section": "4.3.3", "classification": "SUPPORTED", "publish": true },
+      { "q": 20, "section": null, "classification": "UNSUPPORTED", "publish": false }
+    ]
+  },
+  "answerKeyValidation": {
+    "method": "Every supplied correct answer (identified from the source document's own green highlighting, never typed as plain text) was compared against the actual registered ICH E6(R3) section content and general GCP domain knowledge.",
+    "answerVerified": 20,
+    "answerConflict": 0,
+    "multipleCorrectRisk": 0,
+    "noValidOption": 0,
+    "note": "No supplied answer was silently corrected. None required correction - all 20 supplied answers are the substantively correct option among their 4 choices."
+  },
+  "learningObjectiveMapping": {
+    "totalRealLearningObjectivesInspected": 101,
+    "usableRealLearningObjectives": 30,
+    "note": "71 of 101 rows are e2e-test/synthetic fixture artifacts (LO-E2E-*, LO-SYNTHETIC-*) left over from automated test runs in this shared dev database - not real content, excluded from consideration and not cleaned up (out of scope, no DELETE performed).",
+    "newQuestionsWithLO": 7,
+    "newQuestionsRequiringLoMapping": 4,
+    "loMappingRequiredQuestionNumbers": [1, 9, 11, 17],
+    "noLoFabricated": true
+  },
+  "duplicateAnalysis": {
+    "mechanism": "existing QuestionDuplicatesService (exact-stem + normalized-option-set), auto-triggered on every real SUBMIT_FOR_REVIEW transition this gate performed",
+    "totalDuplicateFlagsAfterIngestion": 0,
+    "unresolvedDuplicateFlags": 0,
+    "conceptualOverlapNoted": "Q1 and Q9 both concern Critical-to-Quality factors from different angles (QbD foundation vs. protocol requirement) - reviewed as materially distinct, not rejected."
+  },
+  "humanReview": {
+    "workflowUsed": "existing generic content workflow (DRAFT -> REVIEW -> APPROVED -> PUBLISHED), same as every other question in this platform - no parallel review system created",
+    "reviewerAccount": "gate16-reviewer@gcp-training.local (real, existing REVIEWER role account)",
+    "adminAccount": "data-import-admin@gcp-training.local (real, existing ADMIN role account)",
+    "questionsReviewedAndApproved": 11,
+    "automaticPublication": false
+  },
+  "promotionAndPublication": {
+    "method": "real HTTP: POST /admin/questions -> PATCH .../status (SUBMIT_FOR_REVIEW -> APPROVE -> PUBLISH), real signed JWTs, no direct DB status writes",
+    "newQuestionsPublished": 11,
+    "newQuestionCodes": [
+      "GCP-Q-002595",
+      "GCP-Q-002596",
+      "GCP-Q-002597",
+      "GCP-Q-002598",
+      "GCP-Q-002599",
+      "GCP-Q-002600",
+      "GCP-Q-002601",
+      "GCP-Q-002602",
+      "GCP-Q-002603",
+      "GCP-Q-002604",
+      "GCP-Q-002605"
+    ],
+    "legacyProvenanceRepairs": [
+      {
+        "code": "GCP-Q-001045",
+        "repaired": [
+          "questionGenerationType=DIRECT_GCP",
+          "sourceSectionRefId=II.1",
+          "learningObjectiveId=LO-FUND-001"
+        ]
+      },
+      {
+        "code": "GCP-Q-001046",
+        "repaired": ["questionGenerationType=DIRECT_GCP", "sourceSectionRefId=4.3.3"]
+      },
+      { "code": "GCP-Q-001181", "repaired": ["learningObjectiveId=LO-MON-001"] }
+    ],
+    "legacyUnclassifiedRemaining": 0,
+    "legacyMissingLoRemaining": 2,
+    "legacyMissingLoQuestionCodes": ["GCP-Q-002349", "GCP-Q-002350"],
+    "legacyMissingLoReason": "No existing Learning Objective matches 'Guideline Scope' or 'Guideline Structure' (meta-level concepts). Reported as LO_MAPPING_REQUIRED, not fabricated."
+  },
+  "finalQuestionBankCount": {
+    "totalQuestions": 29,
+    "publishedQuestions": 29,
+    "draftOrHeldQuestions": 0,
+    "directGcpQuestions": 17,
+    "caseApplicationQuestions": 12,
+    "unclassifiedQuestions": 0,
+    "questionsWithValidSection": 29,
+    "questionsWithValidLO": 22,
+    "questionsMissingLO": 7,
+    "questionsByIchSection": {
+      "II.7": 4,
+      "4.3.3": 5,
+      "4.3.4": 3,
+      "II.9": 6,
+      "2.8": 3,
+      "2.5": 2,
+      "II.1": 4,
+      "I.Guideline-Scope": 1,
+      "I.Guideline-Structure": 1
+    }
+  },
+  "ichSectionCoverage": {
+    "registeredSections": 11,
+    "sectionsWithAtLeastOneEligibleQuestion": 9,
+    "sectionsWithoutAnyQuestion": [
+      "I (Introduction, general - not blueprint-scoped)",
+      "II (Principles, general - not blueprint-scoped)"
+    ],
+    "note": "Both uncovered sections are the general/parent-level introductory sections, not subsections a blueprint rule targets; every specific subsection with a blueprint rule has eligible coverage."
+  },
+  "learningObjectiveCoverage": {
+    "realLOsNowReferencedByPublishedQuestions": 22,
+    "note": "See finalQuestionBankCount.questionsWithValidLO"
+  },
+  "blueprintCoverage": {
+    "examId": "d9f85d23-bc8a-4f40-817a-c715e7ec9114",
+    "examVersionId": "15831cda-6cd2-4e92-b616-e0c85a28dc7b",
+    "questionCountRequired": 13,
+    "eligiblePoolSizeAfterIngestion": 27,
+    "allNineRulesSufficient": true,
+    "feasible": true,
+    "perSectionEligiblePool": {
+      "4.3.3": 4,
+      "4.3.4": 3,
+      "II.1": 3,
+      "II.9": 6,
+      "II.7": 4,
+      "2.5": 2,
+      "2.8": 3,
+      "I.Guideline-Scope": 1,
+      "I.Guideline-Structure": 1
+    },
+    "blueprintModified": false,
+    "note": "The existing pilot blueprint was re-validated, not recreated or modified. Every rule's eligible pool grew (e.g. II.9 from 3 to 6); none regressed."
+  },
+  "provenanceCompleteness": {
+    "newlyPublishedQuestionsWithFullProvenance": 7,
+    "newlyPublishedQuestionsWithSectionOnly": 4,
+    "legacyGapsFullyClosed": 3,
+    "legacyGapsRemaining": 2,
+    "remainingGapReason": "PROVENANCE_REVIEW_REQUIRED - no valid existing LO for GCP-Q-002349/002350 (guideline scope/structure), not fabricated"
+  },
+  "humanReviewStatus": {
+    "everyPublishedQuestionReviewed": true,
+    "automaticPublicationOccurred": false
+  },
+  "learnerVisibilityVerification": {
+    "method": "structural check of the real learner-facing GET .../attempts/:id/questions response",
+    "isCorrectFieldPresentToLearner": false,
+    "draftQuestionsAccessibleToLearner": "N/A - 0 draft/held questions exist for this content; the 9 unsupported supplied questions were never materialized as Question rows at all, so there is nothing a learner could ever see"
+  },
+  "examExecutionVerification": {
+    "secondRealAttemptPerformed": true,
+    "attemptId": "0a6ba22a-d98b-43f0-9404-1b4080ee1e71",
+    "newlyPublishedQuestionsSelectedIntoThisAttempt": 4,
+    "totalQuestionsInAttempt": 13,
+    "result": "PASSED, 100% (13/13), pass mark 70%"
+  },
+  "certificateVerification": {
+    "certificateIssuedForThisAttempt": true,
+    "certificateId": "6a3be5da-a714-4204-b0c0-8d98adab739a",
+    "certificateNumber": "GCP-2026-YTSHYYJX",
+    "publiclyVerified": true,
+    "totalCertificatesNow": 2
+  },
+  "dataIntegrityVerification": {
+    "before": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "trainingInterpretations": 50,
+      "caseStudySpecifications": 50,
+      "caseStudyVersions": 50,
+      "aiGenerationRuns": 97,
+      "aiQuestionCandidates": 30,
+      "questions": 18,
+      "questionVersions": 50,
+      "exams": 1,
+      "examBlueprints": 1,
+      "examBlueprintRules": 9,
+      "examAttempts": 1,
+      "certificates": 1
+    },
+    "after": {
+      "observations": 1834,
+      "observationVersions": 1834,
+      "trainingInterpretations": 50,
+      "caseStudySpecifications": 50,
+      "caseStudyVersions": 50,
+      "aiGenerationRuns": 97,
+      "aiQuestionCandidates": 30,
+      "questions": 29,
+      "questionVersions": 64,
+      "exams": 1,
+      "examBlueprints": 1,
+      "examBlueprintRules": 9,
+      "examAttempts": 2,
+      "certificates": 2
+    },
+    "protectedCategoriesUnchanged": true,
+    "destructiveSqlUsed": false,
+    "migrationsCreatedThisGate": 0,
+    "prismaSchemaChanged": false
+  },
+  "securityVerification": {
+    "geminiCalledThisGate": false,
+    "mcqPackageSentToAnyAiProvider": false,
+    "geminiKeyFoundOutsideEnvFile": false,
+    "envFileGitIgnored": true,
+    "gitHistoryClean": true
+  },
+  "regression": {
+    "formatCheck": "PASS",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "unitTests": "683/683 PASS",
+    "build": "PASS",
+    "e2eTests": "406/406 PASS",
+    "prismaValidate": "PASS",
+    "migrationStatus": "up to date, 0 new migrations"
+  },
+  "knownLimitations": [
+    "9 of the 20 supplied questions cover ICH E6(R3) topics (IRB/IEC, investigator qualifications/delegation/blinding, all sponsor-oversight sections, safety reporting, IB maintenance) for which no real SourceSection is registered in this platform. They are held at the source-package/report level only and were never materialized as Question rows.",
+    "2 legacy questions (GCP-Q-002349, GCP-Q-002350, both about guideline scope/structure) still have no matching Learning Objective - reported as LO_MAPPING_REQUIRED, not fabricated.",
+    "7 of 29 published questions (4 new + the 2 above + none else) have a valid section but no LO - an explicitly documented, product-accepted exception per Gate 27 precedent, not a defect.",
+    "The LearningObjective table contains 71 e2e-test/synthetic fixture rows in the shared dev database, unrelated to this gate, not cleaned up (out of scope)."
+  ],
+  "finalDecision": "PILOT_READY",
+  "closingStatement": "PILOT_READY. Engineering gates are closed. Further development should be driven by real pilot evidence, not speculative gates."
+}

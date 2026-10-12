@@ -18,6 +18,8 @@ function candidate(id: string, overrides: Partial<SelectionCandidate> = {}): Sel
     learningObjectiveId: null,
     hasCaseStudy: false,
     hasSource: false,
+    sourceSectionRefId: null,
+    questionGenerationType: null,
     ...overrides,
   };
 }
@@ -33,6 +35,8 @@ function rule(id: string, overrides: Partial<SelectionRule> = {}): SelectionRule
     learningObjectiveId: null,
     caseStudyRequired: null,
     sourceRequired: null,
+    normativeSourceSectionId: null,
+    questionGenerationType: null,
     minimumCount: null,
     maximumCount: null,
     exactCount: null,

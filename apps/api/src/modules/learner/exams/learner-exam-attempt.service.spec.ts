@@ -9,6 +9,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { ExamBlueprintValidationService } from '../../admin/exams/exam-blueprint-validation.service';
 import { isProfileComplete } from '../common/profile-completion';
 import { TrainingStateComputer } from '../common/training-state.service';
+import { IchE6R3ReadingService } from '../training/ich-e6r3-reading.service';
 import {
   BlueprintSelectionError,
   ExamQuestionSelectionService,
@@ -48,6 +49,8 @@ describe('LearnerExamAttemptService', () => {
   const trainingStateSummarize = jest.fn();
   const blueprintValidate = jest.fn();
   const selectionSelect = jest.fn();
+  const ichReadingIsTrainingComplete = jest.fn();
+  const examBlueprintRuleFindFirst = jest.fn();
   const txExamAttemptCreate = jest.fn();
   const txQuestionCreateMany = jest.fn();
   const txOptionCreateMany = jest.fn();
@@ -88,6 +91,7 @@ describe('LearnerExamAttemptService', () => {
             examAttemptQuestion: { findMany: examAttemptQuestionFindMany },
             learnerProfile: { findUnique: learnerProfileFindUnique },
             enrollment: { findFirst: enrollmentFindFirst },
+            examBlueprintRule: { findFirst: examBlueprintRuleFindFirst },
             $transaction: transaction,
           },
         },
@@ -95,6 +99,10 @@ describe('LearnerExamAttemptService', () => {
         { provide: TrainingStateComputer, useValue: { summarize: trainingStateSummarize } },
         { provide: ExamBlueprintValidationService, useValue: { validate: blueprintValidate } },
         { provide: ExamQuestionSelectionService, useValue: { select: selectionSelect } },
+        {
+          provide: IchE6R3ReadingService,
+          useValue: { isTrainingComplete: ichReadingIsTrainingComplete },
+        },
       ],
     }).compile();
     return moduleRef.get(LearnerExamAttemptService);
@@ -111,12 +119,18 @@ describe('LearnerExamAttemptService', () => {
     enrollmentFindFirst.mockResolvedValue(ENROLLMENT);
     trainingStateSummarize.mockResolvedValue({ examEligible: true });
     blueprintValidate.mockResolvedValue({ valid: true, errors: [], warnings: [], checks: [] });
+    ichReadingIsTrainingComplete.mockResolvedValue(true);
+    // Not ICH E6(R3)-grounded by default - matches every pre-existing exam
+    // fixture in this suite (plain question-type/difficulty rules). Tests
+    // that need the ICH reading gate to actually apply set this explicitly.
+    examBlueprintRuleFindFirst.mockResolvedValue(null);
     selectionSelect.mockResolvedValue({
       orderedQuestionVersionIds: ['qv-1', 'qv-2'],
       optionOrderByVersionId: new Map([
         ['qv-1', ['opt-1', 'opt-2']],
         ['qv-2', ['opt-3', 'opt-4']],
       ]),
+      reusedQuestionIds: [],
     });
     txExamAttemptCreate.mockResolvedValue({
       id: 'attempt-1',
@@ -169,6 +183,37 @@ describe('LearnerExamAttemptService', () => {
       expect(auditRecord).toHaveBeenCalledWith(
         expect.objectContaining({ action: AuditAction.EXAM_STARTED, entityId: 'attempt-1' }),
       );
+    });
+
+    it('allows a generic (non-ICH-grounded) exam to start even when the learner has never read the ICH E6(R3) guideline', async () => {
+      examBlueprintRuleFindFirst.mockResolvedValue(null);
+      ichReadingIsTrainingComplete.mockResolvedValue(false);
+      const service = await createService();
+
+      const result = await service.startExam('user-1', 'exam-1');
+
+      expect(result.attemptId).toBe('attempt-1');
+      expect(ichReadingIsTrainingComplete).not.toHaveBeenCalled();
+    });
+
+    it('blocks an ICH E6(R3)-grounded exam (a rule citing a normative section or DIRECT_GCP/CASE_APPLICATION) until the guideline has been read', async () => {
+      examBlueprintRuleFindFirst.mockResolvedValue({ id: 'rule-ich' });
+      ichReadingIsTrainingComplete.mockResolvedValue(false);
+      const service = await createService();
+
+      await expect(service.startExam('user-1', 'exam-1')).rejects.toMatchObject({
+        code: ExamAttemptErrorCode.TRAINING_NOT_COMPLETE,
+      });
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('allows an ICH E6(R3)-grounded exam once the guideline has been read', async () => {
+      examBlueprintRuleFindFirst.mockResolvedValue({ id: 'rule-ich' });
+      ichReadingIsTrainingComplete.mockResolvedValue(true);
+      const service = await createService();
+
+      const result = await service.startExam('user-1', 'exam-1');
+      expect(result.attemptId).toBe('attempt-1');
     });
 
     it('rejects when the exam has no active version', async () => {

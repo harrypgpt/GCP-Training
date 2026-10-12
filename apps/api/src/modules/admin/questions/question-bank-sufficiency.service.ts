@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ExamQuestionEligibilityService } from '../exams/exam-question-eligibility.service';
+import { findIchE6R3SourceVersions } from '../exams/ich-e6r3-authority.util';
 import {
   QuestionBankReadinessService,
   type QuestionBankReadinessSummary,
@@ -12,8 +13,6 @@ import {
   QuestionDuplicatesService,
   type DuplicateFlagSummary,
 } from './question-duplicates.service';
-
-const ICH_DOCUMENT_IDENTIFIER = 'E6(R3)';
 
 export type IchAuthorityStatus =
   | 'SINGLE_AUTHORITATIVE_SOURCE'
@@ -50,12 +49,13 @@ export interface IchSectionCoverage {
   sectionIdentifier: string;
   heading: string | null;
   eligibleQuestionCount: number;
-  /** Gate 24 §8/§9: `ExamBlueprintRule` has no section-level dimension today
-   * - there is no existing mechanism that defines a per-section requirement,
-   * so this is always `NO_REQUIREMENT_DEFINED` rather than an invented
-   * number. See docs/gate24-*.md §9 for why this is a real, honest finding
-   * and not a shortcut. */
-  requirement: 'NO_REQUIREMENT_DEFINED';
+  /** Gate 24 §8/§9 found `ExamBlueprintRule` had no section-level
+   * dimension, so this was always `NO_REQUIREMENT_DEFINED`. Gate 25 closed
+   * that gap (`ExamBlueprintRule.normativeSourceSectionId`) - a section
+   * with an active rule referencing it now reports a real
+   * required/available/shortfall; one with none still honestly reports
+   * `NO_REQUIREMENT_DEFINED` rather than inventing a number. */
+  requirement: LearningObjectiveRequirement;
 }
 
 export interface NormativeGroundingSummary {
@@ -162,6 +162,7 @@ export class QuestionBankSufficiencyService {
       generationGaps,
       blueprints: base.blueprints,
       learningObjectiveCoverage,
+      ichSectionCoverage,
     });
 
     return {
@@ -182,10 +183,7 @@ export class QuestionBankSufficiencyService {
    * unambiguous registration. Never silently picks one if duplicates are
    * found - reports the fact instead. */
   private async checkIchAuthority(): Promise<IchAuthorityCheck> {
-    const versions = await this.prisma.sourceVersion.findMany({
-      where: { documentIdentifier: ICH_DOCUMENT_IDENTIFIER },
-      select: { id: true, sourceId: true },
-    });
+    const versions = await findIchE6R3SourceVersions(this.prisma);
     const distinctSourceIds = new Set(versions.map((v) => v.sourceId));
     const status: IchAuthorityStatus =
       versions.length === 0
@@ -341,10 +339,16 @@ export class QuestionBankSufficiencyService {
     if (ichAuthority.sourceVersionIds.length === 0) {
       return [];
     }
-    const sections = await this.prisma.sourceSection.findMany({
-      where: { sourceVersionId: { in: ichAuthority.sourceVersionIds } },
-      select: { id: true, sectionIdentifier: true, heading: true },
-    });
+    const [sections, activeSectionRules] = await Promise.all([
+      this.prisma.sourceSection.findMany({
+        where: { sourceVersionId: { in: ichAuthority.sourceVersionIds } },
+        select: { id: true, sectionIdentifier: true, heading: true },
+      }),
+      this.prisma.examBlueprintRule.findMany({
+        where: { normativeSourceSectionId: { not: null }, isActive: true },
+        select: { normativeSourceSectionId: true, minimumCount: true, exactCount: true },
+      }),
+    ]);
     const eligibleBySection = new Map<string, number>();
     for (const version of eligibleVersions) {
       if (!version.sourceSectionRefId) continue;
@@ -353,13 +357,36 @@ export class QuestionBankSufficiencyService {
         (eligibleBySection.get(version.sourceSectionRefId) ?? 0) + 1,
       );
     }
-    return sections.map((section) => ({
-      sourceSectionId: section.id,
-      sectionIdentifier: section.sectionIdentifier,
-      heading: section.heading,
-      eligibleQuestionCount: eligibleBySection.get(section.id) ?? 0,
-      requirement: 'NO_REQUIREMENT_DEFINED',
-    }));
+    // Gate 25: the largest active-rule requirement per section, mirroring
+    // `computeLearningObjectiveCoverage`'s own requirement resolution.
+    const requiredBySection = new Map<string, number>();
+    for (const rule of activeSectionRules) {
+      if (!rule.normativeSourceSectionId) continue;
+      const required = rule.exactCount ?? rule.minimumCount ?? 0;
+      requiredBySection.set(
+        rule.normativeSourceSectionId,
+        Math.max(requiredBySection.get(rule.normativeSourceSectionId) ?? 0, required),
+      );
+    }
+    return sections.map((section) => {
+      const eligibleQuestionCount = eligibleBySection.get(section.id) ?? 0;
+      const required = requiredBySection.get(section.id);
+      const requirement: LearningObjectiveRequirement =
+        required === undefined
+          ? 'NO_REQUIREMENT_DEFINED'
+          : {
+              required,
+              available: eligibleQuestionCount,
+              shortfall: Math.max(0, required - eligibleQuestionCount),
+            };
+      return {
+        sourceSectionId: section.id,
+        sectionIdentifier: section.sectionIdentifier,
+        heading: section.heading,
+        eligibleQuestionCount,
+        requirement,
+      };
+    });
   }
 
   /** Gate 24 §12: reuses Gate 21's stored `AiCandidateQualityReview` rows -
@@ -415,6 +442,7 @@ export class QuestionBankSufficiencyService {
     generationGaps: GenerationGap[];
     blueprints: QuestionBankReadinessSummary['blueprints'];
     learningObjectiveCoverage: LearningObjectiveCoverage[];
+    ichSectionCoverage: IchSectionCoverage[];
   }): SufficiencyStatus {
     if (input.totalQuestions === 0) {
       return 'NOT_ASSESSED';
@@ -437,7 +465,16 @@ export class QuestionBankSufficiencyService {
     if (input.blueprints.some((b) => b.status === 'INSUFFICIENT')) {
       return 'INSUFFICIENT';
     }
-    if (input.learningObjectiveCoverage.some((lo) => lo.requirement === 'NO_REQUIREMENT_DEFINED')) {
+    const sectionShortfall = input.ichSectionCoverage.some(
+      (s) => s.requirement !== 'NO_REQUIREMENT_DEFINED' && s.requirement.shortfall > 0,
+    );
+    if (sectionShortfall) {
+      return 'INSUFFICIENT';
+    }
+    const anyRequirementUndefined =
+      input.learningObjectiveCoverage.some((lo) => lo.requirement === 'NO_REQUIREMENT_DEFINED') ||
+      input.ichSectionCoverage.some((s) => s.requirement === 'NO_REQUIREMENT_DEFINED');
+    if (anyRequirementUndefined) {
       return 'PARTIALLY_READY';
     }
     return 'READY';
